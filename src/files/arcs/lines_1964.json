@@ -1,0 +1,77 @@
+{
+    "type": "Transfer",
+    "arcs": [
+        {
+            "type": "transfer",
+            "order": 1,
+            "from": "BRA",
+            "to": "POR",
+            "startLat": -10.39145,
+            "startLong": -49.269828,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.14,
+            "color": "#273E7C"
+        },
+        {
+            "type": "transfer",
+            "order": 2,
+            "from": "ESP",
+            "to": "POR",
+            "startLat": 40.417346,
+            "startLong": -3.372453,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.11,
+            "color": "#AD1814"
+        },
+        {
+            "type": "transfer",
+            "order": 3,
+            "from": "GBI",
+            "to": "POR",
+            "startLat": 11.982935,
+            "startLong": -14.983463,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.11,
+            "color": "#AD1814"
+        },
+        {
+            "type": "transfer",
+            "order": 4,
+            "from": "POR",
+            "to": "ESP",
+            "startLat": 39.0524,
+            "startLong": -8.495397,
+            "endLat": 40.417346,
+            "endLong": -3.372453,
+            "thickness": 0.11,
+            "color": "#AD1814"
+        },
+        {
+            "type": "transfer",
+            "order": 5,
+            "from": "POR",
+            "to": "BEL",
+            "startLat": 39.0524,
+            "startLong": -8.495397,
+            "endLat": 50.646441,
+            "endLong": 4.885676,
+            "thickness": 0.11,
+            "color": "#AD1814"
+        },
+        {
+            "type": "transfer",
+            "order": 6,
+            "from": "POR",
+            "to": "AUT",
+            "startLat": 39.0524,
+            "startLong": -8.495397,
+            "endLat": 47.646747,
+            "endLong": 14.939347,
+            "thickness": 0.11,
+            "color": "#AD1814"
+        }
+    ]
+}

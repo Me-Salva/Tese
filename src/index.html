@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Globe Visualization</title>
+  <style>
+    body { margin: 0; overflow: hidden;}
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://esm.sh/three",
+        "three/": "https://esm.sh/three/",
+        "three-globe": "https://esm.sh/three-globe?external=three",
+        "three/examples/jsm/controls/OrbitControls": "https://esm.sh/three/examples/jsm/controls/OrbitControls.js"
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <div id="globeViz"></div>
+
+  <script type="module" src = "script.js">
+  </script>
+</body>
+</html>

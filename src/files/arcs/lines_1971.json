@@ -1,0 +1,101 @@
+{
+    "type": "Transfer",
+    "arcs": [
+        {
+            "type": "transfer",
+            "order": 1,
+            "from": "PER",
+            "to": "POR",
+            "startLat": -5.873807,
+            "startLong": -76.082824,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.11,
+            "color": "#AD1814"
+        },
+        {
+            "type": "transfer",
+            "order": 2,
+            "from": "POR",
+            "to": "PER",
+            "startLat": 39.0524,
+            "startLong": -8.495397,
+            "endLat": -5.873807,
+            "endLong": -76.082824,
+            "thickness": 0.11,
+            "color": "#AD1814"
+        },
+        {
+            "type": "transfer",
+            "order": 3,
+            "from": "BRA",
+            "to": "POR",
+            "startLat": -10.39145,
+            "startLong": -49.269828,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.14,
+            "color": "#273E7C"
+        },
+        {
+            "type": "transfer",
+            "order": 4,
+            "from": "POR",
+            "to": "CAN",
+            "startLat": 39.0524,
+            "startLong": -8.495397,
+            "endLat": 52.458914,
+            "endLong": -68.903812,
+            "thickness": 0.14,
+            "color": "#AD1814"
+        },
+        {
+            "type": "transfer",
+            "order": 5,
+            "from": "POR",
+            "to": "BRA",
+            "startLat": 39.0524,
+            "startLong": -8.495397,
+            "endLat": -10.39145,
+            "endLong": -49.269828,
+            "thickness": 0.11,
+            "color": "#273E7C"
+        },
+        {
+            "type": "transfer",
+            "order": 6,
+            "from": "POR",
+            "to": "ARG",
+            "startLat": 39.0524,
+            "startLong": -8.495397,
+            "endLat": -29.264611,
+            "endLong": -63.020732,
+            "thickness": 0.11,
+            "color": "#71A6D2"
+        },
+        {
+            "type": "transfer",
+            "order": 7,
+            "from": "POR",
+            "to": "FRA",
+            "startLat": 39.0524,
+            "startLong": -8.495397,
+            "endLat": 46.897375,
+            "endLong": 3.106398,
+            "thickness": 0.12000000000000001,
+            "color": "#2B3856"
+        },
+        {
+            "type": "transfer",
+            "order": 8,
+            "from": "CAN",
+            "to": "POR",
+            "startLat": 52.458914,
+            "startLong": -68.903812,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.11,
+            "color": "#AD1814"
+        }
+    ]
+}

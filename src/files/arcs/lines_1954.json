@@ -1,0 +1,113 @@
+{
+    "type": "Transfer",
+    "arcs": [
+        {
+            "type": "transfer",
+            "order": 1,
+            "from": "ESP",
+            "to": "POR",
+            "startLat": 40.417346,
+            "startLong": -3.372453,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.15000000000000002,
+            "color": "#AD1814"
+        },
+        {
+            "type": "transfer",
+            "order": 2,
+            "from": "CVE",
+            "to": "POR",
+            "startLat": 15.073618,
+            "startLong": -23.621685,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.11,
+            "color": "#2D4C97"
+        },
+        {
+            "type": "transfer",
+            "order": 3,
+            "from": "ARG",
+            "to": "POR",
+            "startLat": -29.264611,
+            "startLong": -63.020732,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.12000000000000001,
+            "color": "#71A6D2"
+        },
+        {
+            "type": "transfer",
+            "order": 4,
+            "from": "CHI",
+            "to": "POR",
+            "startLat": 34.559242,
+            "startLong": 106.00291,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.11,
+            "color": "#AD1814"
+        },
+        {
+            "type": "transfer",
+            "order": 5,
+            "from": "ITA",
+            "to": "POR",
+            "startLat": 42.896888,
+            "startLong": 12.546747,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.11,
+            "color": "#273E7C"
+        },
+        {
+            "type": "transfer",
+            "order": 6,
+            "from": "PLS",
+            "to": "POR",
+            "startLat": 32.106451,
+            "startLong": 35.279264,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.11,
+            "color": "#00703C"
+        },
+        {
+            "type": "transfer",
+            "order": 7,
+            "from": "FRA",
+            "to": "POR",
+            "startLat": 46.897375,
+            "startLong": 3.106398,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "thickness": 0.12000000000000001,
+            "color": "#2B3856"
+        },
+        {
+            "type": "transfer",
+            "order": 8,
+            "from": "POR",
+            "to": "ARG",
+            "startLat": 39.0524,
+            "startLong": -8.495397,
+            "endLat": -29.264611,
+            "endLong": -63.020732,
+            "thickness": 0.11,
+            "color": "#71A6D2"
+        },
+        {
+            "type": "transfer",
+            "order": 9,
+            "from": "POR",
+            "to": "ANG",
+            "startLat": 39.0524,
+            "startLong": -8.495397,
+            "endLat": -11.867301,
+            "endLong": 17.88158,
+            "thickness": 0.11,
+            "color": "#AD1814"
+        }
+    ]
+}
