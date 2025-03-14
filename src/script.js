@@ -200,7 +200,7 @@ function createArcs(arcsData) {
         return {
             ...arc,
             stroke: (arc.thickness || 0.1) * 2,
-            color: `rgba(${r}, ${g}, ${b}, 0.3)`,
+            color: `rgba(${r}, ${g}, ${b}, 0.25)`,
         };
     });
 
