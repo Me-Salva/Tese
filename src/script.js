@@ -2,7 +2,7 @@ import * as THREE from "three";
 import ThreeGlobe from "three-globe";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-var renderer, camera, scene, controls, Globe;
+var renderer, camera, scene, controls, mainGlobe, glowGlobe;
 
 init();
 loadJsonData();
@@ -129,77 +129,84 @@ function createCountryBorders(countries) {
     return bordersGroup;
 }
 
-function createLandingEffect(lat, lng, color) {
-    Globe.ringsData([
-        ...Globe.ringsData(),
-        {
-            lat: lat,
-            lng: lng,
-            maxRadius: 2,
-            propagationSpeed: 1,
-            repeatPeriod: 0,
-            color: color,
-        },
-    ]);
-}
-
 function initGlobe(countries) {
-    Globe = new ThreeGlobe({
+
+    glowGlobe = new ThreeGlobe({
+        waitForGlobeReady: true,
+        animateIn: true,
+    })
+        .arcsData([])
+        .arcColor((arc) => arc.color || "#FF0000")
+        .arcAltitudeAutoScale(0.5)
+        .arcStroke((arc) => arc.stroke || 0.2)
+        .arcDashLength(1)
+        .arcDashGap(0)
+        .arcDashAnimateTime(2000)
+        .arcsTransitionDuration(1000);
+
+    glowGlobe.scale.set(100, 100, 100);
+    scene.add(glowGlobe);
+
+    mainGlobe = new ThreeGlobe({
         waitForGlobeReady: true,
         animateIn: true,
     })
         .polygonsData(countries.features)
         .polygonAltitude(0.01)
-        .polygonCapColor(() => "#ffcf5c")
+        .polygonCapColor(() => "#002244")
+        .polygonSideColor(() => "#01305a")
         .showAtmosphere(true)
-        .atmosphereColor("#87CEEB")
+        .atmosphereColor("#002244")
         .atmosphereAltitude(0.25)
         .arcsData([])
-        .arcColor((arc) => arc.color)
+        .arcColor((arc) => arc.color || "#FF0000")
         .arcAltitudeAutoScale(0.5)
         .arcStroke((arc) => arc.stroke || 0.1)
-        .arcDashLength(0.3)
-        .arcDashInitialGap(2)
-        .arcDashGap(1000)
-        .arcDashAnimateTime(3000)
-        .arcsTransitionDuration(2000)
-        .ringsData([])
-        .ringAltitude(0.01)
-        .ringColor((ring) => ring.color)
-        .ringMaxRadius(1.2)
-        .ringPropagationSpeed(1)
-        .ringRepeatPeriod(0)
-        .ringResolution(64);
+        .arcDashLength(0.25)
+        .arcDashGap(0.25)
+        .arcDashAnimateTime(2000)
+        .arcsTransitionDuration(1000);
 
-    const globeMaterial = Globe.globeMaterial();
-    globeMaterial.color = new THREE.Color("#7fcdff");
+    const globeMaterial = mainGlobe.globeMaterial();
+    globeMaterial.color = new THREE.Color("#00000E");
     globeMaterial.emissive = new THREE.Color("#002244");
     globeMaterial.emissiveIntensity = 0.2;
     globeMaterial.shininess = 0.8;
 
-    Globe.scale.set(100, 100, 100);
-    scene.add(Globe);
+    mainGlobe.scale.set(100, 100, 100);
+    scene.add(mainGlobe);
 
     const borders = createCountryBorders(countries);
     scene.add(borders);
 }
 
 function createArcs(arcsData) {
+
     const arcsWithThickness = arcsData.map((arc) => ({
         ...arc,
         stroke: arc.thickness || 0.2,
-        color: arc.color || "#000000"
     }));
 
-    Globe.arcsData(arcsWithThickness);
+    const glowArcs = arcsData.map((arc) => {
+        const hexToRgb = (hex) => {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return { r, g, b };
+        };
 
-    arcsWithThickness.forEach((arc) => {
-        const arrivalTime = 6000;
+        const { r, g, b } = hexToRgb(arc.color);
 
-        setTimeout(() => {
-            createLandingEffect(arc.endLat, arc.endLng, arc.color || '#000000');
-        }, arrivalTime);
+        return {
+            ...arc,
+            stroke: (arc.thickness || 0.1) * 2,
+            color: `rgba(${r}, ${g}, ${b}, 0.3)`,
+        };
     });
+
+    mainGlobe.arcsData(arcsWithThickness);
+
+    glowGlobe.arcsData(glowArcs);
 }
 
 function onWindowResize() {
