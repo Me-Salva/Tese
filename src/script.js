@@ -3,6 +3,7 @@ import ThreeGlobe from "three-globe";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 var renderer, camera, scene, controls, mainGlobe, glowGlobe;
+var countriesData, arcsData;
 
 init();
 loadJsonData();
@@ -54,30 +55,58 @@ function init() {
     controls.maxPolarAngle = Math.PI / 2;
 
     window.addEventListener("resize", onWindowResize, false);
+
+    // Add event listener for the filter button
+    document.getElementById("applyFilter").addEventListener("click", applyFilter);
 }
 
 async function loadJsonData() {
     try {
         const countriesResponse = await fetch("./files/maps/countriesToday.json");
-        const countries = await countriesResponse.json();
+        countriesData = await countriesResponse.json();
 
         const linesResponse = await fetch("./files/arcs/lines_2025.json");
-        const lines = await linesResponse.json();
+        arcsData = await linesResponse.json();
 
-        initGlobe(countries);
+        initGlobe(countriesData);
 
-        const arcsData = lines.arcs.map((arc) => ({
+        // Initially show all arcs
+        const arcsDataWithThickness = arcsData.arcs.map((arc) => ({
             startLat: arc.startLat,
             startLng: arc.startLong,
             endLat: arc.endLat,
             endLng: arc.endLong,
             thickness: arc.thickness,
-            color: arc.color
+            color: arc.color,
+            startCountry: arc.startCountry, // Ensure this field exists in your JSON
+            endCountry: arc.endCountry,    // Ensure this field exists in your JSON
         }));
-        createArcs(arcsData);
+        createArcs(arcsDataWithThickness);
     } catch (error) {
         console.error("Error loading JSON files:", error);
     }
+}
+
+function applyFilter() {
+    // Get selected countries from checkboxes
+    const selectedCountries = Array.from(document.querySelectorAll('input[name="country"]:checked')).map(checkbox => checkbox.value);
+
+    // Filter arcs based on selected countries
+    const filteredArcs = arcsData.arcs.filter(arc => 
+        selectedCountries.includes(arc.startCountry) || selectedCountries.includes(arc.endCountry)
+    );
+
+    const filteredArcsWithThickness = filteredArcs.map((arc) => ({
+        startLat: arc.startLat,
+        startLng: arc.startLong,
+        endLat: arc.endLat,
+        endLng: arc.endLong,
+        thickness: arc.thickness,
+        color: arc.color,
+    }));
+
+    // Update the globe with filtered arcs
+    createArcs(filteredArcsWithThickness);
 }
 
 function createCountryBorders(countries) {
@@ -130,7 +159,6 @@ function createCountryBorders(countries) {
 }
 
 function initGlobe(countries) {
-
     glowGlobe = new ThreeGlobe({
         waitForGlobeReady: true,
         animateIn: true,
@@ -138,7 +166,7 @@ function initGlobe(countries) {
         .arcsData([])
         .arcColor((arc) => arc.color || "#FF0000")
         .arcAltitudeAutoScale(0.5)
-        .arcStroke((arc) => arc.stroke || 0.2)
+        .arcStroke((arc) => arc.stroke || 0.1)
         .arcDashLength(1)
         .arcDashGap(0)
         .arcDashAnimateTime(2000)
@@ -181,10 +209,9 @@ function initGlobe(countries) {
 }
 
 function createArcs(arcsData) {
-
     const arcsWithThickness = arcsData.map((arc) => ({
         ...arc,
-        stroke: arc.thickness || 0.2,
+        stroke: arc.thickness || 0.1,
     }));
 
     const glowArcs = arcsData.map((arc) => {
@@ -205,7 +232,6 @@ function createArcs(arcsData) {
     });
 
     mainGlobe.arcsData(arcsWithThickness);
-
     glowGlobe.arcsData(glowArcs);
 }
 

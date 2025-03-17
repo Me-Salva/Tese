@@ -5,7 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D Globe Visualization</title>
   <style>
-    body { margin: 0; overflow: hidden;}
+    body { margin: 0; overflow: hidden; }
+    #controls {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 5px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    #controls h3 {
+      margin: 0 0 10px 0;
+    }
+    #controls label {
+      display: block;
+      margin: 5px 0;
+    }
+    .continent-group {
+      margin-bottom: 15px;
+    }
+    .continent-group h4 {
+      margin: 10px 0 5px 0;
+      font-size: 14px;
+      color: #333;
+    }
   </style>
 
   <script type="importmap">
@@ -21,9 +47,49 @@
 </head>
 
 <body>
+  <div id="controls">
+    <h3>Select Countries:</h3>
+
+    <!-- Europe -->
+    <div class="continent-group">
+      <h4>Europe</h4>
+      <label><input type="checkbox" name="country" value="Portugal" checked> Portugal</label>
+      <label><input type="checkbox" name="country" value="Spain" checked> Spain</label>
+      <label><input type="checkbox" name="country" value="France" checked> France</label>
+      <label><input type="checkbox" name="country" value="England" checked> England</label>
+      <label><input type="checkbox" name="country" value="Italy" checked> Italy</label>
+      <label><input type="checkbox" name="country" value="Netherlands" checked> Netherlands</label>
+      <label><input type="checkbox" name="country" value="Belgium" checked> Belgium</label>
+      <label><input type="checkbox" name="country" value="Germany" checked> Germany</label>
+    </div>
+
+    <!-- Asia -->
+    <div class="continent-group">
+      <h4>Asia</h4>
+      <label><input type="checkbox" name="country" value="Turkey" checked> Turkey</label>
+      <label><input type="checkbox" name="country" value="Saudi Arabia" checked> Saudi Arabia</label>
+      <label><input type="checkbox" name="country" value="China" checked> China</label>
+    </div>
+
+    <!-- Americas -->
+    <div class="continent-group">
+      <h4>North America</h4>
+      <label><input type="checkbox" name="country" value="USA" checked> USA</label>
+      <label><input type="checkbox" name="country" value="México" checked> México</label>
+    </div>
+
+    <div class="continent-group">
+      <h4>South America</h4>
+      <label><input type="checkbox" name="country" value="Brazil" checked> Brazil</label>
+      <label><input type="checkbox" name="country" value="Argentina" checked> Argentina</label>
+    </div>
+
+    <br>
+    <button id="applyFilter">Apply Filter</button>
+  </div>
+
   <div id="globeViz"></div>
 
-  <script type="module" src = "script.js">
-  </script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
