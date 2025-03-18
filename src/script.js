@@ -23,8 +23,16 @@ const countryCodeToName = {
     ARG: "Argentina",
 };
 
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
 init();
-loadJsonData();
+loadJsonData(1951);
 onWindowResize();
 animate();
 
@@ -83,6 +91,13 @@ function init() {
     continentCheckboxes.forEach(checkbox => {
         checkbox.addEventListener("change", toggleContinent);
     });
+
+    const timeSlider = document.getElementById("time-slider");
+    timeSlider.addEventListener("input", debounce(() => {
+        const year = timeSlider.value;
+        document.getElementById("current-year").textContent = year;
+        loadJsonData(year);
+    }, 200));
 }
 
 function toggleAllCountries(event) {
@@ -118,13 +133,18 @@ function updateSelectAllCheckbox() {
     selectAllCheckbox.checked = allChecked;
 }
 
-async function loadJsonData() {
+async function loadJsonData(year) {
     try {
         const countriesResponse = await fetch("./files/maps/countriesToday.json");
         countriesData = await countriesResponse.json();
 
-        const linesResponse = await fetch("./files/arcs/lines_2025.json");
+        const linesResponse = await fetch(`./files/arcs/lines_${year}.json`);
         arcsData = await linesResponse.json();
+
+        if (mainGlobe) {
+            scene.remove(mainGlobe);
+            scene.remove(glowGlobe);
+        }
 
         initGlobe(countriesData);
 
