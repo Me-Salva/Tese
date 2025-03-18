@@ -5,6 +5,24 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 var renderer, camera, scene, controls, mainGlobe, glowGlobe;
 var countriesData, arcsData;
 
+const countryCodeToName = {
+    POR: "Portugal",
+    ESP: "Spain",
+    FRA: "France",
+    ING: "England",
+    ITA: "Italy",
+    PBA: "Netherlands",
+    BEL: "Belgium",
+    ALE: "Germany",
+    TUR: "Turkey",
+    ASA: "Saudi Arabia",
+    CHI: "China",
+    EUA: "USA",
+    MEX: "Mexico",
+    BRA: "Brazil",
+    ARG: "Argentina",
+};
+
 init();
 loadJsonData();
 onWindowResize();
@@ -56,8 +74,48 @@ function init() {
 
     window.addEventListener("resize", onWindowResize, false);
 
-    // Add event listener for the filter button
     document.getElementById("applyFilter").addEventListener("click", applyFilter);
+
+    const selectAllCheckbox = document.getElementById("selectAll");
+    selectAllCheckbox.addEventListener("change", toggleAllCountries);
+
+    const continentCheckboxes = document.querySelectorAll('.continent-checkbox');
+    continentCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener("change", toggleContinent);
+    });
+}
+
+function toggleAllCountries(event) {
+    const selectAllCheckbox = event.target;
+    const countryCheckboxes = document.querySelectorAll('input[name="country"]');
+    const continentCheckboxes = document.querySelectorAll('.continent-checkbox');
+
+    countryCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    continentCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+}
+
+function toggleContinent(event) {
+    const continentCheckbox = event.target;
+    const continentGroup = continentCheckbox.closest('.continent-group');
+    const countryCheckboxes = continentGroup.querySelectorAll('input[name="country"]');
+
+    countryCheckboxes.forEach(checkbox => {
+        checkbox.checked = continentCheckbox.checked;
+    });
+
+    updateSelectAllCheckbox();
+}
+
+function updateSelectAllCheckbox() {
+    const countryCheckboxes = document.querySelectorAll('input[name="country"]');
+    const selectAllCheckbox = document.getElementById("selectAll");
+
+    const allChecked = Array.from(countryCheckboxes).every(checkbox => checkbox.checked);
+    selectAllCheckbox.checked = allChecked;
 }
 
 async function loadJsonData() {
@@ -70,7 +128,6 @@ async function loadJsonData() {
 
         initGlobe(countriesData);
 
-        // Initially show all arcs
         const arcsDataWithThickness = arcsData.arcs.map((arc) => ({
             startLat: arc.startLat,
             startLng: arc.startLong,
@@ -78,8 +135,8 @@ async function loadJsonData() {
             endLng: arc.endLong,
             thickness: arc.thickness,
             color: arc.color,
-            startCountry: arc.startCountry, // Ensure this field exists in your JSON
-            endCountry: arc.endCountry,    // Ensure this field exists in your JSON
+            from: arc.from,
+            to: arc.to,
         }));
         createArcs(arcsDataWithThickness);
     } catch (error) {
@@ -88,13 +145,22 @@ async function loadJsonData() {
 }
 
 function applyFilter() {
-    // Get selected countries from checkboxes
     const selectedCountries = Array.from(document.querySelectorAll('input[name="country"]:checked')).map(checkbox => checkbox.value);
 
-    // Filter arcs based on selected countries
-    const filteredArcs = arcsData.arcs.filter(arc => 
-        selectedCountries.includes(arc.startCountry) || selectedCountries.includes(arc.endCountry)
-    );
+    const showTransfersIn = document.getElementById("showTransfersIn").checked;
+    const showTransfersOut = document.getElementById("showTransfersOut").checked;
+
+    const filteredArcs = arcsData.arcs.filter(arc => {
+        const startCountryName = countryCodeToName[arc.from];
+        const endCountryName = countryCodeToName[arc.to];
+
+        const isTransferIn = selectedCountries.includes(endCountryName) && showTransfersIn;
+        const isTransferOut = selectedCountries.includes(startCountryName) && showTransfersOut;
+
+        return isTransferIn || isTransferOut;
+    });
+
+    console.log("Filtered Arcs:", filteredArcs);
 
     const filteredArcsWithThickness = filteredArcs.map((arc) => ({
         startLat: arc.startLat,
@@ -105,7 +171,6 @@ function applyFilter() {
         color: arc.color,
     }));
 
-    // Update the globe with filtered arcs
     createArcs(filteredArcsWithThickness);
 }
 
@@ -121,7 +186,7 @@ function createCountryBorders(countries) {
                 const points = polygon.map(([lng, lat]) => {
                     const phi = (90 - lat) * (Math.PI / 180);
                     const theta = (lng + 90) * (Math.PI / 180);
-                    const radius = 101.1;
+                    const radius = 100.6;
                     return new THREE.Vector3(
                         -radius * Math.sin(phi) * Math.cos(theta),
                         radius * Math.cos(phi),
@@ -139,7 +204,7 @@ function createCountryBorders(countries) {
                     const points = polygon.map(([lng, lat]) => {
                         const phi = (90 - lat) * (Math.PI / 180);
                         const theta = (lng + 90) * (Math.PI / 180);
-                        const radius = 101.1;
+                        const radius = 100.6;
                         return new THREE.Vector3(
                             -radius * Math.sin(phi) * Math.cos(theta),
                             radius * Math.cos(phi),
@@ -180,7 +245,7 @@ function initGlobe(countries) {
         animateIn: true,
     })
         .polygonsData(countries.features)
-        .polygonAltitude(0.01)
+        .polygonAltitude(0.005)
         .polygonCapColor(() => "#002244")
         .polygonSideColor(() => "#01305a")
         .showAtmosphere(true)

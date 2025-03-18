@@ -18,20 +18,32 @@
       overflow-y: auto;
     }
     #controls h3 {
-      margin: 0 0 10px 0;
+      margin: 10px 0 10px 0;
     }
     #controls label {
       display: block;
       margin: 5px 0;
     }
+    .country-list {
+      margin-left: 20px;
+      display: block;
+    }
     .continent-group {
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
-    .continent-group h4 {
-      margin: 10px 0 5px 0;
-      font-size: 14px;
-      color: #333;
+    #transfer-filters {
+      margin-top: 10px;
     }
+    #controls button {
+    display: block;
+    margin: 10px auto 0;
+    padding: 5px 10px;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+  }
   </style>
 
   <script type="importmap">
@@ -48,40 +60,55 @@
 
 <body>
   <div id="controls">
-    <h3>Select Countries:</h3>
 
-    <!-- Europe -->
-    <div class="continent-group">
-      <h4>Europe</h4>
-      <label><input type="checkbox" name="country" value="Portugal" checked> Portugal</label>
-      <label><input type="checkbox" name="country" value="Spain" checked> Spain</label>
-      <label><input type="checkbox" name="country" value="France" checked> France</label>
-      <label><input type="checkbox" name="country" value="England" checked> England</label>
-      <label><input type="checkbox" name="country" value="Italy" checked> Italy</label>
-      <label><input type="checkbox" name="country" value="Netherlands" checked> Netherlands</label>
-      <label><input type="checkbox" name="country" value="Belgium" checked> Belgium</label>
-      <label><input type="checkbox" name="country" value="Germany" checked> Germany</label>
+    <h3>Transfers:</h3>
+
+    <div id="transfer-filters">
+      <label><input type="checkbox" id="showTransfersIn" checked> Incoming</label>
+      <label><input type="checkbox" id="showTransfersOut" checked> Outgoing</label>
     </div>
 
-    <!-- Asia -->
-    <div class="continent-group">
-      <h4>Asia</h4>
-      <label><input type="checkbox" name="country" value="Turkey" checked> Turkey</label>
-      <label><input type="checkbox" name="country" value="Saudi Arabia" checked> Saudi Arabia</label>
-      <label><input type="checkbox" name="country" value="China" checked> China</label>
-    </div>
+    <h3>Selected Countries:</h3>
 
-    <!-- Americas -->
-    <div class="continent-group">
-      <h4>North America</h4>
-      <label><input type="checkbox" name="country" value="USA" checked> USA</label>
-      <label><input type="checkbox" name="country" value="México" checked> México</label>
-    </div>
+    <label><input type="checkbox" id="selectAll" checked> <strong>All</strong></label>
 
     <div class="continent-group">
-      <h4>South America</h4>
-      <label><input type="checkbox" name="country" value="Brazil" checked> Brazil</label>
-      <label><input type="checkbox" name="country" value="Argentina" checked> Argentina</label>
+      <label><input type="checkbox" class="continent-checkbox" checked> <strong>Europe</strong></label>
+      <div class="country-list">
+        <label><input type="checkbox" name="country" value="Portugal" checked> Portugal</label>
+        <label><input type="checkbox" name="country" value="Spain" checked> Spain</label>
+        <label><input type="checkbox" name="country" value="France" checked> France</label>
+        <label><input type="checkbox" name="country" value="England" checked> England</label>
+        <label><input type="checkbox" name="country" value="Italy" checked> Italy</label>
+        <label><input type="checkbox" name="country" value="Netherlands" checked> Netherlands</label>
+        <label><input type="checkbox" name="country" value="Belgium" checked> Belgium</label>
+        <label><input type="checkbox" name="country" value="Germany" checked> Germany</label>
+      </div>
+    </div>
+    
+    <div class="continent-group">
+      <label><input type="checkbox" class="continent-checkbox" checked> <strong>Asia</strong></label>
+      <div class="country-list">
+        <label><input type="checkbox" name="country" value="Turkey" checked> Turkey</label>
+        <label><input type="checkbox" name="country" value="Saudi Arabia" checked> Saudi Arabia</label>
+        <label><input type="checkbox" name="country" value="China" checked> China</label>
+      </div>
+    </div>
+
+    <div class="continent-group">
+      <label><input type="checkbox" class="continent-checkbox" checked> <strong>North America</strong></label>
+      <div class="country-list">
+        <label><input type="checkbox" name="country" value="USA" checked> USA</label>
+        <label><input type="checkbox" name="country" value="Mexico" checked> Mexico</label>
+      </div>
+    </div>
+
+    <div class="continent-group">
+      <label><input type="checkbox" class="continent-checkbox" checked> <strong>South America</strong></label>
+      <div class="country-list">
+        <label><input type="checkbox" name="country" value="Brazil" checked> Brazil</label>
+        <label><input type="checkbox" name="country" value="Argentina" checked> Argentina</label>
+      </div>
     </div>
 
     <br>
