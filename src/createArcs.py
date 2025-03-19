@@ -127,7 +127,9 @@ for transfer_file in transfer_files:
                         "endLat": end_lat,
                         "endLong": end_long,
                         "thickness": thickness,
-                        "color": '#FF0000'
+                        "color": '#FF0000',
+                        "scale": 0.5,
+                        "count": count
                     })
                 else:
                     print(f"Warning: {origin_code} or {destination_code} not found in country_info")

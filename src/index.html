@@ -6,7 +6,7 @@
   <title>3D Globe Visualization</title>
   <style>
     body { margin: 0; overflow: hidden; }
-    #controls {
+    #filters {
       position: absolute;
       top: 20px;
       left: 20px;
@@ -16,11 +16,12 @@
       border-radius: 5px;
       max-height: 80vh;
       overflow-y: auto;
+      display: none;
     }
-    #controls h3 {
-      margin: 10px 0 10px 0;
+    #filters h3 {
+      margin: 10px 0;
     }
-    #controls label {
+    #filters label {
       display: block;
       margin: 5px 0;
     }
@@ -34,7 +35,7 @@
     #transfer-filters {
       margin-top: 10px;
     }
-    #controls button {
+    #filters button {
       display: block;
       margin: 10px auto 0;
       padding: 5px 10px;
@@ -58,6 +59,18 @@
     #time-slider {
       width: 300px;
     }
+    #toggle-filters {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      padding: 5px 10px;
+      border: none;
+      background: #ff5733;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
   </style>
 
   <script type="importmap">
@@ -73,7 +86,9 @@
 </head>
 
 <body>
-  <div id="controls">
+  <button id="toggle-filters">Show Filters</button>
+
+  <div id="filters">
     <h3>Transfers:</h3>
 
     <div id="transfer-filters">

@@ -74,7 +74,7 @@ function init() {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enablePan = false;
-    controls.minDistance = 200;
+    controls.minDistance = 160;
     controls.maxDistance = 300;
     controls.autoRotate = false;
     controls.minPolarAngle = Math.PI / 4;
@@ -98,6 +98,24 @@ function init() {
         document.getElementById("current-year").textContent = year;
         loadJsonData(year);
     }, 200));
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const filtersDiv = document.getElementById("filters");
+        const toggleButton = document.getElementById("toggle-filters");
+    
+        filtersDiv.style.display = "none";
+        toggleButton.textContent = "Show Filters";
+    
+        toggleButton.addEventListener("click", function () {
+            if (filtersDiv.style.display === "none" || filtersDiv.style.display === "") {
+                filtersDiv.style.display = "block";
+                toggleButton.textContent = "Hide Filters";
+            } else {
+                filtersDiv.style.display = "none";
+                toggleButton.textContent = "Show Filters";
+            }
+        });
+    });    
 }
 
 function toggleAllCountries(event) {
@@ -170,7 +188,7 @@ function applyFilter() {
     const showTransfersIn = document.getElementById("showTransfersIn").checked;
     const showTransfersOut = document.getElementById("showTransfersOut").checked;
 
-    const filteredArcs = arcsData.arcs.filter(arc => {
+    let filteredArcs = arcsData.arcs.filter(arc => {
         const startCountryName = countryCodeToName[arc.from];
         const endCountryName = countryCodeToName[arc.to];
 
@@ -180,15 +198,29 @@ function applyFilter() {
         return isTransferIn || isTransferOut;
     });
 
+    if (selectedCountries.length === 1) {
+        const selectedCountry = selectedCountries[0];
+
+        filteredArcs = filteredArcs.map(arc => {
+            const endCountryName = countryCodeToName[arc.to];
+
+            return {
+                ...arc,
+                color: endCountryName === selectedCountry ? "#00FF00" : "#FF0000",
+            };
+        });
+    }
+
     console.log("Filtered Arcs:", filteredArcs);
 
-    const filteredArcsWithThickness = filteredArcs.map((arc) => ({
+    const filteredArcsWithThickness = filteredArcs.map(arc => ({
         startLat: arc.startLat,
         startLng: arc.startLong,
         endLat: arc.endLat,
         endLng: arc.endLong,
         thickness: arc.thickness,
         color: arc.color,
+        scale: arc.color === "#00FF00" ? 0.3 : 0.5,
     }));
 
     createArcs(filteredArcsWithThickness);
@@ -250,7 +282,7 @@ function initGlobe(countries) {
     })
         .arcsData([])
         .arcColor((arc) => arc.color || "#FF0000")
-        .arcAltitudeAutoScale(0.5)
+        .arcAltitudeAutoScale((arc) => arc.scale || 0.5)
         .arcStroke((arc) => arc.stroke || 0.1)
         .arcDashLength(1)
         .arcDashGap(0)
@@ -273,7 +305,7 @@ function initGlobe(countries) {
         .atmosphereAltitude(0.25)
         .arcsData([])
         .arcColor((arc) => arc.color || "#FF0000")
-        .arcAltitudeAutoScale(0.5)
+        .arcAltitudeAutoScale((arc) => arc.scale || 0.5)
         .arcStroke((arc) => arc.stroke || 0.1)
         .arcDashLength(0.25)
         .arcDashGap(0.25)
@@ -311,7 +343,7 @@ function createArcs(arcsData) {
 
         return {
             ...arc,
-            stroke: (arc.thickness || 0.1) * 2,
+            stroke: (arc.thickness || 0.1) * 1.2,
             color: `rgba(${r}, ${g}, ${b}, 0.25)`,
         };
     });
