@@ -71,6 +71,18 @@
       border-radius: 5px;
       cursor: pointer;
     }
+    #tooltip {
+    position: absolute;
+    display: none;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 5px;
+    border-radius: 3px;
+    pointer-events: none;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #000;
+    border: 1px solid #ccc;
+    }
   </style>
 
   <script type="importmap">
@@ -147,6 +159,9 @@
     <label for="time-slider">Year: <span id="current-year">1951</span></label>
     <input type="range" id="time-slider" min="1951" max="2025" value="1951" step="1">
   </div>
+
+  <div id="tooltip" style="position: absolute; display: none; background: rgba(255, 255, 255, 0.9); 
+  padding: 5px; border-radius: 3px; pointer-events: none;"></div>
 
   <div id="globeViz"></div>
 

@@ -4,24 +4,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 var renderer, camera, scene, controls, mainGlobe, glowGlobe;
 var countriesData, arcsData;
-
-const countryCodeToName = {
-    POR: "Portugal",
-    ESP: "Spain",
-    FRA: "France",
-    ING: "England",
-    ITA: "Italy",
-    PBA: "Netherlands",
-    BEL: "Belgium",
-    ALE: "Germany",
-    TUR: "Turkey",
-    ASA: "Saudi Arabia",
-    CHI: "China",
-    EUA: "USA",
-    MEX: "Mexico",
-    BRA: "Brazil",
-    ARG: "Argentina",
-};
+var arcsArray = [];
+let countryCodeToName = {};
 
 function debounce(func, wait) {
     let timeout;
@@ -115,7 +99,9 @@ function init() {
                 toggleButton.textContent = "Show Filters";
             }
         });
-    });    
+    });
+
+    window.addEventListener('mousemove', onMouseMove, false);
 }
 
 function toggleAllCountries(event) {
@@ -153,8 +139,31 @@ function updateSelectAllCheckbox() {
 
 async function loadJsonData(year) {
     try {
-        const countriesResponse = await fetch("./files/maps/countriesToday.json");
-        countriesData = await countriesResponse.json();
+        if (1951 <= year <= 1959) {
+            const countriesResponse = await fetch("./files/maps/countries1945.json");
+            countriesData = await countriesResponse.json();
+        } else if (1960 <= year <= 1993) {
+            const countriesResponse = await fetch("./files/maps/countries1960.json");
+            countriesData = await countriesResponse.json();
+        } else if (1994 <= year <= 1999) {
+            const countriesResponse = await fetch("./files/maps/countries1994.json");
+            countriesData = await countriesResponse.json();
+        } else if (2000 <= year <= 2010){
+            const countriesResponse = await fetch("./files/maps/countries2000.json");
+            countriesData = await countriesResponse.json();
+        } else {
+            const countriesResponse = await fetch("./files/maps/countriesToday.json");
+            countriesData = await countriesResponse.json();
+        }
+
+        const mapResponse = await fetch("./files/map.json");
+        const mapData = await mapResponse.json();
+
+        mapData.coordinates.forEach((country) => {
+            const code = country.text;
+            const name = country.country;
+            countryCodeToName[code] = name;
+        });
 
         const linesResponse = await fetch(`./files/arcs/lines_${year}.json`);
         arcsData = await linesResponse.json();
@@ -175,6 +184,7 @@ async function loadJsonData(year) {
             color: arc.color,
             from: arc.from,
             to: arc.to,
+            count: arc.count,
         }));
         createArcs(arcsDataWithThickness);
     } catch (error) {
@@ -211,8 +221,6 @@ function applyFilter() {
         });
     }
 
-    console.log("Filtered Arcs:", filteredArcs);
-
     const filteredArcsWithThickness = filteredArcs.map(arc => ({
         startLat: arc.startLat,
         startLng: arc.startLong,
@@ -220,7 +228,9 @@ function applyFilter() {
         endLng: arc.endLong,
         thickness: arc.thickness,
         color: arc.color,
-        scale: arc.color === "#00FF00" ? 0.3 : 0.5,
+        from: arc.from,
+        to: arc.to,
+        count: arc.count,
     }));
 
     createArcs(filteredArcsWithThickness);
@@ -238,7 +248,7 @@ function createCountryBorders(countries) {
                 const points = polygon.map(([lng, lat]) => {
                     const phi = (90 - lat) * (Math.PI / 180);
                     const theta = (lng + 90) * (Math.PI / 180);
-                    const radius = 100.6;
+                    const radius = 100.7;
                     return new THREE.Vector3(
                         -radius * Math.sin(phi) * Math.cos(theta),
                         radius * Math.cos(phi),
@@ -256,7 +266,7 @@ function createCountryBorders(countries) {
                     const points = polygon.map(([lng, lat]) => {
                         const phi = (90 - lat) * (Math.PI / 180);
                         const theta = (lng + 90) * (Math.PI / 180);
-                        const radius = 100.6;
+                        const radius = 100.7;
                         return new THREE.Vector3(
                             -radius * Math.sin(phi) * Math.cos(theta),
                             radius * Math.cos(phi),
@@ -326,6 +336,8 @@ function initGlobe(countries) {
 }
 
 function createArcs(arcsData) {
+    arcsArray = [];
+
     const arcsWithThickness = arcsData.map((arc) => ({
         ...arc,
         stroke: arc.thickness || 0.1,
@@ -350,6 +362,8 @@ function createArcs(arcsData) {
 
     mainGlobe.arcsData(arcsWithThickness);
     glowGlobe.arcsData(glowArcs);
+
+    arcsArray = mainGlobe.arcsData();
 }
 
 function onWindowResize() {
@@ -362,4 +376,87 @@ function animate() {
     controls.update();
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
+}
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let hoveredArc = null;
+
+function latLonToVector3(lat, lon, radius = 1) {
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lon + 90) * (Math.PI / 180);
+
+    const x = -radius * Math.sin(phi) * Math.cos(theta);
+    const y = radius * Math.cos(phi);
+    const z = radius * Math.sin(phi) * Math.sin(theta);
+
+    return new THREE.Vector3(x, y, z);
+}
+
+function onMouseMove(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    let closestArc = null;
+    let closestDistance = Infinity;
+
+    arcsArray.forEach((arc) => {
+        const start = latLonToVector3(arc.startLat, arc.startLng);
+        const end = latLonToVector3(arc.endLat, arc.endLng);
+        const midpoint = new THREE.Vector3().lerpVectors(start, end, 0.5);
+
+        // Convert to screen coordinates
+        const screenPosition = midpoint.clone().project(camera);
+
+        // Convert to pixel space
+        const screenX = (screenPosition.x + 1) * window.innerWidth / 2;
+        const screenY = (1 - screenPosition.y) * window.innerHeight / 2;
+
+        const distance = Math.sqrt(
+            Math.pow(event.clientX - screenX, 2) +
+            Math.pow(event.clientY - screenY, 2)
+        );
+
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closestArc = arc;
+        }
+    });
+
+    if (closestArc && closestDistance < 30) {  // Adjust threshold based on pixel space
+        if (hoveredArc !== closestArc) {
+            hoveredArc = closestArc;
+            showTooltip(closestArc, event.clientX, event.clientY);
+        }
+    } else {
+        if (hoveredArc !== null) {
+            hideTooltip();
+            hoveredArc = null;
+        }
+    }
+}
+function showTooltip(arc) {
+    const tooltip = document.getElementById('tooltip');
+    const arcData = arc;
+
+    const originCountry = countryCodeToName[arcData.from] || "Unknown";
+    const destinationCountry = countryCodeToName[arcData.to] || "Unknown";
+    const playerCount = arcData.count;
+
+    tooltip.innerHTML = `
+        <strong>From:</strong> ${originCountry}<br>
+        <strong>To:</strong> ${destinationCountry}<br>
+        <strong>Players:</strong> ${playerCount}
+    `;
+
+    tooltip.style.display = 'block';
+    tooltip.style.left = `${event.clientX + 10}px`;
+    tooltip.style.top = `${event.clientY + 10}px`;
+}
+
+function hideTooltip() {
+    const tooltip = document.getElementById('tooltip');
+    tooltip.style.display = 'none';
 }
