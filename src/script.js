@@ -6,6 +6,9 @@ var renderer, camera, scene, controls, mainGlobe, glowGlobe;
 var countriesData, arcsData;
 var arcsArray = [];
 let countryCodeToName = {};
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let hoveredArc = null;
 
 function debounce(func, wait) {
     let timeout;
@@ -27,10 +30,7 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
     scene = new THREE.Scene();
-    const loader = new THREE.TextureLoader();
-    loader.load('./files/space_background.jpg', function (texture) {
-        scene.background = texture;
-    });
+    scene.background = new THREE.Color(0xffffff);
 
     var ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
@@ -231,13 +231,14 @@ function applyFilter() {
         from: arc.from,
         to: arc.to,
         count: arc.count,
+        scale: arc.color === "#00FF00" ? 0.3 : 0.5,
     }));
 
     createArcs(filteredArcsWithThickness);
 }
 
 function createCountryBorders(countries) {
-    const borderMaterial = new THREE.LineBasicMaterial({ color: "#000000", linewidth: 1 });
+    const borderMaterial = new THREE.LineBasicMaterial({ color: "#d6dbdf", linewidth: 1 });
     const bordersGroup = new THREE.Group();
 
     countries.features.forEach((country) => {
@@ -290,6 +291,7 @@ function initGlobe(countries) {
         waitForGlobeReady: true,
         animateIn: true,
     })
+        .showAtmosphere(false)
         .arcsData([])
         .arcColor((arc) => arc.color || "#FF0000")
         .arcAltitudeAutoScale((arc) => arc.scale || 0.5)
@@ -298,6 +300,7 @@ function initGlobe(countries) {
         .arcDashGap(0)
         .arcDashAnimateTime(2000)
         .arcsTransitionDuration(1000);
+    
 
     glowGlobe.scale.set(100, 100, 100);
     scene.add(glowGlobe);
@@ -308,10 +311,10 @@ function initGlobe(countries) {
     })
         .polygonsData(countries.features)
         .polygonAltitude(0.005)
-        .polygonCapColor(() => "#002244")
-        .polygonSideColor(() => "#01305a")
+        .polygonCapColor(() => "#abb2b9")
+        .polygonSideColor(() => "#abb2b9")
         .showAtmosphere(true)
-        .atmosphereColor("#002244")
+        .atmosphereColor("#f8f9f9")
         .atmosphereAltitude(0.25)
         .arcsData([])
         .arcColor((arc) => arc.color || "#FF0000")
@@ -323,8 +326,7 @@ function initGlobe(countries) {
         .arcsTransitionDuration(1000);
 
     const globeMaterial = mainGlobe.globeMaterial();
-    globeMaterial.color = new THREE.Color("#00000E");
-    globeMaterial.emissive = new THREE.Color("#002244");
+    globeMaterial.emissive = new THREE.Color("#f8f9f9");
     globeMaterial.emissiveIntensity = 0.2;
     globeMaterial.shininess = 0.8;
 
@@ -378,10 +380,6 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-let hoveredArc = null;
-
 function latLonToVector3(lat, lon, radius = 1) {
     const phi = (90 - lat) * (Math.PI / 180);
     const theta = (lon + 90) * (Math.PI / 180);
@@ -407,10 +405,8 @@ function onMouseMove(event) {
         const end = latLonToVector3(arc.endLat, arc.endLng);
         const midpoint = new THREE.Vector3().lerpVectors(start, end, 0.5);
 
-        // Convert to screen coordinates
         const screenPosition = midpoint.clone().project(camera);
 
-        // Convert to pixel space
         const screenX = (screenPosition.x + 1) * window.innerWidth / 2;
         const screenY = (1 - screenPosition.y) * window.innerHeight / 2;
 
@@ -425,7 +421,7 @@ function onMouseMove(event) {
         }
     });
 
-    if (closestArc && closestDistance < 30) {  // Adjust threshold based on pixel space
+    if (closestArc && closestDistance < 5) {
         if (hoveredArc !== closestArc) {
             hoveredArc = closestArc;
             showTooltip(closestArc, event.clientX, event.clientY);
