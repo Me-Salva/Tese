@@ -9,6 +9,7 @@ let countryCodeToName = {};
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let hoveredArc = null;
+let globeInitialized = false;
 
 function debounce(func, wait) {
     let timeout;
@@ -19,7 +20,7 @@ function debounce(func, wait) {
 }
 
 init();
-loadJsonData(1951);
+loadInitialData();
 onWindowResize();
 animate();
 
@@ -80,7 +81,7 @@ function init() {
     timeSlider.addEventListener("input", debounce(() => {
         const year = timeSlider.value;
         document.getElementById("current-year").textContent = year;
-        loadJsonData(year);
+        loadArcsForYear(year);
     }, 200));
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -88,20 +89,81 @@ function init() {
         const toggleButton = document.getElementById("toggle-filters");
     
         filtersDiv.style.display = "none";
-        toggleButton.textContent = "Show Filters";
+        toggleButton.textContent = "Mostrar Filtros";
     
         toggleButton.addEventListener("click", function () {
             if (filtersDiv.style.display === "none" || filtersDiv.style.display === "") {
                 filtersDiv.style.display = "block";
-                toggleButton.textContent = "Hide Filters";
+                toggleButton.textContent = "Esconder Filtros";
             } else {
                 filtersDiv.style.display = "none";
-                toggleButton.textContent = "Show Filters";
+                toggleButton.textContent = "Mostrar Filtros";
             }
         });
     });
 
     window.addEventListener('mousemove', onMouseMove, false);
+}
+
+// Load initial data and create the globe
+async function loadInitialData() {
+    try {
+        // Load countries data (only need to do this once)
+        const countriesResponse = await fetch("./files/maps/countriesToday.json");
+        countriesData = await countriesResponse.json();
+
+        // Load country code to name mapping
+        const mapResponse = await fetch("./files/map.json");
+        const mapData = await mapResponse.json();
+
+        mapData.coordinates.forEach((country) => {
+            const code = country.text;
+            const name = country.country;
+            countryCodeToName[code] = name;
+        });
+
+        // Initialize the globe with countries data
+        initGlobe(countriesData);
+        
+        // Now load the initial arcs data for the starting year
+        const initialYear = document.getElementById("time-slider").value || 1951;
+        document.getElementById("current-year").textContent = initialYear;
+        
+        await loadArcsForYear(initialYear);
+        
+    } catch (error) {
+        console.error("Error loading initial data:", error);
+    }
+}
+
+// Load arcs data for a specific year
+async function loadArcsForYear(year) {
+    try {
+        console.log(`Loading arcs for year: ${year}`);
+        
+        // Load the arcs data for this year
+        const linesResponse = await fetch(`./files/arcs/lines_${year}.json`);
+        arcsData = await linesResponse.json();
+
+        // Process and display the arcs
+        const arcsDataWithThickness = arcsData.arcs.map((arc) => ({
+            startLat: arc.startLat,
+            startLng: arc.startLong,
+            endLat: arc.endLat,
+            endLng: arc.endLong,
+            thickness: arc.thickness,
+            color: arc.color,
+            from: arc.from,
+            to: arc.to,
+            count: arc.count,
+        }));
+        
+        // Update the arcs without recreating the globe
+        updateArcs(arcsDataWithThickness);
+        
+    } catch (error) {
+        console.error(`Error loading arcs for year ${year}:`, error);
+    }
 }
 
 function toggleAllCountries(event) {
@@ -137,86 +199,77 @@ function updateSelectAllCheckbox() {
     selectAllCheckbox.checked = allChecked;
 }
 
-async function loadJsonData(year) {
-    try {
-        if (1951 <= year <= 1959) {
-            const countriesResponse = await fetch("./files/maps/countries1945.json");
-            countriesData = await countriesResponse.json();
-        } else if (1960 <= year <= 1993) {
-            const countriesResponse = await fetch("./files/maps/countries1960.json");
-            countriesData = await countriesResponse.json();
-        } else if (1994 <= year <= 1999) {
-            const countriesResponse = await fetch("./files/maps/countries1994.json");
-            countriesData = await countriesResponse.json();
-        } else if (2000 <= year <= 2010){
-            const countriesResponse = await fetch("./files/maps/countries2000.json");
-            countriesData = await countriesResponse.json();
-        } else {
-            const countriesResponse = await fetch("./files/maps/countriesToday.json");
-            countriesData = await countriesResponse.json();
-        }
+function applyFilter() {
+    const selectedCountries = Array.from(document.querySelectorAll('input[name="country"]:checked')).map(checkbox => checkbox.value);
+    const allCountries = Array.from(document.querySelectorAll('input[name="country"]')).map(checkbox => checkbox.value);
+    const allSelected = selectedCountries.length === allCountries.length;
 
-        const mapResponse = await fetch("./files/map.json");
-        const mapData = await mapResponse.json();
+    const showTransfersIn = document.getElementById("showTransfersIn").checked;
+    const showTransfersOut = document.getElementById("showTransfersOut").checked;
+    const showAllTransfers = showTransfersIn && showTransfersOut;
 
-        mapData.coordinates.forEach((country) => {
-            const code = country.text;
-            const name = country.country;
-            countryCodeToName[code] = name;
-        });
-
-        const linesResponse = await fetch(`./files/arcs/lines_${year}.json`);
-        arcsData = await linesResponse.json();
-
-        if (mainGlobe) {
-            scene.remove(mainGlobe);
-            scene.remove(glowGlobe);
-        }
-
-        initGlobe(countriesData);
-
-        const arcsDataWithThickness = arcsData.arcs.map((arc) => ({
+    // If all countries are selected and both transfer directions are checked, show all arcs
+    if (allSelected && showAllTransfers) {
+        console.log("Showing all arcs - all countries and directions selected");
+        
+        const allArcsWithThickness = arcsData.arcs.map((arc) => ({
             startLat: arc.startLat,
             startLng: arc.startLong,
             endLat: arc.endLat,
             endLng: arc.endLong,
             thickness: arc.thickness,
-            color: arc.color,
+            color: arc.color || "#FF0000", // Default to red if no color specified
             from: arc.from,
             to: arc.to,
             count: arc.count,
+            scale: 0.5, // Default scale
         }));
-        createArcs(arcsDataWithThickness);
-    } catch (error) {
-        console.error("Error loading JSON files:", error);
+        
+        updateArcs(allArcsWithThickness);
+        return;
     }
-}
+    
+    // If no transfer directions are selected, show no arcs
+    if (!showTransfersIn && !showTransfersOut) {
+        console.log("No transfer directions selected, showing no arcs");
+        updateArcs([]);
+        return;
+    }
 
-function applyFilter() {
-    const selectedCountries = Array.from(document.querySelectorAll('input[name="country"]:checked')).map(checkbox => checkbox.value);
-
-    const showTransfersIn = document.getElementById("showTransfersIn").checked;
-    const showTransfersOut = document.getElementById("showTransfersOut").checked;
-
+    // Create a reverse mapping from country names to country codes
+    // This helps us match the selected country names with the country codes in the arcs
+    const countryNameToCode = {};
+    Object.entries(countryCodeToName).forEach(([code, name]) => {
+        countryNameToCode[name] = code;
+    });
+    
+    // Get country codes for the selected countries
+    const selectedCountryCodes = selectedCountries.map(name => countryNameToCode[name]).filter(Boolean);
+    console.log("Selected country codes:", selectedCountryCodes);
+    
+    // Filter arcs based on selected countries and transfer directions
     let filteredArcs = arcsData.arcs.filter(arc => {
-        const startCountryName = countryCodeToName[arc.from];
-        const endCountryName = countryCodeToName[arc.to];
-
-        const isTransferIn = selectedCountries.includes(endCountryName) && showTransfersIn;
-        const isTransferOut = selectedCountries.includes(startCountryName) && showTransfersOut;
-
+        const isTransferIn = selectedCountryCodes.includes(arc.to) && showTransfersIn;
+        const isTransferOut = selectedCountryCodes.includes(arc.from) && showTransfersOut;
+        
         return isTransferIn || isTransferOut;
     });
 
-    if (selectedCountries.length === 1) {
-        const selectedCountry = selectedCountries[0];
+    console.log(`Filtered to ${filteredArcs.length} arcs out of ${arcsData.arcs.length} total`);
 
+    // If only one country is selected, color the arcs based on direction
+    if (selectedCountryCodes.length === 1) {
+        const selectedCountryCode = selectedCountryCodes[0];
+        
         filteredArcs = filteredArcs.map(arc => {
-            const endCountryName = countryCodeToName[arc.to];
-
+            // If the arc ends in the selected country, it's an incoming transfer (green)
+            // If the arc starts from the selected country, it's an outgoing transfer (red)
+            const isIncoming = arc.to === selectedCountryCode;
+            const color = isIncoming ? "#00FF00" : "#FF0000";
+            
             return {
                 ...arc,
-                color: endCountryName === selectedCountry ? "#00FF00" : "#FF0000",
+                color: color
             };
         });
     }
@@ -234,7 +287,13 @@ function applyFilter() {
         scale: arc.color === "#00FF00" ? 0.3 : 0.5,
     }));
 
-    createArcs(filteredArcsWithThickness);
+    updateArcs(filteredArcsWithThickness);
+    
+    // Reset hover state when filters are applied
+    if (hoveredArc) {
+        hoveredArc = null;
+        hideTooltip();
+    }
 }
 
 function createCountryBorders(countries) {
@@ -287,6 +346,11 @@ function createCountryBorders(countries) {
 }
 
 function initGlobe(countries) {
+    if (globeInitialized) return; // Only initialize once
+    
+    console.log("Initializing globe");
+    
+    // Create glow globe
     glowGlobe = new ThreeGlobe({
         waitForGlobeReady: true,
         animateIn: true,
@@ -301,10 +365,10 @@ function initGlobe(countries) {
         .arcDashAnimateTime(2000)
         .arcsTransitionDuration(1000);
     
-
     glowGlobe.scale.set(100, 100, 100);
     scene.add(glowGlobe);
 
+    // Create main globe
     mainGlobe = new ThreeGlobe({
         waitForGlobeReady: true,
         animateIn: true,
@@ -335,9 +399,12 @@ function initGlobe(countries) {
 
     const borders = createCountryBorders(countries);
     scene.add(borders);
+    
+    globeInitialized = true;
 }
 
-function createArcs(arcsData) {
+// Update only the arcs without recreating the globe
+function updateArcs(arcsData) {
     arcsArray = [];
 
     const arcsWithThickness = arcsData.map((arc) => ({
@@ -353,7 +420,7 @@ function createArcs(arcsData) {
             return { r, g, b };
         };
 
-        const { r, g, b } = hexToRgb(arc.color);
+        const { r, g, b } = hexToRgb(arc.color || "#FF0000");
 
         return {
             ...arc,
@@ -362,10 +429,17 @@ function createArcs(arcsData) {
         };
     });
 
+    // Update arcs with smooth transition
     mainGlobe.arcsData(arcsWithThickness);
     glowGlobe.arcsData(glowArcs);
 
     arcsArray = mainGlobe.arcsData();
+    
+    // Reset hover state when arcs are updated
+    if (hoveredArc) {
+        hoveredArc = null;
+        hideTooltip();
+    }
 }
 
 function onWindowResize() {
@@ -380,7 +454,7 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
-function latLonToVector3(lat, lon, radius = 1) {
+function latLonToVector3(lat, lon, radius = 100) {
     const phi = (90 - lat) * (Math.PI / 180);
     const theta = (lon + 90) * (Math.PI / 180);
 
@@ -391,68 +465,180 @@ function latLonToVector3(lat, lon, radius = 1) {
     return new THREE.Vector3(x, y, z);
 }
 
+// Generate points along an arc path with proper altitude
+function generateArcPoints(startLat, startLng, endLat, endLng, scale, numPoints = 30) {
+    const points = [];
+    const start = latLonToVector3(startLat, startLng, 100);
+    const end = latLonToVector3(endLat, endLng, 100);
+    
+    for (let i = 0; i <= numPoints; i++) {
+        const t = i / numPoints;
+        // Create a point along the arc
+        const point = new THREE.Vector3().lerpVectors(start, end, t);
+        
+        // Apply altitude curve to the point
+        const altitude = scale || 0.5;
+        const altitudeFactor = Math.sin(t * Math.PI) * altitude;
+        const elevated = point.clone().normalize().multiplyScalar(100 * (1 + altitudeFactor * 0.4));
+        
+        points.push(elevated);
+    }
+    
+    return points;
+}
+
 function onMouseMove(event) {
+    // Update mouse coordinates
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-
+    
     let closestArc = null;
     let closestDistance = Infinity;
 
+    if (!arcsArray || arcsArray.length === 0) return;
+
+    // Check each arc
     arcsArray.forEach((arc) => {
-        const start = latLonToVector3(arc.startLat, arc.startLng);
-        const end = latLonToVector3(arc.endLat, arc.endLng);
-        const midpoint = new THREE.Vector3().lerpVectors(start, end, 0.5);
-
-        const screenPosition = midpoint.clone().project(camera);
-
-        const screenX = (screenPosition.x + 1) * window.innerWidth / 2;
-        const screenY = (1 - screenPosition.y) * window.innerHeight / 2;
-
-        const distance = Math.sqrt(
-            Math.pow(event.clientX - screenX, 2) +
-            Math.pow(event.clientY - screenY, 2)
+        // Generate more points along the arc for better detection
+        const arcPoints = generateArcPoints(
+            arc.startLat, 
+            arc.startLng, 
+            arc.endLat, 
+            arc.endLng, 
+            arc.scale,
+            50 // Increased number of points for better detection
         );
-
-        if (distance < closestDistance) {
-            closestDistance = distance;
+        
+        // Check each segment of the arc
+        let minDistanceToArc = Infinity;
+        
+        for (let i = 0; i < arcPoints.length - 1; i++) {
+            const start = arcPoints[i];
+            const end = arcPoints[i + 1];
+            
+            // Project both points to screen space
+            const startScreen = start.clone().project(camera);
+            const endScreen = end.clone().project(camera);
+            
+            // Convert to screen coordinates
+            const startX = (startScreen.x * 0.5 + 0.5) * window.innerWidth;
+            const startY = (startScreen.y * -0.5 + 0.5) * window.innerHeight;
+            const endX = (endScreen.x * 0.5 + 0.5) * window.innerWidth;
+            const endY = (endScreen.y * -0.5 + 0.5) * window.innerHeight;
+            
+            // Calculate distance from mouse to this line segment in screen space
+            const mouseX = event.clientX;
+            const mouseY = event.clientY;
+            
+            // Line segment distance calculation in 2D
+            const A = mouseX - startX;
+            const B = mouseY - startY;
+            const C = endX - startX;
+            const D = endY - startY;
+            
+            const dot = A * C + B * D;
+            const lenSq = C * C + D * D;
+            let param = -1;
+            
+            if (lenSq !== 0) {
+                param = dot / lenSq;
+            }
+            
+            let xx, yy;
+            
+            if (param < 0) {
+                xx = startX;
+                yy = startY;
+            } else if (param > 1) {
+                xx = endX;
+                yy = endY;
+            } else {
+                xx = startX + param * C;
+                yy = startY + param * D;
+            }
+            
+            const dx = mouseX - xx;
+            const dy = mouseY - yy;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < minDistanceToArc) {
+                minDistanceToArc = distance;
+            }
+        }
+        
+        // If this arc is closer than previous closest, update
+        if (minDistanceToArc < closestDistance) {
+            closestDistance = minDistanceToArc;
             closestArc = arc;
         }
     });
 
-    if (closestArc && closestDistance < 5) {
+    // Threshold for hover detection - increased for better usability
+    const hoverThreshold = 10; // Increased threshold
+    
+    if (closestArc && closestDistance < hoverThreshold) {
         if (hoveredArc !== closestArc) {
+            // Set new hovered arc
             hoveredArc = closestArc;
+            
+            // Show tooltip
             showTooltip(closestArc, event.clientX, event.clientY);
+        } else {
+            // Update tooltip position even if the arc hasn't changed
+            updateTooltipPosition(event.clientX, event.clientY);
         }
     } else {
         if (hoveredArc !== null) {
+            // Hide tooltip
             hideTooltip();
             hoveredArc = null;
         }
     }
 }
-function showTooltip(arc) {
-    const tooltip = document.getElementById('tooltip');
-    const arcData = arc;
 
+// Add this new function to update tooltip position without changing content
+function updateTooltipPosition(clientX, clientY) {
+    const tooltip = document.getElementById('tooltip');
+    if (!tooltip || tooltip.style.display === 'none') return;
+    
+    const offsetX = 15;
+    const offsetY = 15;
+    
+    // Ensure tooltip stays within viewport
+    const tooltipWidth = tooltip.offsetWidth || 150;
+    const tooltipHeight = tooltip.offsetHeight || 80;
+    
+    const left = Math.min(clientX + offsetX, window.innerWidth - tooltipWidth - 5);
+    const top = Math.min(clientY + offsetY, window.innerHeight - tooltipHeight - 5);
+    
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+}
+
+function showTooltip(arc, clientX, clientY) {
+    const tooltip = document.getElementById('tooltip');
+    if (!tooltip) return;
+
+    const arcData = arc;
     const originCountry = countryCodeToName[arcData.from] || "Unknown";
     const destinationCountry = countryCodeToName[arcData.to] || "Unknown";
     const playerCount = arcData.count;
 
     tooltip.innerHTML = `
-        <strong>From:</strong> ${originCountry}<br>
-        <strong>To:</strong> ${destinationCountry}<br>
-        <strong>Players:</strong> ${playerCount}
+        <strong>Origem:</strong> ${originCountry}<br>
+        <strong>Destino:</strong> ${destinationCountry}<br>
+        <strong>Quantidade:</strong> ${playerCount}
     `;
 
     tooltip.style.display = 'block';
-    tooltip.style.left = `${event.clientX + 10}px`;
-    tooltip.style.top = `${event.clientY + 10}px`;
+    updateTooltipPosition(clientX, clientY);
 }
 
 function hideTooltip() {
     const tooltip = document.getElementById('tooltip');
-    tooltip.style.display = 'none';
+    if (tooltip) {
+        tooltip.style.display = 'none';
+    }
 }
