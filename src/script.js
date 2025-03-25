@@ -156,6 +156,7 @@ async function loadArcsForYear(year) {
             from: arc.from,
             to: arc.to,
             count: arc.count,
+            players: arc.players,
         }));
         
         // Update the arcs without recreating the globe
@@ -223,6 +224,7 @@ function applyFilter() {
             to: arc.to,
             count: arc.count,
             scale: 0.5, // Default scale
+            players: arc.players,
         }));
         
         updateArcs(allArcsWithThickness);
@@ -285,6 +287,7 @@ function applyFilter() {
         to: arc.to,
         count: arc.count,
         scale: arc.color === "#00FF00" ? 0.3 : 0.5,
+        players: arc.players,
     }));
 
     updateArcs(filteredArcsWithThickness);
@@ -576,7 +579,7 @@ function onMouseMove(event) {
     });
 
     // Threshold for hover detection - increased for better usability
-    const hoverThreshold = 10; // Increased threshold
+    const hoverThreshold = 20; // Increased threshold
     
     if (closestArc && closestDistance < hoverThreshold) {
         if (hoveredArc !== closestArc) {
@@ -622,14 +625,16 @@ function showTooltip(arc, clientX, clientY) {
     if (!tooltip) return;
 
     const arcData = arc;
-    const originCountry = countryCodeToName[arcData.from] || "Unknown";
-    const destinationCountry = countryCodeToName[arcData.to] || "Unknown";
+    const originCountry = countryCodeToName[arcData.from] || "País Desconhecido";
+    const destinationCountry = countryCodeToName[arcData.to] || "País Desconhecido";
     const playerCount = arcData.count;
+    const playersList = arcData.players;
+    const playersDisplay = playersList.length > 0 ? playersList.join(", ") : "Nenhum jogador disponível";
 
     tooltip.innerHTML = `
         <strong>Origem:</strong> ${originCountry}<br>
         <strong>Destino:</strong> ${destinationCountry}<br>
-        <strong>Quantidade:</strong> ${playerCount}
+        <strong>Jogadores (${playerCount}):</strong> ${playersDisplay}
     `;
 
     tooltip.style.display = 'block';
