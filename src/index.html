@@ -31,9 +31,11 @@
     }
     .continent-group {
       margin-bottom: 10px;
+      margin-left: 10px;
     }
     #transfer-filters {
       margin-top: 10px;
+      margin-left: 10px;
     }
     #filters button {
       display: block;
@@ -100,12 +102,16 @@
       z-index: 1000;
     }
     .time-control-btn {
-      border: none;
-      border-radius: 4px;
-      padding: 8px 12px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.2s;
+      font-size: 14px;
     }
     .time-control-btn:hover {
       background-color: #e0e0e0;
@@ -146,6 +152,8 @@
 
   <div id="filters">
     <h3>Transferências:</h3>
+
+    <label><input type="checkbox" id="showAllTransfers" checked> <strong>Todas</strong></label>
 
     <div id="transfer-filters">
       <label><input type="checkbox" id="showTransfersIn" checked> Entradas</label>

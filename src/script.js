@@ -16,6 +16,14 @@ let currentYear = 1951;
 const minYear = 1951;
 const maxYear = 2025;
 
+// Filter state variables
+let currentFilterState = {
+    selectedCountryCodes: [],
+    showTransfersIn: true,
+    showTransfersOut: true,
+    filtersApplied: false
+};
+
 function debounce(func, wait) {
     let timeout;
     return function (...args) {
@@ -72,8 +80,7 @@ function init() {
 
     window.addEventListener("resize", onWindowResize, false);
 
-    document.getElementById("applyFilter").addEventListener("click", applyFilter);
-
+    // Set up toggle events for countries
     const selectAllCheckbox = document.getElementById("selectAll");
     selectAllCheckbox.addEventListener("change", toggleAllCountries);
 
@@ -111,6 +118,101 @@ function init() {
     });
 
     window.addEventListener('mousemove', onMouseMove, false);
+    
+    // Set up auto filtering
+    setupAutoFiltering();
+}
+
+// Setup auto filtering for all checkboxes
+function setupAutoFiltering() {
+    // Add event listeners to all country checkboxes
+    const countryCheckboxes = document.querySelectorAll('input[name="country"]');
+    countryCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            applyFilter();
+        });
+    });
+
+    // Add event listeners to transfer direction checkboxes
+    const transferInCheckbox = document.getElementById("showTransfersIn");
+    const transferOutCheckbox = document.getElementById("showTransfersOut");
+    const showAllTransfersCheckbox = document.getElementById("showAllTransfers");
+    
+    transferInCheckbox.addEventListener('change', () => {
+        // Update the "Show All Transfers" checkbox state
+        if (transferOutCheckbox.checked && transferInCheckbox.checked) {
+            showAllTransfersCheckbox.checked = true;
+        } else {
+            showAllTransfersCheckbox.checked = false;
+        }
+        applyFilter();
+    });
+    
+    transferOutCheckbox.addEventListener('change', () => {
+        // Update the "Show All Transfers" checkbox state
+        if (transferOutCheckbox.checked && transferInCheckbox.checked) {
+            showAllTransfersCheckbox.checked = true;
+        } else {
+            showAllTransfersCheckbox.checked = false;
+        }
+        applyFilter();
+    });
+    
+    // Add event listener for the "Show All Transfers" checkbox
+    showAllTransfersCheckbox.addEventListener('change', () => {
+        if (showAllTransfersCheckbox.checked) {
+            transferInCheckbox.checked = true;
+            transferOutCheckbox.checked = true;
+        } else {
+            transferInCheckbox.checked = false;
+            transferOutCheckbox.checked = false;
+        }
+        applyFilter();
+    });
+
+    // Optionally hide or disable the Apply Filter button since it's no longer needed
+    const applyFilterButton = document.getElementById("applyFilter");
+    if (applyFilterButton) {
+        // Option 1: Hide the button
+        applyFilterButton.style.display = 'none';
+        
+        // Option 2: Or keep it but with a different label as a "Reset Filters" button
+        // applyFilterButton.textContent = "Reset Filters";
+        // applyFilterButton.onclick = resetFilters;
+    }
+}
+
+// Optional: Add a reset filters function if you want to keep the button as a reset option
+function resetFilters() {
+    // Reset all country checkboxes to checked
+    const countryCheckboxes = document.querySelectorAll('input[name="country"]');
+    countryCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    
+    // Reset continent checkboxes
+    const continentCheckboxes = document.querySelectorAll('.continent-checkbox');
+    continentCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    
+    // Reset select all checkbox
+    const selectAllCheckbox = document.getElementById("selectAll");
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = true;
+    }
+    
+    // Reset transfer direction checkboxes
+    const transferInCheckbox = document.getElementById("showTransfersIn");
+    const transferOutCheckbox = document.getElementById("showTransfersOut");
+    const showAllTransfersCheckbox = document.getElementById("showAllTransfers");
+    
+    if (transferInCheckbox) transferInCheckbox.checked = true;
+    if (transferOutCheckbox) transferOutCheckbox.checked = true;
+    if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true;
+    
+    // Apply the reset filters
+    applyFilter();
 }
 
 // Setup time controls (play/pause, forward, backward)
@@ -250,7 +352,7 @@ async function loadArcsForYear(year) {
         const linesResponse = await fetch(`./files/arcs/lines_${year}.json`);
         arcsData = await linesResponse.json();
 
-        // Process and display the arcs
+        // Process the arcs
         const arcsDataWithThickness = arcsData.arcs.map((arc) => ({
             startLat: arc.startLat,
             startLng: arc.startLong,
@@ -264,8 +366,13 @@ async function loadArcsForYear(year) {
             players: arc.players,
         }));
         
-        // Update the arcs without recreating the globe
-        updateArcs(arcsDataWithThickness);
+        // If filters have been applied, reapply them to the new data
+        if (currentFilterState.filtersApplied) {
+            applyCurrentFilters();
+        } else {
+            // Otherwise, just show all arcs
+            updateArcs(arcsDataWithThickness);
+        }
         
     } catch (error) {
         console.error(`Error loading arcs for year ${year}:`, error);
@@ -283,6 +390,9 @@ function toggleAllCountries(event) {
     continentCheckboxes.forEach(checkbox => {
         checkbox.checked = selectAllCheckbox.checked;
     });
+    
+    // Apply filter after toggling all countries
+    setTimeout(() => applyFilter(), 0);
 }
 
 function toggleContinent(event) {
@@ -295,6 +405,9 @@ function toggleContinent(event) {
     });
 
     updateSelectAllCheckbox();
+    
+    // Apply filter after toggling continent
+    setTimeout(() => applyFilter(), 0);
 }
 
 function updateSelectAllCheckbox() {
@@ -305,17 +418,25 @@ function updateSelectAllCheckbox() {
     selectAllCheckbox.checked = allChecked;
 }
 
-function applyFilter() {
-    const selectedCountries = Array.from(document.querySelectorAll('input[name="country"]:checked')).map(checkbox => checkbox.value);
-    const allCountries = Array.from(document.querySelectorAll('input[name="country"]')).map(checkbox => checkbox.value);
-    const allSelected = selectedCountries.length === allCountries.length;
-
-    const showTransfersIn = document.getElementById("showTransfersIn").checked;
-    const showTransfersOut = document.getElementById("showTransfersOut").checked;
-    const showAllTransfers = showTransfersIn && showTransfersOut;
+// Apply the current filter state to the arcs
+function applyCurrentFilters() {
+    if (!arcsData || !arcsData.arcs) return;
+    
+    // Get the select all checkbox state
+    const selectAllCheckbox = document.getElementById("selectAll");
+    const allCountriesSelected = selectAllCheckbox ? selectAllCheckbox.checked : true;
+    
+    // If no countries are selected (selectAllCheckbox is unchecked), show no arcs
+    if (!allCountriesSelected && currentFilterState.selectedCountryCodes.length === 0) {
+        console.log("No countries selected, showing no arcs");
+        updateArcs([]);
+        return;
+    }
+    
+    const showAllTransfers = currentFilterState.showTransfersIn && currentFilterState.showTransfersOut;
 
     // If all countries are selected and both transfer directions are checked, show all arcs
-    if (allSelected && showAllTransfers) {
+    if (allCountriesSelected && showAllTransfers) {
         console.log("Showing all arcs - all countries and directions selected");
         
         const allArcsWithThickness = arcsData.arcs.map((arc) => ({
@@ -337,27 +458,22 @@ function applyFilter() {
     }
     
     // If no transfer directions are selected, show no arcs
-    if (!showTransfersIn && !showTransfersOut) {
+    if (!currentFilterState.showTransfersIn && !currentFilterState.showTransfersOut) {
         console.log("No transfer directions selected, showing no arcs");
         updateArcs([]);
         return;
     }
 
-    // Create a reverse mapping from country names to country codes
-    // This helps us match the selected country names with the country codes in the arcs
-    const countryNameToCode = {};
-    Object.entries(countryCodeToName).forEach(([code, name]) => {
-        countryNameToCode[name] = code;
-    });
-    
-    // Get country codes for the selected countries
-    const selectedCountryCodes = selectedCountries.map(name => countryNameToCode[name]).filter(Boolean);
-    console.log("Selected country codes:", selectedCountryCodes);
-    
     // Filter arcs based on selected countries and transfer directions
     let filteredArcs = arcsData.arcs.filter(arc => {
-        const isTransferIn = selectedCountryCodes.includes(arc.to) && showTransfersIn;
-        const isTransferOut = selectedCountryCodes.includes(arc.from) && showTransfersOut;
+        // If all countries are selected, include all arcs (if direction matches)
+        if (allCountriesSelected) {
+            return true;
+        }
+        
+        // Otherwise, only include arcs that match the selected countries and directions
+        const isTransferIn = currentFilterState.selectedCountryCodes.includes(arc.to) && currentFilterState.showTransfersIn;
+        const isTransferOut = currentFilterState.selectedCountryCodes.includes(arc.from) && currentFilterState.showTransfersOut;
         
         return isTransferIn || isTransferOut;
     });
@@ -365,8 +481,8 @@ function applyFilter() {
     console.log(`Filtered to ${filteredArcs.length} arcs out of ${arcsData.arcs.length} total`);
 
     // If only one country is selected, color the arcs based on direction
-    if (selectedCountryCodes.length === 1) {
-        const selectedCountryCode = selectedCountryCodes[0];
+    if (currentFilterState.selectedCountryCodes.length === 1) {
+        const selectedCountryCode = currentFilterState.selectedCountryCodes[0];
         
         filteredArcs = filteredArcs.map(arc => {
             // If the arc ends in the selected country, it's an incoming transfer (green)
@@ -402,6 +518,35 @@ function applyFilter() {
         hoveredArc = null;
         hideTooltip();
     }
+}
+
+function applyFilter() {
+    // Get selected countries
+    const selectedCountries = Array.from(document.querySelectorAll('input[name="country"]:checked')).map(checkbox => checkbox.value);
+    
+    // Create a reverse mapping from country names to country codes
+    const countryNameToCode = {};
+    Object.entries(countryCodeToName).forEach(([code, name]) => {
+        countryNameToCode[name] = code;
+    });
+    
+    // Get country codes for the selected countries
+    const selectedCountryCodes = selectedCountries.map(name => countryNameToCode[name]).filter(Boolean);
+    
+    // Get transfer direction settings
+    const showTransfersIn = document.getElementById("showTransfersIn").checked;
+    const showTransfersOut = document.getElementById("showTransfersOut").checked;
+    
+    // Update the current filter state
+    currentFilterState = {
+        selectedCountryCodes: selectedCountryCodes,
+        showTransfersIn: showTransfersIn,
+        showTransfersOut: showTransfersOut,
+        filtersApplied: true
+    };
+    
+    // Apply the filters
+    applyCurrentFilters();
 }
 
 function createCountryBorders(countries) {
