@@ -10,6 +10,11 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let hoveredArc = null;
 let globeInitialized = false;
+let isPlaying = false;
+let animationInterval = null;
+let currentYear = 1951;
+const minYear = 1951;
+const maxYear = 2025;
 
 function debounce(func, wait) {
     let timeout;
@@ -79,10 +84,13 @@ function init() {
 
     const timeSlider = document.getElementById("time-slider");
     timeSlider.addEventListener("input", debounce(() => {
-        const year = timeSlider.value;
-        document.getElementById("current-year").textContent = year;
-        loadArcsForYear(year);
+        currentYear = parseInt(timeSlider.value);
+        document.getElementById("current-year").textContent = currentYear;
+        loadArcsForYear(currentYear);
     }, 200));
+
+    // Set up time control buttons
+    setupTimeControls();
 
     document.addEventListener("DOMContentLoaded", function () {
         const filtersDiv = document.getElementById("filters");
@@ -103,6 +111,103 @@ function init() {
     });
 
     window.addEventListener('mousemove', onMouseMove, false);
+}
+
+// Setup time controls (play/pause, forward, backward)
+function setupTimeControls() {
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const forwardBtn = document.getElementById('forward-btn');
+    const backwardBtn = document.getElementById('backward-btn');
+    
+    // Play/Pause button event
+    playPauseBtn.addEventListener('click', () => {
+        togglePlayPause(playPauseBtn);
+    });
+    
+    // Forward button event
+    forwardBtn.addEventListener('click', () => {
+        goToNextYear();
+    });
+    
+    // Backward button event
+    backwardBtn.addEventListener('click', () => {
+        goToPreviousYear();
+    });
+}
+
+// Toggle play/pause state
+function togglePlayPause(button) {
+    isPlaying = !isPlaying;
+    
+    if (isPlaying) {
+        // Change to pause icon
+        button.innerHTML = '&#9616;&#9616;'; // Pause icon
+        button.classList.add('playing');
+        
+        // Start animation
+        startYearAnimation();
+    } else {
+        // Change to play icon
+        button.innerHTML = '&#9658;'; // Play icon
+        button.classList.remove('playing');
+        
+        // Stop animation
+        stopYearAnimation();
+    }
+}
+
+// Start year animation
+function startYearAnimation() {
+    if (animationInterval) {
+        clearInterval(animationInterval);
+    }
+    
+    // Advance year every 2 seconds
+    animationInterval = setInterval(() => {    
+        if (currentYear < maxYear) {
+            currentYear++;
+            updateYearDisplay();
+        } else {
+            togglePlayPause(document.getElementById('play-pause-btn'));
+        }    
+    }, 2000);
+}
+
+// Stop year animation
+function stopYearAnimation() {
+    if (animationInterval) {
+        clearInterval(animationInterval);
+        animationInterval = null;
+    }
+}
+
+// Go to next year
+function goToNextYear() {
+    if (currentYear < maxYear) {
+        currentYear++;
+        updateYearDisplay();
+    }
+}
+
+// Go to previous year
+function goToPreviousYear() {
+    if (currentYear > minYear) {
+        currentYear--;
+        updateYearDisplay();
+    }
+}
+
+// Update year display and load arcs for the current year
+function updateYearDisplay() {
+    // Update slider value
+    const timeSlider = document.getElementById("time-slider");
+    timeSlider.value = currentYear;
+    
+    // Update year text
+    document.getElementById("current-year").textContent = currentYear;
+    
+    // Load arcs for the new year
+    loadArcsForYear(currentYear);
 }
 
 // Load initial data and create the globe
@@ -126,10 +231,10 @@ async function loadInitialData() {
         initGlobe(countriesData);
         
         // Now load the initial arcs data for the starting year
-        const initialYear = document.getElementById("time-slider").value || 1951;
-        document.getElementById("current-year").textContent = initialYear;
+        currentYear = parseInt(document.getElementById("time-slider").value) || minYear;
+        document.getElementById("current-year").textContent = currentYear;
         
-        await loadArcsForYear(initialYear);
+        await loadArcsForYear(currentYear);
         
     } catch (error) {
         console.error("Error loading initial data:", error);
