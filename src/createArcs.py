@@ -157,8 +157,6 @@ for transfer_file in transfer_files:
                     end_lat = country_info[destination_id]["lat"]
                     end_long = country_info[destination_id]["lng"]
 
-                    thickness = min(3.0, 0.1 + (count * 0.05))
-
                     yearly_arcs[year].append({
                         "type": "transfer",
                         "from": origin_code,
@@ -167,7 +165,6 @@ for transfer_file in transfer_files:
                         "startLong": start_long,
                         "endLat": end_lat,
                         "endLong": end_long,
-                        "thickness": thickness,
                         "color": '#FF0000',
                         "scale": 0.5,
                         "count": count,

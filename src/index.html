@@ -14,7 +14,7 @@
       background: rgba(255, 255, 255, 0.8);
       padding: 10px;
       border-radius: 5px;
-      max-height: 80vh;
+      max-height: 95vh;
       overflow-y: auto;
       display: none;
     }
@@ -86,6 +86,9 @@
       border: 1px solid #ccc;
       max-width: 250px;
     }
+    #playerName {
+      width: 150px;
+    }
     /* Time Controls Styles */
     .time-controls {
       position: absolute;
@@ -102,16 +105,12 @@
       z-index: 1000;
     }
     .time-control-btn {
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 12px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 16px;
+      transition: background-color 0.2s;
     }
     .time-control-btn:hover {
       background-color: #e0e0e0;
@@ -132,6 +131,59 @@
     }
     .play-pause-btn.playing:hover {
       background-color: #e53935;
+    }
+    /* Advanced Filters Styles */
+    .advanced-filters {
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid #ccc;
+    }
+    .filter-row {
+      margin-bottom: 10px;
+      max-width: 160px;
+    }
+    .filter-row select, .filter-row input {
+      width: 100%;
+      padding: 5px;
+      margin-top: 3px;
+      border-radius: 3px;
+      border: 1px solid #ccc;
+    }
+    .filter-toggle {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+    }
+    .filter-toggle:before {
+      content: '▶';
+      display: inline-block;
+      margin-right: 5px;
+      transition: transform 0.2s;
+    }
+    .filter-toggle.open:before {
+      transform: rotate(90deg);
+    }
+    .filter-content {
+      display: none;
+      margin-top: 5px;
+      padding-left: 15px;
+    }
+    .filter-content.open {
+      display: block;
+    }
+    .reset-btn {
+      background-color: #f44336;
+      margin-left: 10px;
+    }
+    .sub-filter {
+      margin-top: 10px;
+      padding-top: 5px;
+      border-top: 1px dashed #ccc;
+    }
+    .sub-filter-title {
+      font-weight: bold;
+      margin-bottom: 5px;
     }
   </style>
 
@@ -203,8 +255,45 @@
       </div>
     </div>
 
+    <div class="advanced-filters">
+      <h3 class="filter-toggle" id="toggle-advanced-filters">Filtros Avançados</h3>
+      <div class="filter-content" id="advanced-filters-content">
+        <!-- Country to Country Filter -->
+        <div class="sub-filter">
+          <div class="sub-filter-title">Filtro por País a País</div>
+          <div class="filter-row">
+            <label for="sourceCountry">País 1:</label>
+            <select id="sourceCountry">
+              <option value="">Selecione um país</option>
+              <!-- Options will be populated by JavaScript -->
+            </select>
+          </div>
+          <div class="filter-row">
+            <label for="destinationCountry">País 2:</label>
+            <select id="destinationCountry">
+              <option value="">Selecione um país</option>
+              <!-- Options will be populated by JavaScript -->
+            </select>
+          </div>
+          <button id="applyCountryFilter">Aplicar</button>
+          <button id="resetCountryFilter" class="reset-btn">Limpar</button>
+        </div>
+        
+        <!-- Player Filter -->
+        <div class="sub-filter">
+          <div class="sub-filter-title">Filtro por Jogador</div>
+          <div class="filter-row">
+            <label for="playerName">Nome do Jogador:</label>
+            <input type="text" id="playerName" placeholder="Digite o nome do jogador">
+          </div>
+          <button id="applyPlayerFilter">Aplicar</button>
+          <button id="resetPlayerFilter" class="reset-btn">Limpar</button>
+        </div>
+      </div>
+    </div>
+
     <br>
-    <button id="applyFilter">Aplicar Filtros</button>
+    <button id="resetAllFilters" class="reset-btn">Limpar Todos os Filtros</button>
   </div>
 
   <div id="time-slider-container">

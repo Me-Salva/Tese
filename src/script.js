@@ -21,6 +21,12 @@ let currentFilterState = {
     selectedCountryCodes: [],
     showTransfersIn: true,
     showTransfersOut: true,
+    sourceCountryCode: null,
+    destCountryCode: null,
+    playerName: null,
+    countryToCountryFilterActive: false,
+    playerFilterActive: false,
+    bidirectionalFilter: false,
     filtersApplied: false
 };
 
@@ -80,7 +86,6 @@ function init() {
 
     window.addEventListener("resize", onWindowResize, false);
 
-    // Set up toggle events for countries
     const selectAllCheckbox = document.getElementById("selectAll");
     selectAllCheckbox.addEventListener("change", toggleAllCountries);
 
@@ -102,10 +107,10 @@ function init() {
     document.addEventListener("DOMContentLoaded", function () {
         const filtersDiv = document.getElementById("filters");
         const toggleButton = document.getElementById("toggle-filters");
-    
+
         filtersDiv.style.display = "none";
         toggleButton.textContent = "Mostrar Filtros";
-    
+
         toggleButton.addEventListener("click", function () {
             if (filtersDiv.style.display === "none" || filtersDiv.style.display === "") {
                 filtersDiv.style.display = "block";
@@ -118,101 +123,6 @@ function init() {
     });
 
     window.addEventListener('mousemove', onMouseMove, false);
-    
-    // Set up auto filtering
-    setupAutoFiltering();
-}
-
-// Setup auto filtering for all checkboxes
-function setupAutoFiltering() {
-    // Add event listeners to all country checkboxes
-    const countryCheckboxes = document.querySelectorAll('input[name="country"]');
-    countryCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            applyFilter();
-        });
-    });
-
-    // Add event listeners to transfer direction checkboxes
-    const transferInCheckbox = document.getElementById("showTransfersIn");
-    const transferOutCheckbox = document.getElementById("showTransfersOut");
-    const showAllTransfersCheckbox = document.getElementById("showAllTransfers");
-    
-    transferInCheckbox.addEventListener('change', () => {
-        // Update the "Show All Transfers" checkbox state
-        if (transferOutCheckbox.checked && transferInCheckbox.checked) {
-            showAllTransfersCheckbox.checked = true;
-        } else {
-            showAllTransfersCheckbox.checked = false;
-        }
-        applyFilter();
-    });
-    
-    transferOutCheckbox.addEventListener('change', () => {
-        // Update the "Show All Transfers" checkbox state
-        if (transferOutCheckbox.checked && transferInCheckbox.checked) {
-            showAllTransfersCheckbox.checked = true;
-        } else {
-            showAllTransfersCheckbox.checked = false;
-        }
-        applyFilter();
-    });
-    
-    // Add event listener for the "Show All Transfers" checkbox
-    showAllTransfersCheckbox.addEventListener('change', () => {
-        if (showAllTransfersCheckbox.checked) {
-            transferInCheckbox.checked = true;
-            transferOutCheckbox.checked = true;
-        } else {
-            transferInCheckbox.checked = false;
-            transferOutCheckbox.checked = false;
-        }
-        applyFilter();
-    });
-
-    // Optionally hide or disable the Apply Filter button since it's no longer needed
-    const applyFilterButton = document.getElementById("applyFilter");
-    if (applyFilterButton) {
-        // Option 1: Hide the button
-        applyFilterButton.style.display = 'none';
-        
-        // Option 2: Or keep it but with a different label as a "Reset Filters" button
-        // applyFilterButton.textContent = "Reset Filters";
-        // applyFilterButton.onclick = resetFilters;
-    }
-}
-
-// Optional: Add a reset filters function if you want to keep the button as a reset option
-function resetFilters() {
-    // Reset all country checkboxes to checked
-    const countryCheckboxes = document.querySelectorAll('input[name="country"]');
-    countryCheckboxes.forEach(checkbox => {
-        checkbox.checked = true;
-    });
-    
-    // Reset continent checkboxes
-    const continentCheckboxes = document.querySelectorAll('.continent-checkbox');
-    continentCheckboxes.forEach(checkbox => {
-        checkbox.checked = true;
-    });
-    
-    // Reset select all checkbox
-    const selectAllCheckbox = document.getElementById("selectAll");
-    if (selectAllCheckbox) {
-        selectAllCheckbox.checked = true;
-    }
-    
-    // Reset transfer direction checkboxes
-    const transferInCheckbox = document.getElementById("showTransfersIn");
-    const transferOutCheckbox = document.getElementById("showTransfersOut");
-    const showAllTransfersCheckbox = document.getElementById("showAllTransfers");
-    
-    if (transferInCheckbox) transferInCheckbox.checked = true;
-    if (transferOutCheckbox) transferOutCheckbox.checked = true;
-    if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true;
-    
-    // Apply the reset filters
-    applyFilter();
 }
 
 // Setup time controls (play/pause, forward, backward)
@@ -220,17 +130,17 @@ function setupTimeControls() {
     const playPauseBtn = document.getElementById('play-pause-btn');
     const forwardBtn = document.getElementById('forward-btn');
     const backwardBtn = document.getElementById('backward-btn');
-    
+
     // Play/Pause button event
     playPauseBtn.addEventListener('click', () => {
         togglePlayPause(playPauseBtn);
     });
-    
+
     // Forward button event
     forwardBtn.addEventListener('click', () => {
         goToNextYear();
     });
-    
+
     // Backward button event
     backwardBtn.addEventListener('click', () => {
         goToPreviousYear();
@@ -240,7 +150,7 @@ function setupTimeControls() {
 // Toggle play/pause state
 function togglePlayPause(button) {
     isPlaying = !isPlaying;
-    
+
     if (isPlaying) {
         // Change to pause icon
         button.innerHTML = '&#9616;&#9616;'; // Pause icon
@@ -263,7 +173,7 @@ function startYearAnimation() {
     if (animationInterval) {
         clearInterval(animationInterval);
     }
-    
+
     // Advance year every 2 seconds
     animationInterval = setInterval(() => {    
         if (currentYear < maxYear) {
@@ -304,10 +214,10 @@ function updateYearDisplay() {
     // Update slider value
     const timeSlider = document.getElementById("time-slider");
     timeSlider.value = currentYear;
-    
+
     // Update year text
     document.getElementById("current-year").textContent = currentYear;
-    
+
     // Load arcs for the new year
     loadArcsForYear(currentYear);
 }
@@ -338,6 +248,9 @@ async function loadInitialData() {
         
         await loadArcsForYear(currentYear);
         
+        // Initialize filters after data is loaded
+        initializeFilters();
+        
     } catch (error) {
         console.error("Error loading initial data:", error);
     }
@@ -358,7 +271,6 @@ async function loadArcsForYear(year) {
             startLng: arc.startLong,
             endLat: arc.endLat,
             endLng: arc.endLong,
-            thickness: arc.thickness,
             color: arc.color,
             from: arc.from,
             to: arc.to,
@@ -422,95 +334,107 @@ function updateSelectAllCheckbox() {
 function applyCurrentFilters() {
     if (!arcsData || !arcsData.arcs) return;
     
-    // Get the select all checkbox state
-    const selectAllCheckbox = document.getElementById("selectAll");
-    const allCountriesSelected = selectAllCheckbox ? selectAllCheckbox.checked : true;
+    // Start with all arcs
+    let filteredArcs = [...arcsData.arcs];
     
-    // If no countries are selected (selectAllCheckbox is unchecked), show no arcs
-    if (!allCountriesSelected && currentFilterState.selectedCountryCodes.length === 0) {
-        console.log("No countries selected, showing no arcs");
-        updateArcs([]);
-        return;
+    // Apply country selection filter if any countries are selected
+    if (currentFilterState.selectedCountryCodes.length > 0) {
+        filteredArcs = filteredArcs.filter(arc => {
+            const isTransferIn = currentFilterState.selectedCountryCodes.includes(arc.to) && currentFilterState.showTransfersIn;
+            const isTransferOut = currentFilterState.selectedCountryCodes.includes(arc.from) && currentFilterState.showTransfersOut;
+            return isTransferIn || isTransferOut;
+        });
+    } else if (!currentFilterState.showTransfersIn || !currentFilterState.showTransfersOut) {
+        // If no countries are selected but transfer directions are filtered
+        filteredArcs = filteredArcs.filter(arc => {
+            return (currentFilterState.showTransfersIn && currentFilterState.showTransfersOut) ||
+                   (currentFilterState.showTransfersIn && arc.to) ||
+                   (currentFilterState.showTransfersOut && arc.from);
+        });
     }
     
-    const showAllTransfers = currentFilterState.showTransfersIn && currentFilterState.showTransfersOut;
-
-    // If all countries are selected and both transfer directions are checked, show all arcs
-    if (allCountriesSelected && showAllTransfers) {
-        console.log("Showing all arcs - all countries and directions selected");
-        
-        const allArcsWithThickness = arcsData.arcs.map((arc) => ({
-            startLat: arc.startLat,
-            startLng: arc.startLong,
-            endLat: arc.endLat,
-            endLng: arc.endLong,
-            thickness: arc.thickness,
-            color: arc.color || "#FF0000", // Default to red if no color specified
-            from: arc.from,
-            to: arc.to,
-            count: arc.count,
-            scale: 0.5, // Default scale
-            players: arc.players,
-        }));
-        
-        updateArcs(allArcsWithThickness);
-        return;
-    }
-    
-    // If no transfer directions are selected, show no arcs
-    if (!currentFilterState.showTransfersIn && !currentFilterState.showTransfersOut) {
-        console.log("No transfer directions selected, showing no arcs");
-        updateArcs([]);
-        return;
-    }
-
-    // Filter arcs based on selected countries and transfer directions
-    let filteredArcs = arcsData.arcs.filter(arc => {
-        // If all countries are selected, include all arcs (if direction matches)
-        if (allCountriesSelected) {
-            return true;
+    // Apply country-to-country filter if active
+    if (currentFilterState.countryToCountryFilterActive) {
+        if (currentFilterState.bidirectionalFilter) {
+            // Show transfers in both directions between the two selected countries
+            filteredArcs = filteredArcs.filter(arc => {
+                return (
+                    // First direction: source -> destination
+                    (arc.from === currentFilterState.sourceCountryCode && 
+                     arc.to === currentFilterState.destCountryCode) ||
+                    // Second direction: destination -> source
+                    (arc.from === currentFilterState.destCountryCode && 
+                     arc.to === currentFilterState.sourceCountryCode)
+                );
+            });
+            
+            // Color the arcs based on direction relative to the source country
+            filteredArcs = filteredArcs.map(arc => {
+                // If arc is from source to destination, color it red (outgoing from source)
+                // If arc is from destination to source, color it green (incoming to source)
+                const isOutgoingFromSource = arc.from === currentFilterState.sourceCountryCode;
+                const color = isOutgoingFromSource ? "#FF0000" : "#00FF00";
+                
+                return {
+                    ...arc,
+                    color: color,
+                    // Apply different scaling based on direction
+                    scale: isOutgoingFromSource ? 0.5 : 0.3
+                };
+            });
+        } else {
+            // Standard filtering (one or both countries specified, but not bidirectional)
+            filteredArcs = filteredArcs.filter(arc => {
+                const sourceMatch = !currentFilterState.sourceCountryCode || arc.from === currentFilterState.sourceCountryCode;
+                const destMatch = !currentFilterState.destCountryCode || arc.to === currentFilterState.destCountryCode;
+                return sourceMatch && destMatch;
+            });
         }
-        
-        // Otherwise, only include arcs that match the selected countries and directions
-        const isTransferIn = currentFilterState.selectedCountryCodes.includes(arc.to) && currentFilterState.showTransfersIn;
-        const isTransferOut = currentFilterState.selectedCountryCodes.includes(arc.from) && currentFilterState.showTransfersOut;
-        
-        return isTransferIn || isTransferOut;
-    });
-
-    console.log(`Filtered to ${filteredArcs.length} arcs out of ${arcsData.arcs.length} total`);
-
+    }
+    
+    // Apply player filter if active
+    if (currentFilterState.playerFilterActive && currentFilterState.playerName) {
+        const playerNameLower = currentFilterState.playerName.toLowerCase();
+        filteredArcs = filteredArcs.filter(arc => {
+            return arc.players && arc.players.some(player => 
+                player.toLowerCase().includes(playerNameLower)
+            );
+        });
+    }
+    
     // If only one country is selected, color the arcs based on direction
-    if (currentFilterState.selectedCountryCodes.length === 1) {
+    if (currentFilterState.selectedCountryCodes.length === 1 && 
+        !currentFilterState.countryToCountryFilterActive && 
+        !currentFilterState.playerFilterActive) {
         const selectedCountryCode = currentFilterState.selectedCountryCodes[0];
         
         filteredArcs = filteredArcs.map(arc => {
-            // If the arc ends in the selected country, it's an incoming transfer (green)
-            // If the arc starts from the selected country, it's an outgoing transfer (red)
             const isIncoming = arc.to === selectedCountryCode;
             const color = isIncoming ? "#00FF00" : "#FF0000";
             
             return {
                 ...arc,
-                color: color
+                color: color,
+                scale: isIncoming ? 0.3 : 0.5
             };
         });
     }
-
+    
+    // Process the filtered arcs for display
     const filteredArcsWithThickness = filteredArcs.map(arc => ({
         startLat: arc.startLat,
         startLng: arc.startLong,
         endLat: arc.endLat,
         endLng: arc.endLong,
-        thickness: arc.thickness,
-        color: arc.color,
+        color: arc.color || "#FF0000",
         from: arc.from,
         to: arc.to,
         count: arc.count,
-        scale: arc.color === "#00FF00" ? 0.3 : 0.5,
+        scale: arc.scale !== undefined ? arc.scale : (arc.color === "#00FF00" ? 0.3 : 0.5),
         players: arc.players,
     }));
-
+    
+    // Update the visualization
     updateArcs(filteredArcsWithThickness);
     
     // Reset hover state when filters are applied
@@ -523,28 +447,37 @@ function applyCurrentFilters() {
 function applyFilter() {
     // Get selected countries
     const selectedCountries = Array.from(document.querySelectorAll('input[name="country"]:checked')).map(checkbox => checkbox.value);
-    
+
     // Create a reverse mapping from country names to country codes
     const countryNameToCode = {};
     Object.entries(countryCodeToName).forEach(([code, name]) => {
         countryNameToCode[name] = code;
     });
-    
+
     // Get country codes for the selected countries
     const selectedCountryCodes = selectedCountries.map(name => countryNameToCode[name]).filter(Boolean);
-    
+
     // Get transfer direction settings
     const showTransfersIn = document.getElementById("showTransfersIn").checked;
     const showTransfersOut = document.getElementById("showTransfersOut").checked;
-    
+
     // Update the current filter state
     currentFilterState = {
+        ...currentFilterState,
         selectedCountryCodes: selectedCountryCodes,
         showTransfersIn: showTransfersIn,
         showTransfersOut: showTransfersOut,
         filtersApplied: true
     };
-    
+
+    // If no countries are selected and no other filters are active, show nothing
+    if (selectedCountryCodes.length === 0 && 
+        !currentFilterState.countryToCountryFilterActive && 
+        !currentFilterState.playerFilterActive) {
+        updateArcs([]);
+        return;
+    }
+
     // Apply the filters
     applyCurrentFilters();
 }
@@ -600,9 +533,9 @@ function createCountryBorders(countries) {
 
 function initGlobe(countries) {
     if (globeInitialized) return; // Only initialize once
-    
+
     console.log("Initializing globe");
-    
+
     // Create glow globe
     glowGlobe = new ThreeGlobe({
         waitForGlobeReady: true,
@@ -617,7 +550,7 @@ function initGlobe(countries) {
         .arcDashGap(0)
         .arcDashAnimateTime(2000)
         .arcsTransitionDuration(1000);
-    
+
     glowGlobe.scale.set(100, 100, 100);
     scene.add(glowGlobe);
 
@@ -652,7 +585,7 @@ function initGlobe(countries) {
 
     const borders = createCountryBorders(countries);
     scene.add(borders);
-    
+
     globeInitialized = true;
 }
 
@@ -662,7 +595,7 @@ function updateArcs(arcsData) {
 
     const arcsWithThickness = arcsData.map((arc) => ({
         ...arc,
-        stroke: arc.thickness || 0.1,
+        stroke: Math.max(0.1, (arc.count / 10) * 0.2),
     }));
 
     const glowArcs = arcsData.map((arc) => {
@@ -677,7 +610,7 @@ function updateArcs(arcsData) {
 
         return {
             ...arc,
-            stroke: (arc.thickness || 0.1) * 1.2,
+            stroke: Math.max(0.12, (arc.count / 10) * 0.24),
             color: `rgba(${r}, ${g}, ${b}, 0.25)`,
         };
     });
@@ -687,7 +620,7 @@ function updateArcs(arcsData) {
     glowGlobe.arcsData(glowArcs);
 
     arcsArray = mainGlobe.arcsData();
-    
+
     // Reset hover state when arcs are updated
     if (hoveredArc) {
         hoveredArc = null;
@@ -723,7 +656,7 @@ function generateArcPoints(startLat, startLng, endLat, endLng, scale, numPoints 
     const points = [];
     const start = latLonToVector3(startLat, startLng, 100);
     const end = latLonToVector3(endLat, endLng, 100);
-    
+
     for (let i = 0; i <= numPoints; i++) {
         const t = i / numPoints;
         // Create a point along the arc
@@ -736,7 +669,7 @@ function generateArcPoints(startLat, startLng, endLat, endLng, scale, numPoints 
         
         points.push(elevated);
     }
-    
+
     return points;
 }
 
@@ -746,7 +679,7 @@ function onMouseMove(event) {
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-    
+
     let closestArc = null;
     let closestDistance = Infinity;
 
@@ -830,7 +763,7 @@ function onMouseMove(event) {
 
     // Threshold for hover detection - increased for better usability
     const hoverThreshold = 20; // Increased threshold
-    
+
     if (closestArc && closestDistance < hoverThreshold) {
         if (hoveredArc !== closestArc) {
             // Set new hovered arc
@@ -855,17 +788,17 @@ function onMouseMove(event) {
 function updateTooltipPosition(clientX, clientY) {
     const tooltip = document.getElementById('tooltip');
     if (!tooltip || tooltip.style.display === 'none') return;
-    
+
     const offsetX = 15;
     const offsetY = 15;
-    
+
     // Ensure tooltip stays within viewport
     const tooltipWidth = tooltip.offsetWidth || 150;
     const tooltipHeight = tooltip.offsetHeight || 80;
-    
+
     const left = Math.min(clientX + offsetX, window.innerWidth - tooltipWidth - 5);
     const top = Math.min(clientY + offsetY, window.innerHeight - tooltipHeight - 5);
-    
+
     tooltip.style.left = `${left}px`;
     tooltip.style.top = `${top}px`;
 }
@@ -896,4 +829,285 @@ function hideTooltip() {
     if (tooltip) {
         tooltip.style.display = 'none';
     }
+}
+
+// Initialize advanced filters
+function initAdvancedFilters() {
+    // Populate country dropdowns
+    populateCountryDropdowns();
+    
+    // Set up toggle functionality for advanced filter sections
+    setupFilterToggles();
+    
+    // Set up event listeners for advanced filter buttons
+    if (document.getElementById('applyCountryFilter')) {
+        document.getElementById('applyCountryFilter').addEventListener('click', applyCountryToCountryFilter);
+    }
+    
+    if (document.getElementById('resetCountryFilter')) {
+        document.getElementById('resetCountryFilter').addEventListener('click', resetCountryToCountryFilter);
+    }
+    
+    if (document.getElementById('applyPlayerFilter')) {
+        document.getElementById('applyPlayerFilter').addEventListener('click', applyPlayerFilter);
+    }
+    
+    if (document.getElementById('resetPlayerFilter')) {
+        document.getElementById('resetPlayerFilter').addEventListener('click', resetPlayerFilter);
+    }
+    
+    if (document.getElementById('resetAllFilters')) {
+        document.getElementById('resetAllFilters').addEventListener('click', resetAllFilters);
+    }
+}
+
+// Populate country dropdowns with all available countries
+function populateCountryDropdowns() {
+    const sourceDropdown = document.getElementById('sourceCountry');
+    const destDropdown = document.getElementById('destinationCountry');
+    
+    if (!sourceDropdown || !destDropdown) return;
+    
+    // Clear existing options except the first one
+    sourceDropdown.innerHTML = '<option value="">Selecione um país</option>';
+    destDropdown.innerHTML = '<option value="">Selecione um país</option>';
+    
+    // Get all country names from the countryCodeToName object
+    const countryNames = Object.values(countryCodeToName).sort();
+    
+    // Add options for each country
+    countryNames.forEach(country => {
+        const sourceOption = document.createElement('option');
+        sourceOption.value = country;
+        sourceOption.textContent = country;
+        sourceDropdown.appendChild(sourceOption);
+        
+        const destOption = document.createElement('option');
+        destOption.value = country;
+        destOption.textContent = country;
+        destDropdown.appendChild(destOption);
+    });
+}
+
+// Set up toggle functionality for advanced filter sections
+function setupFilterToggles() {
+    const toggles = document.querySelectorAll('.filter-toggle');
+    
+    toggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            this.classList.toggle('open');
+            
+            // Get the corresponding content element
+            const contentId = this.id.replace('toggle-', '') + '-content';
+            const content = document.getElementById(contentId);
+            
+            if (content) {
+                content.classList.toggle('open');
+            }
+        });
+    });
+}
+
+// Apply country-to-country filter
+function applyCountryToCountryFilter() {
+    const sourceCountry = document.getElementById('sourceCountry').value;
+    const destCountry = document.getElementById('destinationCountry').value;
+    
+    if (!sourceCountry && !destCountry) {
+        alert('Por favor, selecione pelo menos um país de origem ou destino.');
+        return;
+    }
+    
+    // Create a reverse mapping from country names to country codes
+    const countryNameToCode = {};
+    Object.entries(countryCodeToName).forEach(([code, name]) => {
+        countryNameToCode[name] = code;
+    });
+    
+    // Get country codes
+    const sourceCode = sourceCountry ? countryNameToCode[sourceCountry] : null;
+    const destCode = destCountry ? countryNameToCode[destCountry] : null;
+    
+    // Update current filter state
+    currentFilterState = {
+        ...currentFilterState,
+        sourceCountryCode: sourceCode,
+        destCountryCode: destCode,
+        countryToCountryFilterActive: true,
+        bidirectionalFilter: (sourceCode && destCode), // Flag for bidirectional filtering
+        filtersApplied: true
+    };
+    
+    // Apply the filters
+    applyCurrentFilters();
+}
+
+// Reset country-to-country filter
+function resetCountryToCountryFilter() {
+    const sourceDropdown = document.getElementById('sourceCountry');
+    const destDropdown = document.getElementById('destinationCountry');
+    
+    if (sourceDropdown) sourceDropdown.value = '';
+    if (destDropdown) destDropdown.value = '';
+    
+    // Update current filter state
+    currentFilterState = {
+        ...currentFilterState,
+        sourceCountryCode: null,
+        destCountryCode: null,
+        countryToCountryFilterActive: false,
+        bidirectionalFilter: false
+    };
+    
+    // Apply the filters
+    applyCurrentFilters();
+}
+
+// Apply player filter
+function applyPlayerFilter() {
+    const playerNameInput = document.getElementById('playerName');
+    if (!playerNameInput) return;
+    
+    const playerName = playerNameInput.value.trim();
+    
+    if (!playerName) {
+        alert('Por favor, digite o nome de um jogador.');
+        return;
+    }
+    
+    // Update current filter state
+    currentFilterState = {
+        ...currentFilterState,
+        playerName: playerName,
+        playerFilterActive: true,
+        filtersApplied: true
+    };
+    
+    // Apply the filters
+    applyCurrentFilters();
+}
+
+// Reset player filter
+function resetPlayerFilter() {
+    const playerNameInput = document.getElementById('playerName');
+    if (playerNameInput) playerNameInput.value = '';
+    
+    // Update current filter state
+    currentFilterState = {
+        ...currentFilterState,
+        playerName: null,
+        playerFilterActive: false
+    };
+    
+    // Apply the filters
+    applyCurrentFilters();
+}
+
+// Reset all filters
+function resetAllFilters() {
+    // Reset country checkboxes
+    const countryCheckboxes = document.querySelectorAll('input[name="country"]');
+    countryCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    
+    // Reset continent checkboxes
+    const continentCheckboxes = document.querySelectorAll('.continent-checkbox');
+    continentCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    
+    // Reset select all checkbox
+    const selectAllCheckbox = document.getElementById("selectAll");
+    if (selectAllCheckbox) selectAllCheckbox.checked = true;
+    
+    // Reset transfer direction checkboxes
+    const transferInCheckbox = document.getElementById("showTransfersIn");
+    const transferOutCheckbox = document.getElementById("showTransfersOut");
+    const showAllTransfersCheckbox = document.getElementById("showAllTransfers");
+    
+    if (transferInCheckbox) transferInCheckbox.checked = true;
+    if (transferOutCheckbox) transferOutCheckbox.checked = true;
+    if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true;
+    
+    // Reset advanced filters
+    resetCountryToCountryFilter();
+    resetPlayerFilter();
+    
+    // Reset filter state
+    currentFilterState = {
+        selectedCountryCodes: [],
+        showTransfersIn: true,
+        showTransfersOut: true,
+        sourceCountryCode: null,
+        destCountryCode: null,
+        playerName: null,
+        countryToCountryFilterActive: false,
+        playerFilterActive: false,
+        bidirectionalFilter: false,
+        filtersApplied: false
+    };
+    
+    // Apply the reset filters
+    applyCurrentFilters();
+}
+
+// Setup auto filtering for all checkboxes
+function setupAutoFiltering() {
+    // Add event listeners to all country checkboxes
+    const countryCheckboxes = document.querySelectorAll('input[name="country"]');
+    countryCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            applyFilter();
+        });
+    });
+
+    // Add event listeners to transfer direction checkboxes
+    const transferInCheckbox = document.getElementById("showTransfersIn");
+    const transferOutCheckbox = document.getElementById("showTransfersOut");
+    const showAllTransfersCheckbox = document.getElementById("showAllTransfers");
+    
+    if (transferInCheckbox) {
+        transferInCheckbox.addEventListener('change', () => {
+            // Update the "Show All Transfers" checkbox state
+            if (transferOutCheckbox && transferOutCheckbox.checked && transferInCheckbox.checked) {
+                if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true;
+            } else {
+                if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = false;
+            }
+            applyFilter();
+        });
+    }
+    
+    if (transferOutCheckbox) {
+        transferOutCheckbox.addEventListener('change', () => {
+            // Update the "Show All Transfers" checkbox state
+            if (transferInCheckbox && transferOutCheckbox.checked && transferInCheckbox.checked) {
+                if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true;
+            } else {
+                if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = false;
+            }
+            applyFilter();
+        });
+    }
+    
+    // Add event listener for the "Show All Transfers" checkbox
+    if (showAllTransfersCheckbox) {
+        showAllTransfersCheckbox.addEventListener('change', () => {
+            if (showAllTransfersCheckbox.checked) {
+                if (transferInCheckbox) transferInCheckbox.checked = true;
+                if (transferOutCheckbox) transferOutCheckbox.checked = true;
+            } else {
+                if (transferInCheckbox) transferInCheckbox.checked = false;
+                if (transferOutCheckbox) transferOutCheckbox.checked = false;
+            }
+            applyFilter();
+        });
+    }
+}
+
+// Initialize all filters
+function initializeFilters() {
+    initAdvancedFilters();
+    setupAutoFiltering();
 }
