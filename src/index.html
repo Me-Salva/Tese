@@ -185,6 +185,31 @@
       font-weight: bold;
       margin-bottom: 5px;
     }
+    .autocomplete-container {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+    .autocomplete-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      border: 1px solid #ccc;
+      border-top: none;
+      background-color: #fff;
+      z-index: 1;
+      display: none;
+    }
+    .autocomplete-dropdown a {
+      padding: 10px;
+      text-decoration: none;
+      display: block;
+      color: #000;
+    }
+    .autocomplete-dropdown a:hover {
+      background-color: #f0f0f0;
+    }
   </style>
 
   <script type="importmap">
@@ -284,7 +309,10 @@
           <div class="sub-filter-title">Filtro por Jogador</div>
           <div class="filter-row">
             <label for="playerName">Nome do Jogador:</label>
-            <input type="text" id="playerName" placeholder="Digite o nome do jogador">
+            <div class="autocomplete-container">
+              <input type="text" id="playerName" placeholder="Digite o nome do jogador">
+              <div id="playerAutocomplete" class="autocomplete-dropdown"></div>
+            </div>
           </div>
           <button id="applyPlayerFilter">Aplicar</button>
           <button id="resetPlayerFilter" class="reset-btn">Limpar</button>
