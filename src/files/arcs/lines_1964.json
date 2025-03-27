@@ -19,6 +19,21 @@
         },
         {
             "type": "transfer",
+            "from": "COL",
+            "to": "ESP",
+            "startLat": 4.083421,
+            "startLong": -73.030988,
+            "endLat": 40.417346,
+            "endLong": -3.372453,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Oscar Fullon\u00e9"
+            ]
+        },
+        {
+            "type": "transfer",
             "from": "BRA",
             "to": "ALE",
             "startLat": -10.39145,
@@ -31,6 +46,77 @@
             "players": [
                 "Zeze",
                 "Raoul Tagliari"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "BRA",
+            "to": "ARG",
+            "startLat": -10.39145,
+            "startLong": -49.269828,
+            "endLat": -29.264611,
+            "endLong": -63.020732,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 7,
+            "players": [
+                "Luiz Cl\u00e1udio",
+                "Dorval",
+                "Batista",
+                "Jo\u00e3o Cardoso",
+                "Ivo Diogo",
+                "Mour\u00e3o",
+                "Cecilio Mart\u00ednez"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "BRA",
+            "to": "ESP",
+            "startLat": -10.39145,
+            "startLong": -49.269828,
+            "endLat": 40.417346,
+            "endLong": -3.372453,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Almir "
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "BRA",
+            "to": "ITA",
+            "startLat": -10.39145,
+            "startLong": -49.269828,
+            "endLat": 42.896888,
+            "endLong": 12.546747,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 2,
+            "players": [
+                "Amarildo",
+                "Nen\u00e9"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "BRA",
+            "to": "POR",
+            "startLat": -10.39145,
+            "startLong": -49.269828,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 5,
+            "players": [
+                "Durval Carvalho",
+                "Ti\u00e3o",
+                "W\u00e1gner",
+                "Romeu",
+                "Waldir"
             ]
         },
         {
@@ -58,84 +144,11 @@
             "endLong": 4.885676,
             "color": "#FF0000",
             "scale": 0.5,
-            "count": 1,
+            "count": 3,
             "players": [
+                "Wilhelm Bleser",
+                "Arp\u00e1d Fazekas",
                 "Karl-Heinz Ripkens"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "SUI",
-            "to": "ALE",
-            "startLat": 46.907814,
-            "startLong": 7.985324,
-            "endLat": 51.083688,
-            "endLong": 10.420764,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Rolf Wuethrich"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "PBA",
-            "to": "ALE",
-            "startLat": 52.21654,
-            "startLong": 5.549834,
-            "endLat": 51.083688,
-            "endLong": 10.420764,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Toni Allemann"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "BEL",
-            "to": "ALE",
-            "startLat": 50.646441,
-            "startLong": 4.885676,
-            "endLat": 51.083688,
-            "endLong": 10.420764,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Bernd Patzke"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "AUT",
-            "to": "ALE",
-            "startLat": 47.646747,
-            "startLong": 14.939347,
-            "endLat": 51.083688,
-            "endLong": 10.420764,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Hans-Georg Tutschek"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "FIN",
-            "to": "ALE",
-            "startLat": 62.751422,
-            "startLong": 26.429833,
-            "endLat": 51.083688,
-            "endLong": 10.420764,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Juhani Peltonen"
             ]
         },
         {
@@ -155,508 +168,50 @@
         },
         {
             "type": "transfer",
-            "from": "ARG",
-            "to": "MEX",
-            "startLat": -29.264611,
-            "startLong": -63.020732,
-            "endLat": 22.157323,
-            "endLong": -101.251817,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Bernardo Vargas"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ARG",
-            "to": "COL",
-            "startLat": -29.264611,
-            "startLong": -63.020732,
-            "endLat": 4.083421,
-            "endLong": -73.030988,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 3,
-            "players": [
-                "Ricardo Ramaciotti",
-                "Wilfredo Camacho",
-                "Lorenzo Dacquarti"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ARG",
-            "to": "URU",
-            "startLat": -29.264611,
-            "startLong": -63.020732,
-            "endLat": -32.722269,
-            "endLong": -55.830776,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 7,
-            "players": [
-                "Eduardo Restivo",
-                "H\u00e9ctor Pederzoli",
-                "Pedro Mansilla",
-                "Carlos Borges",
-                "Enzo Gennoni",
-                "Ram\u00f3n Abeledo",
-                "Jos\u00e9 Sanfilippo"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ARG",
-            "to": "EUA",
-            "startLat": -29.264611,
-            "startLong": -63.020732,
-            "endLat": 40.62131,
-            "endLong": -98.619713,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Vladimiro Tarnawski"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "URU",
-            "to": "ARG",
-            "startLat": -32.722269,
-            "startLong": -55.830776,
-            "endLat": -29.264611,
-            "endLong": -63.020732,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 3,
-            "players": [
-                "Guillermo Escalada",
-                "Roberto Matosas",
-                "Rub\u00e9n Gonz\u00e1lez "
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ARG",
-            "to": "PER",
-            "startLat": -29.264611,
-            "startLong": -63.020732,
-            "endLat": -5.873807,
-            "endLong": -76.082824,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Oscar G\u00f3mez"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "PAR",
-            "to": "ARG",
-            "startLat": -21.857574,
-            "startLong": -59.844122,
-            "endLat": -29.264611,
-            "endLong": -63.020732,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 3,
-            "players": [
-                "Lucio Calonga",
-                "Reyes",
-                "Eladio Z\u00e1rate"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ARG",
-            "to": "BRA",
-            "startLat": -29.264611,
-            "startLong": -63.020732,
-            "endLat": -10.39145,
-            "endLong": -49.269828,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 3,
-            "players": [
-                "Zeola",
-                "Alfeu",
-                "Emmanuele Del Vecchio"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "BRA",
-            "to": "ARG",
-            "startLat": -10.39145,
-            "startLong": -49.269828,
-            "endLat": -29.264611,
-            "endLong": -63.020732,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 7,
-            "players": [
-                "Mour\u00e3o",
-                "Jo\u00e3o Cardoso",
-                "Dorval",
-                "Batista",
-                "Luiz Cl\u00e1udio",
-                "Ivo Diogo",
-                "Cecilio Mart\u00ednez"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ITA",
-            "to": "ARG",
-            "startLat": 42.896888,
-            "startLong": 12.546747,
-            "endLat": -29.264611,
-            "endLong": -63.020732,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Luis Pentrelli"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ESP",
-            "to": "ARG",
-            "startLat": 40.417346,
-            "startLong": -3.372453,
-            "endLat": -29.264611,
-            "endLong": -63.020732,
+            "from": "ALE",
+            "to": "ITA",
+            "startLat": 51.083688,
+            "startLong": 10.420764,
+            "endLat": 42.896888,
+            "endLong": 12.546747,
             "color": "#FF0000",
             "scale": 0.5,
             "count": 2,
             "players": [
-                "Luis Cubilla",
-                "Silveira"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ARG",
-            "to": "CHL",
-            "startLat": -29.264611,
-            "startLong": -63.020732,
-            "endLat": -23.635971,
-            "endLong": -69.11892,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Roberto Frojuelo"
+                "Schnellinger",
+                "J\u00fcrgen Sch\u00fctz"
             ]
         },
         {
             "type": "transfer",
             "from": "ALE",
-            "to": "BEL",
+            "to": "PBA",
             "startLat": 51.083688,
             "startLong": 10.420764,
-            "endLat": 50.646441,
-            "endLong": 4.885676,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 2,
-            "players": [
-                "Wilhelm Bleser",
-                "Arp\u00e1d Fazekas"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "BEL",
-            "to": "PBA",
-            "startLat": 50.646441,
-            "startLong": 4.885676,
             "endLat": 52.21654,
             "endLong": 5.549834,
             "color": "#FF0000",
             "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Aleksandar Petakovi&#263;"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "BEL",
-            "to": "LUX",
-            "startLat": 50.646441,
-            "startLong": 4.885676,
-            "endLat": 49.736828,
-            "endLong": 6.158008,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Henri Cirelli"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "RDC",
-            "to": "BEL",
-            "startLat": -2.86262,
-            "startLong": 23.611214,
-            "endLat": 50.646441,
-            "endLong": 4.885676,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "L\u00e9onard Sa\u00efdi"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "TUR",
-            "to": "BEL",
-            "startLat": 39.316716,
-            "startLong": 35.613402,
-            "endLat": 50.646441,
-            "endLong": 4.885676,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Mohamed Riahi"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "POR",
-            "to": "BEL",
-            "startLat": 39.0524,
-            "startLong": -8.495397,
-            "endLat": 50.646441,
-            "endLong": 4.885676,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Lua"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "AUT",
-            "to": "BEL",
-            "startLat": 47.646747,
-            "startLong": 14.939347,
-            "endLat": 50.646441,
-            "endLong": 4.885676,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Walter Loske"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ESP",
-            "to": "ARG",
-            "startLat": 40.417346,
-            "startLong": -3.372453,
-            "endLat": -29.264611,
-            "endLong": -63.020732,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 2,
-            "players": [
-                "Silveira",
-                "Luis Cubilla"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ESP",
-            "to": "BRA",
-            "startLat": 40.417346,
-            "startLong": -3.372453,
-            "endLat": -10.39145,
-            "endLong": -49.269828,
-            "color": "#FF0000",
-            "scale": 0.5,
             "count": 3,
             "players": [
-                "Recaman",
-                "Almir ",
-                "Evaristo de Macedo"
+                "Willi Bergstein",
+                "Dieter Gresens",
+                "Werner Weigel"
             ]
         },
         {
             "type": "transfer",
-            "from": "CHL",
-            "to": "ESP",
-            "startLat": -23.635971,
-            "startLong": -69.11892,
-            "endLat": 40.417346,
-            "endLong": -3.372453,
+            "from": "SUI",
+            "to": "ALE",
+            "startLat": 46.907814,
+            "startLong": 7.985324,
+            "endLat": 51.083688,
+            "endLong": 10.420764,
             "color": "#FF0000",
             "scale": 0.5,
             "count": 1,
             "players": [
-                "Jaime Ram\u00edrez"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ESP",
-            "to": "POR",
-            "startLat": 40.417346,
-            "startLong": -3.372453,
-            "endLat": 39.0524,
-            "endLong": -8.495397,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "\u00cdndio"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "URU",
-            "to": "ESP",
-            "startLat": -32.722269,
-            "startLong": -55.830776,
-            "endLat": 40.417346,
-            "endLong": -3.372453,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Cabral"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "COL",
-            "to": "ESP",
-            "startLat": 4.083421,
-            "startLong": -73.030988,
-            "endLat": 40.417346,
-            "endLong": -3.372453,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Oscar Fullon\u00e9"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "POR",
-            "to": "ESP",
-            "startLat": 39.0524,
-            "startLong": -8.495397,
-            "endLat": 40.417346,
-            "endLong": -3.372453,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Juan Almenara"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "PAR",
-            "to": "ESP",
-            "startLat": -21.857574,
-            "startLong": -59.844122,
-            "endLat": 40.417346,
-            "endLong": -3.372453,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Cabrera "
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "BRA",
-            "to": "ESP",
-            "startLat": -10.39145,
-            "startLong": -49.269828,
-            "endLat": 40.417346,
-            "endLong": -3.372453,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Almir "
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "CRI",
-            "to": "ESP",
-            "startLat": 10.3568,
-            "startLong": -84.371899,
-            "endLat": 40.417346,
-            "endLong": -3.372453,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Cayaca"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ESP",
-            "to": "IRL",
-            "startLat": 40.417346,
-            "startLong": -3.372453,
-            "endLat": 53.067372,
-            "endLong": -7.712871,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Alvarito"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ITA",
-            "to": "ESP",
-            "startLat": 42.896888,
-            "startLong": 12.546747,
-            "endLat": 40.417346,
-            "endLong": -3.372453,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Juan Santisteban"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "FRA",
-            "to": "ALG",
-            "startLat": 46.897375,
-            "startLong": 3.106398,
-            "endLat": 27.731286,
-            "endLong": 2.674239,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 2,
-            "players": [
-                "Brahim Bouras",
-                "Amar Roua\u00ef"
+                "Rolf Wuethrich"
             ]
         },
         {
@@ -676,373 +231,6 @@
         },
         {
             "type": "transfer",
-            "from": "FRA",
-            "to": "SUI",
-            "startLat": 46.897375,
-            "startLong": 3.106398,
-            "endLat": 46.907814,
-            "endLong": 7.985324,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 3,
-            "players": [
-                "Bernard Rahis",
-                "Henri Skiba",
-                "Norbert Eschmann"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "CRO",
-            "to": "FRA",
-            "startLat": 45.639635,
-            "startLong": 16.622203,
-            "endLat": 46.897375,
-            "endLong": 3.106398,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Muhamed Mujic"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "FRA",
-            "to": "CRO",
-            "startLat": 46.897375,
-            "startLong": 3.106398,
-            "endLat": 45.639635,
-            "endLong": 16.622203,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Muhamed Mujic"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "FRA",
-            "to": "ESP",
-            "startLat": 46.897375,
-            "startLong": 3.106398,
-            "endLat": 40.417346,
-            "endLong": -3.372453,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "\u00c1ngel Segurola"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "FRA",
-            "to": "ITA",
-            "startLat": 46.897375,
-            "startLong": 3.106398,
-            "endLat": 42.896888,
-            "endLong": 12.546747,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Maryan Wisniewski"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ESC",
-            "to": "ING",
-            "startLat": 56.878876,
-            "startLong": -3.895413,
-            "endLat": 52.288958,
-            "endLong": -0.238655,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 13,
-            "players": [
-                "John Colrain",
-                "Gerry Baker",
-                "Joe Davin",
-                "Jim Thorburn",
-                "Jack Bolton",
-                "Sandy Brown",
-                "Ian Ure",
-                "Max Dougan",
-                "Jimmy Goodfellow",
-                "Bobby Roberts",
-                "George Kinnell",
-                "Jimmy Robertson",
-                "Doug Fraser"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ING",
-            "to": "ESC",
-            "startLat": 52.288958,
-            "startLong": -0.238655,
-            "endLat": 56.878876,
-            "endLong": -3.895413,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 3,
-            "players": [
-                "Doug Moran",
-                "Pat Quinn",
-                "Max Murray"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ING",
-            "to": "PGA",
-            "startLat": 52.288958,
-            "startLong": -0.238655,
-            "endLat": 51.918326,
-            "endLong": -3.802864,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 2,
-            "players": [
-                "Aled Owen",
-                "Albert Dunlop"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ING",
-            "to": "INO",
-            "startLat": 52.288958,
-            "startLong": -0.238655,
-            "endLat": 54.721271,
-            "endLong": -6.558959,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Billy McCullough"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "PGA",
-            "to": "ING",
-            "startLat": 51.918326,
-            "startLong": -3.802864,
-            "endLat": 52.288958,
-            "endLong": -0.238655,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Mike Kear"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ING",
-            "to": "AUS",
-            "startLat": 52.288958,
-            "startLong": -0.238655,
-            "endLat": -20.943863,
-            "endLong": 131.889808,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Matt Woods"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "INO",
-            "to": "ING",
-            "startLat": 54.721271,
-            "startLong": -6.558959,
-            "endLat": 52.288958,
-            "endLong": -0.238655,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 2,
-            "players": [
-                "Bobby Irvine",
-                "Dave Clements"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "BRA",
-            "to": "ITA",
-            "startLat": -10.39145,
-            "startLong": -49.269828,
-            "endLat": 42.896888,
-            "endLong": 12.546747,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 2,
-            "players": [
-                "Nen\u00e9",
-                "Amarildo"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ITA",
-            "to": "VEN",
-            "startLat": 42.896888,
-            "startLong": 12.546747,
-            "endLat": 7.849545,
-            "endLong": -64.162903,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Fernando"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "PER",
-            "to": "ITA",
-            "startLat": -5.873807,
-            "startLong": -76.082824,
-            "endLat": 42.896888,
-            "endLong": 12.546747,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Alberto Gallardo"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ALE",
-            "to": "ITA",
-            "startLat": 51.083688,
-            "startLong": 10.420764,
-            "endLat": 42.896888,
-            "endLong": 12.546747,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 2,
-            "players": [
-                "J\u00fcrgen Sch\u00fctz",
-                "Schnellinger"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ITA",
-            "to": "PGA",
-            "startLat": 42.896888,
-            "startLong": 12.546747,
-            "endLat": 51.918326,
-            "endLong": -3.802864,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "John Charles "
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ITA",
-            "to": "ALE",
-            "startLat": 42.896888,
-            "startLong": 12.546747,
-            "endLat": 51.083688,
-            "endLong": 10.420764,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 3,
-            "players": [
-                "Willi Huberts",
-                "Rolf Geiger",
-                "Erwin Waldner"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "FRA",
-            "to": "ITA",
-            "startLat": 46.897375,
-            "startLong": 3.106398,
-            "endLat": 42.896888,
-            "endLong": 12.546747,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Maryan Wisniewski"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ITA",
-            "to": "ARG",
-            "startLat": 42.896888,
-            "startLong": 12.546747,
-            "endLat": -29.264611,
-            "endLong": -63.020732,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Luis Pentrelli"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ITA",
-            "to": "ING",
-            "startLat": 42.896888,
-            "startLong": 12.546747,
-            "endLat": 52.288958,
-            "endLong": -0.238655,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Eddie Firmani"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ITA",
-            "to": "PBA",
-            "startLat": 42.896888,
-            "startLong": 12.546747,
-            "endLat": 52.21654,
-            "endLong": 5.549834,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Toni Allemann"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "FRA",
-            "to": "PBA",
-            "startLat": 46.897375,
-            "startLong": 3.106398,
-            "endLat": 52.21654,
-            "endLong": 5.549834,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Bart Carlier"
-            ]
-        },
-        {
-            "type": "transfer",
             "from": "PBA",
             "to": "ALE",
             "startLat": 52.21654,
@@ -1054,25 +242,8 @@
             "count": 3,
             "players": [
                 "Willi Kraus",
-                "Willi Bergstein",
-                "Toni Allemann"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ALE",
-            "to": "PBA",
-            "startLat": 51.083688,
-            "startLong": 10.420764,
-            "endLat": 52.21654,
-            "endLong": 5.549834,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 3,
-            "players": [
-                "Willi Bergstein",
-                "Werner Weigel",
-                "Dieter Gresens"
+                "Toni Allemann",
+                "Willi Bergstein"
             ]
         },
         {
@@ -1123,21 +294,411 @@
         },
         {
             "type": "transfer",
-            "from": "BRA",
-            "to": "POR",
-            "startLat": -10.39145,
-            "startLong": -49.269828,
-            "endLat": 39.0524,
-            "endLong": -8.495397,
+            "from": "BEL",
+            "to": "ALE",
+            "startLat": 50.646441,
+            "startLong": 4.885676,
+            "endLat": 51.083688,
+            "endLong": 10.420764,
             "color": "#FF0000",
             "scale": 0.5,
-            "count": 5,
+            "count": 1,
             "players": [
-                "Durval Carvalho",
-                "Waldir",
-                "Romeu",
-                "Ti\u00e3o",
-                "W\u00e1gner"
+                "Bernd Patzke"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "BEL",
+            "to": "PBA",
+            "startLat": 50.646441,
+            "startLong": 4.885676,
+            "endLat": 52.21654,
+            "endLong": 5.549834,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Aleksandar Petakovi&#263;"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "BEL",
+            "to": "LUX",
+            "startLat": 50.646441,
+            "startLong": 4.885676,
+            "endLat": 49.736828,
+            "endLong": 6.158008,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Henri Cirelli"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "AUT",
+            "to": "ALE",
+            "startLat": 47.646747,
+            "startLong": 14.939347,
+            "endLat": 51.083688,
+            "endLong": 10.420764,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Hans-Georg Tutschek"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "AUT",
+            "to": "BEL",
+            "startLat": 47.646747,
+            "startLong": 14.939347,
+            "endLat": 50.646441,
+            "endLong": 4.885676,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Walter Loske"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "FIN",
+            "to": "ALE",
+            "startLat": 62.751422,
+            "startLong": 26.429833,
+            "endLat": 51.083688,
+            "endLong": 10.420764,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Juhani Peltonen"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ARG",
+            "to": "MEX",
+            "startLat": -29.264611,
+            "startLong": -63.020732,
+            "endLat": 22.157323,
+            "endLong": -101.251817,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Bernardo Vargas"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ARG",
+            "to": "COL",
+            "startLat": -29.264611,
+            "startLong": -63.020732,
+            "endLat": 4.083421,
+            "endLong": -73.030988,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 3,
+            "players": [
+                "Wilfredo Camacho",
+                "Lorenzo Dacquarti",
+                "Ricardo Ramaciotti"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ARG",
+            "to": "URU",
+            "startLat": -29.264611,
+            "startLong": -63.020732,
+            "endLat": -32.722269,
+            "endLong": -55.830776,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 7,
+            "players": [
+                "Carlos Borges",
+                "Pedro Mansilla",
+                "H\u00e9ctor Pederzoli",
+                "Enzo Gennoni",
+                "Jos\u00e9 Sanfilippo",
+                "Eduardo Restivo",
+                "Ram\u00f3n Abeledo"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ARG",
+            "to": "EUA",
+            "startLat": -29.264611,
+            "startLong": -63.020732,
+            "endLat": 40.62131,
+            "endLong": -98.619713,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Vladimiro Tarnawski"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ARG",
+            "to": "PER",
+            "startLat": -29.264611,
+            "startLong": -63.020732,
+            "endLat": -5.873807,
+            "endLong": -76.082824,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Oscar G\u00f3mez"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ARG",
+            "to": "BRA",
+            "startLat": -29.264611,
+            "startLong": -63.020732,
+            "endLat": -10.39145,
+            "endLong": -49.269828,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 3,
+            "players": [
+                "Emmanuele Del Vecchio",
+                "Alfeu",
+                "Zeola"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ARG",
+            "to": "CHL",
+            "startLat": -29.264611,
+            "startLong": -63.020732,
+            "endLat": -23.635971,
+            "endLong": -69.11892,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Roberto Frojuelo"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "URU",
+            "to": "ARG",
+            "startLat": -32.722269,
+            "startLong": -55.830776,
+            "endLat": -29.264611,
+            "endLong": -63.020732,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 3,
+            "players": [
+                "Guillermo Escalada",
+                "Roberto Matosas",
+                "Rub\u00e9n Gonz\u00e1lez "
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "URU",
+            "to": "ESP",
+            "startLat": -32.722269,
+            "startLong": -55.830776,
+            "endLat": 40.417346,
+            "endLong": -3.372453,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Cabral"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "PAR",
+            "to": "ARG",
+            "startLat": -21.857574,
+            "startLong": -59.844122,
+            "endLat": -29.264611,
+            "endLong": -63.020732,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 3,
+            "players": [
+                "Reyes",
+                "Lucio Calonga",
+                "Eladio Z\u00e1rate"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "PAR",
+            "to": "ESP",
+            "startLat": -21.857574,
+            "startLong": -59.844122,
+            "endLat": 40.417346,
+            "endLong": -3.372453,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Cabrera "
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ITA",
+            "to": "ARG",
+            "startLat": 42.896888,
+            "startLong": 12.546747,
+            "endLat": -29.264611,
+            "endLong": -63.020732,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Luis Pentrelli"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ITA",
+            "to": "ESP",
+            "startLat": 42.896888,
+            "startLong": 12.546747,
+            "endLat": 40.417346,
+            "endLong": -3.372453,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Juan Santisteban"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ITA",
+            "to": "VEN",
+            "startLat": 42.896888,
+            "startLong": 12.546747,
+            "endLat": 7.849545,
+            "endLong": -64.162903,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Fernando"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ITA",
+            "to": "PGA",
+            "startLat": 42.896888,
+            "startLong": 12.546747,
+            "endLat": 51.918326,
+            "endLong": -3.802864,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "John Charles "
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ITA",
+            "to": "ALE",
+            "startLat": 42.896888,
+            "startLong": 12.546747,
+            "endLat": 51.083688,
+            "endLong": 10.420764,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 3,
+            "players": [
+                "Erwin Waldner",
+                "Willi Huberts",
+                "Rolf Geiger"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ITA",
+            "to": "ING",
+            "startLat": 42.896888,
+            "startLong": 12.546747,
+            "endLat": 52.288958,
+            "endLong": -0.238655,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Eddie Firmani"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ITA",
+            "to": "PBA",
+            "startLat": 42.896888,
+            "startLong": 12.546747,
+            "endLat": 52.21654,
+            "endLong": 5.549834,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Toni Allemann"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ESP",
+            "to": "ARG",
+            "startLat": 40.417346,
+            "startLong": -3.372453,
+            "endLat": -29.264611,
+            "endLong": -63.020732,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 2,
+            "players": [
+                "Luis Cubilla",
+                "Silveira"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ESP",
+            "to": "BRA",
+            "startLat": 40.417346,
+            "startLong": -3.372453,
+            "endLat": -10.39145,
+            "endLong": -49.269828,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 3,
+            "players": [
+                "Almir ",
+                "Recaman",
+                "Evaristo de Macedo"
             ]
         },
         {
@@ -1157,33 +718,47 @@
         },
         {
             "type": "transfer",
-            "from": "GBI",
-            "to": "POR",
-            "startLat": 11.982935,
-            "startLong": -14.983463,
-            "endLat": 39.0524,
-            "endLong": -8.495397,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 2,
-            "players": [
-                "Filipe",
-                "Tat\u00f3"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "POR",
-            "to": "ESP",
-            "startLat": 39.0524,
-            "startLong": -8.495397,
-            "endLat": 40.417346,
-            "endLong": -3.372453,
+            "from": "ESP",
+            "to": "IRL",
+            "startLat": 40.417346,
+            "startLong": -3.372453,
+            "endLat": 53.067372,
+            "endLong": -7.712871,
             "color": "#FF0000",
             "scale": 0.5,
             "count": 1,
             "players": [
-                "Manuel Sosa"
+                "Alvarito"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "RDC",
+            "to": "BEL",
+            "startLat": -2.86262,
+            "startLong": 23.611214,
+            "endLat": 50.646441,
+            "endLong": 4.885676,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "L\u00e9onard Sa\u00efdi"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "TUR",
+            "to": "BEL",
+            "startLat": 39.316716,
+            "startLong": 35.613402,
+            "endLat": 50.646441,
+            "endLong": 4.885676,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Mohamed Riahi"
             ]
         },
         {
@@ -1204,6 +779,22 @@
         {
             "type": "transfer",
             "from": "POR",
+            "to": "ESP",
+            "startLat": 39.0524,
+            "startLong": -8.495397,
+            "endLat": 40.417346,
+            "endLong": -3.372453,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 2,
+            "players": [
+                "Manuel Sosa",
+                "Juan Almenara"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "POR",
             "to": "AUT",
             "startLat": 39.0524,
             "startLong": -8.495397,
@@ -1214,6 +805,296 @@
             "count": 1,
             "players": [
                 "Jos\u00e9 \u00c1guas"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "CHL",
+            "to": "ESP",
+            "startLat": -23.635971,
+            "startLong": -69.11892,
+            "endLat": 40.417346,
+            "endLong": -3.372453,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Jaime Ram\u00edrez"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "CRI",
+            "to": "ESP",
+            "startLat": 10.3568,
+            "startLong": -84.371899,
+            "endLat": 40.417346,
+            "endLong": -3.372453,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Cayaca"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "FRA",
+            "to": "ALG",
+            "startLat": 46.897375,
+            "startLong": 3.106398,
+            "endLat": 27.731286,
+            "endLong": 2.674239,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 2,
+            "players": [
+                "Amar Roua\u00ef",
+                "Brahim Bouras"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "FRA",
+            "to": "SUI",
+            "startLat": 46.897375,
+            "startLong": 3.106398,
+            "endLat": 46.907814,
+            "endLong": 7.985324,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 3,
+            "players": [
+                "Henri Skiba",
+                "Norbert Eschmann",
+                "Bernard Rahis"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "FRA",
+            "to": "CRO",
+            "startLat": 46.897375,
+            "startLong": 3.106398,
+            "endLat": 45.639635,
+            "endLong": 16.622203,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Muhamed Mujic"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "FRA",
+            "to": "ESP",
+            "startLat": 46.897375,
+            "startLong": 3.106398,
+            "endLat": 40.417346,
+            "endLong": -3.372453,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "\u00c1ngel Segurola"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "FRA",
+            "to": "ITA",
+            "startLat": 46.897375,
+            "startLong": 3.106398,
+            "endLat": 42.896888,
+            "endLong": 12.546747,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Maryan Wisniewski"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "FRA",
+            "to": "PBA",
+            "startLat": 46.897375,
+            "startLong": 3.106398,
+            "endLat": 52.21654,
+            "endLong": 5.549834,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Bart Carlier"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "CRO",
+            "to": "FRA",
+            "startLat": 45.639635,
+            "startLong": 16.622203,
+            "endLat": 46.897375,
+            "endLong": 3.106398,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Muhamed Mujic"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ESC",
+            "to": "ING",
+            "startLat": 56.878876,
+            "startLong": -3.895413,
+            "endLat": 52.288958,
+            "endLong": -0.238655,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 13,
+            "players": [
+                "Sandy Brown",
+                "Doug Fraser",
+                "Jack Bolton",
+                "Ian Ure",
+                "Jimmy Goodfellow",
+                "Gerry Baker",
+                "Jimmy Robertson",
+                "John Colrain",
+                "Jim Thorburn",
+                "Max Dougan",
+                "Joe Davin",
+                "Bobby Roberts",
+                "George Kinnell"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ING",
+            "to": "ESC",
+            "startLat": 52.288958,
+            "startLong": -0.238655,
+            "endLat": 56.878876,
+            "endLong": -3.895413,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 3,
+            "players": [
+                "Max Murray",
+                "Pat Quinn",
+                "Doug Moran"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ING",
+            "to": "PGA",
+            "startLat": 52.288958,
+            "startLong": -0.238655,
+            "endLat": 51.918326,
+            "endLong": -3.802864,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 2,
+            "players": [
+                "Albert Dunlop",
+                "Aled Owen"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ING",
+            "to": "INO",
+            "startLat": 52.288958,
+            "startLong": -0.238655,
+            "endLat": 54.721271,
+            "endLong": -6.558959,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Billy McCullough"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ING",
+            "to": "AUS",
+            "startLat": 52.288958,
+            "startLong": -0.238655,
+            "endLat": -20.943863,
+            "endLong": 131.889808,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Matt Woods"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "PGA",
+            "to": "ING",
+            "startLat": 51.918326,
+            "startLong": -3.802864,
+            "endLat": 52.288958,
+            "endLong": -0.238655,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Mike Kear"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "INO",
+            "to": "ING",
+            "startLat": 54.721271,
+            "startLong": -6.558959,
+            "endLat": 52.288958,
+            "endLong": -0.238655,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 2,
+            "players": [
+                "Bobby Irvine",
+                "Dave Clements"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "PER",
+            "to": "ITA",
+            "startLat": -5.873807,
+            "startLong": -76.082824,
+            "endLat": 42.896888,
+            "endLong": 12.546747,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Alberto Gallardo"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "GBI",
+            "to": "POR",
+            "startLat": 11.982935,
+            "startLong": -14.983463,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 2,
+            "players": [
+                "Filipe",
+                "Tat\u00f3"
             ]
         },
         {

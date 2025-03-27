@@ -33,7 +33,10 @@ country_info = {
 }
 
 transfer_files = [f for f in os.listdir(transfers_folder_path) if f.endswith('.json')]
-yearly_arcs = defaultdict(list)
+
+# Create a structure to track transfers by year, origin, and destination
+# This will help us consolidate transfers from different files
+yearly_transfer_data = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: {'count': 0, 'players': set(), 'player_ids': set()})))
 
 for transfer_file in transfer_files:
     transfer_file_path = os.path.join(transfers_folder_path, transfer_file)
@@ -43,7 +46,6 @@ for transfer_file in transfer_files:
         transfers_data = json.load(f)
 
     seasons = transfers_data["data"]["seasons"]
-
     sorted_seasons = sorted(seasons.items(), key=lambda x: x[0])
 
     for season_name, clubs in sorted_seasons:
@@ -53,8 +55,6 @@ for transfer_file in transfer_files:
         if not year:
             print(f"Warning: Could not extract year from season name: {season_name}")
             continue
-
-        transfer_counts = defaultdict(lambda: {'count': 0, 'players': []})
 
         for club in clubs:
             transfers_in = club.get("teams_in", {})
@@ -68,18 +68,24 @@ for transfer_file in transfer_files:
                     if int(country_id) in country_info:
                         origin_code = country_info[int(country_id)]["code"]
                         destination_code = transfer_file.split("_")[-1].split(".")[0]
-                        key = (origin_code, destination_code, "in")
-                        transfer_counts[key]['count'] += int(transfer_info.get("count", 1))
+                        
+                        # Track player IDs to avoid duplicates
                         if "players" in transfer_info:
                             players = transfer_info["players"]
                             if isinstance(players, dict):
-                                transfer_counts[key]['players'].extend(
-                                    [player["name"] for player in players.values() if "name" in player]
-                                )
+                                for player_id, player in players.items():
+                                    if "name" in player:
+                                        yearly_transfer_data[year][origin_code][destination_code]['players'].add(player["name"])
+                                        yearly_transfer_data[year][origin_code][destination_code]['player_ids'].add(player_id)
                             elif isinstance(players, list):
-                                transfer_counts[key]['players'].extend(
-                                    [player["name"] for player in players if "name" in player]
-                                )
+                                for player in players:
+                                    if "name" in player and "id" in player:
+                                        yearly_transfer_data[year][origin_code][destination_code]['players'].add(player["name"])
+                                        yearly_transfer_data[year][origin_code][destination_code]['player_ids'].add(player["id"])
+                        else:
+                            # If no players are specified, just increment the count
+                            yearly_transfer_data[year][origin_code][destination_code]['count'] += int(transfer_info.get("count", 1))
+            
             elif isinstance(transfers_in, list):
                 for transfer_info in transfers_in:
                     country_id = transfer_info.get("country_id")
@@ -88,18 +94,13 @@ for transfer_file in transfer_files:
                     if int(country_id) in country_info:
                         origin_code = country_info[int(country_id)]["code"]
                         destination_code = transfer_file.split("_")[-1].split(".")[0]
-                        key = (origin_code, destination_code, "in")
-                        transfer_counts[key]['count'] += 1
-                        if "players" in transfer_info:
-                            players = transfer_info["players"]
-                            if isinstance(players, dict):
-                                transfer_counts[key]['players'].extend(
-                                    [player["name"] for player in players.values() if "name" in player]
-                                )
-                            elif isinstance(players, list):
-                                transfer_counts[key]['players'].extend(
-                                    [player["name"] for player in players if "name" in player]
-                                )
+                        
+                        # Track player IDs
+                        if "id" in transfer_info and "name" in transfer_info:
+                            yearly_transfer_data[year][origin_code][destination_code]['players'].add(transfer_info["name"])
+                            yearly_transfer_data[year][origin_code][destination_code]['player_ids'].add(transfer_info["id"])
+                        else:
+                            yearly_transfer_data[year][origin_code][destination_code]['count'] += 1
 
             # Process outgoing transfers
             if isinstance(transfers_out, dict):
@@ -109,18 +110,24 @@ for transfer_file in transfer_files:
                     if int(country_id) in country_info:
                         origin_code = transfer_file.split("_")[-1].split(".")[0]
                         destination_code = country_info[int(country_id)]["code"]
-                        key = (origin_code, destination_code, "out")
-                        transfer_counts[key]['count'] += int(transfer_info.get("count", 1))
+                        
+                        # Track player IDs to avoid duplicates
                         if "players" in transfer_info:
                             players = transfer_info["players"]
                             if isinstance(players, dict):
-                                transfer_counts[key]['players'].extend(
-                                    [player["name"] for player in players.values() if "name" in player]
-                                )
+                                for player_id, player in players.items():
+                                    if "name" in player:
+                                        yearly_transfer_data[year][origin_code][destination_code]['players'].add(player["name"])
+                                        yearly_transfer_data[year][origin_code][destination_code]['player_ids'].add(player_id)
                             elif isinstance(players, list):
-                                transfer_counts[key]['players'].extend(
-                                    [player["name"] for player in players if "name" in player]
-                                )
+                                for player in players:
+                                    if "name" in player and "id" in player:
+                                        yearly_transfer_data[year][origin_code][destination_code]['players'].add(player["name"])
+                                        yearly_transfer_data[year][origin_code][destination_code]['player_ids'].add(player["id"])
+                        else:
+                            # If no players are specified, just increment the count
+                            yearly_transfer_data[year][origin_code][destination_code]['count'] += int(transfer_info.get("count", 1))
+            
             elif isinstance(transfers_out, list):
                 for transfer_info in transfers_out:
                     country_id = transfer_info.get("country_id")
@@ -129,25 +136,27 @@ for transfer_file in transfer_files:
                     if int(country_id) in country_info:
                         origin_code = transfer_file.split("_")[-1].split(".")[0]
                         destination_code = country_info[int(country_id)]["code"]
-                        key = (origin_code, destination_code, "out")
-                        transfer_counts[key]['count'] += 1
-                        if "players" in transfer_info:
-                            players = transfer_info["players"]
-                            if isinstance(players, dict):
-                                transfer_counts[key]['players'].extend(
-                                    [player["name"] for player in players.values() if "name" in player]
-                                )
-                            elif isinstance(players, list):
-                                transfer_counts[key]['players'].extend(
-                                    [player["name"] for player in players if "name" in player]
-                                )
+                        
+                        # Track player IDs
+                        if "id" in transfer_info and "name" in transfer_info:
+                            yearly_transfer_data[year][origin_code][destination_code]['players'].add(transfer_info["name"])
+                            yearly_transfer_data[year][origin_code][destination_code]['player_ids'].add(transfer_info["id"])
+                        else:
+                            yearly_transfer_data[year][origin_code][destination_code]['count'] += 1
 
-        for (origin_code, destination_code, direction), data in transfer_counts.items():
-            count = data['count']
-            players = data['players']
+# Now convert the consolidated data into arcs
+yearly_arcs = defaultdict(list)
+
+for year, origin_data in yearly_transfer_data.items():
+    for origin_code, destination_data in origin_data.items():
+        for destination_code, data in destination_data.items():
+            # Use the number of unique players as the count
+            player_count = len(data['players'])
+            # If we have player data, use that count, otherwise use the accumulated count
+            count = player_count if player_count > 0 else data['count']
+            players = list(data['players'])
             
             if origin_code in {info["code"] for info in country_info.values()} and destination_code in {info["code"] for info in country_info.values()}:
-
                 origin_id = next((id for id, info in country_info.items() if info["code"] == origin_code), None)
                 destination_id = next((id for id, info in country_info.items() if info["code"] == destination_code), None)
 
@@ -175,6 +184,7 @@ for transfer_file in transfer_files:
             else:
                 print(f"Warning: {origin_code} or {destination_code} not found in country_info")
 
+# Write the consolidated arcs to files
 for year, arcs in yearly_arcs.items():
     if 1951 <= int(year) <= 2025:
         lines_data = {
@@ -185,6 +195,6 @@ for year, arcs in yearly_arcs.items():
         with open(output_filename, 'w', encoding='utf-8') as f:
             json.dump(lines_data, f, indent=4)
 
-        print(f"✅ {output_filename} successfully generated!")
+        print(f"✅ {output_filename} successfully generated with {len(arcs)} consolidated arcs!")
 
 print("All files processed.")

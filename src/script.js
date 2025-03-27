@@ -595,7 +595,7 @@ function updateArcs(arcsData) {
 
     const arcsWithThickness = arcsData.map((arc) => ({
         ...arc,
-        stroke: Math.max(0.1, (arc.count / 10) * 0.2),
+        stroke: Math.max(0.05, (arc.count / 10) * 0.25),
     }));
 
     const glowArcs = arcsData.map((arc) => {
@@ -610,7 +610,7 @@ function updateArcs(arcsData) {
 
         return {
             ...arc,
-            stroke: Math.max(0.12, (arc.count / 10) * 0.24),
+            stroke: Math.max(0.06, (arc.count / 10) * 0.3),
             color: `rgba(${r}, ${g}, ${b}, 0.25)`,
         };
     });
