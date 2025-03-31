@@ -291,6 +291,18 @@ async function loadArcsForYear(year) {
       allYearsData[year] = arcsData
     }
 
+    // Check if no countries are selected and no other filters are active
+    if (
+      currentFilterState.filtersApplied &&
+      currentFilterState.selectedCountryCodes.length === 0 &&
+      !currentFilterState.countryToCountryFilterActive &&
+      !currentFilterState.playerFilterActive
+    ) {
+      // If no countries are selected, show no arcs
+      updateArcs([])
+      return
+    }
+
     // Process the arcs
     const arcsDataWithThickness = arcsData.arcs.map((arc) => ({
       startLat: arc.startLat,
