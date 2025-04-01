@@ -3,67 +3,6 @@
     "arcs": [
         {
             "type": "transfer",
-            "from": "COL",
-            "to": "ARG",
-            "startLat": 4.083421,
-            "startLong": -73.030988,
-            "endLat": -29.264611,
-            "endLong": -63.020732,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Mario Boy\u00e9"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "COL",
-            "to": "POR",
-            "startLat": 4.083421,
-            "startLong": -73.030988,
-            "endLat": 39.0524,
-            "endLong": -8.495397,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "B\u00e9la S\u00e1rosi"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ARG",
-            "to": "ESP",
-            "startLat": -29.264611,
-            "startLong": -63.020732,
-            "endLat": 40.417346,
-            "endLong": -3.372453,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 2,
-            "players": [
-                "Roque Olsen",
-                "Antonio Imbelloni"
-            ]
-        },
-        {
-            "type": "transfer",
-            "from": "ARG",
-            "to": "ITA",
-            "startLat": -29.264611,
-            "startLong": -63.020732,
-            "endLat": 42.896888,
-            "endLong": 12.546747,
-            "color": "#FF0000",
-            "scale": 0.5,
-            "count": 1,
-            "players": [
-                "Enrique Martegani"
-            ]
-        },
-        {
-            "type": "transfer",
             "from": "HUN",
             "to": "ESP",
             "startLat": 47.088247,
@@ -75,6 +14,9 @@
             "count": 1,
             "players": [
                 "L\u00e1szl\u00f3 Kubala"
+            ],
+            "player_ids": [
+                "14863"
             ]
         },
         {
@@ -89,10 +31,16 @@
             "scale": 0.5,
             "count": 4,
             "players": [
-                "Szegedi ",
-                "Jos\u00e9 Valle",
+                "Di Paola ",
                 "Rene Raphy",
-                "Di Paola "
+                "Szegedi ",
+                "Jos\u00e9 Valle"
+            ],
+            "player_ids": [
+                "337142",
+                "190208",
+                "167624",
+                "178038"
             ]
         },
         {
@@ -107,12 +55,20 @@
             "scale": 0.5,
             "count": 6,
             "players": [
-                "Roberto Alarc\u00f3n",
                 "\u00c5ke Hjalmarsson",
+                "P\u00e4r Bengtsson",
                 "Roberto Aballay",
                 "Gyula Nagy",
                 "Juan Carlos Verdeal",
-                "P\u00e4r Bengtsson"
+                "Roberto Alarc\u00f3n"
+            ],
+            "player_ids": [
+                "286491",
+                "468269",
+                "305050",
+                "468268",
+                "362859",
+                "313136"
             ]
         },
         {
@@ -127,9 +83,14 @@
             "scale": 0.5,
             "count": 3,
             "players": [
-                "Ferenc Nyers II",
                 "Zvonko Monsider",
-                "Rudi Strittich"
+                "Rudi Strittich",
+                "Ferenc Nyers II"
+            ],
+            "player_ids": [
+                "338557",
+                "468216",
+                "350809"
             ]
         },
         {
@@ -145,6 +106,9 @@
             "count": 1,
             "players": [
                 "L\u00e1szl\u00f3 Kubala"
+            ],
+            "player_ids": [
+                "14863"
             ]
         },
         {
@@ -160,6 +124,9 @@
             "count": 1,
             "players": [
                 "Marchiaro"
+            ],
+            "player_ids": [
+                "405834"
             ]
         },
         {
@@ -175,6 +142,9 @@
             "count": 1,
             "players": [
                 "Calligaris "
+            ],
+            "player_ids": [
+                "208491"
             ]
         },
         {
@@ -189,9 +159,14 @@
             "scale": 0.5,
             "count": 3,
             "players": [
-                "Juan Lauren",
+                "Polo",
                 "Paquirri",
-                "Polo"
+                "Juan Lauren"
+            ],
+            "player_ids": [
+                "337140",
+                "169912",
+                "193132"
             ]
         },
         {
@@ -207,6 +182,9 @@
             "count": 1,
             "players": [
                 "Cand\u00eda"
+            ],
+            "player_ids": [
+                "194754"
             ]
         },
         {
@@ -221,13 +199,22 @@
             "scale": 0.5,
             "count": 7,
             "players": [
-                "Mohamed Abderrazack",
-                "Guti\u00e9rrez ",
-                "Jean Luciano",
-                "Rodr\u00edguez ",
-                "Louis Hon",
                 "Mohamed Ben Mahjoub",
+                "Louis Hon",
+                "Guti\u00e9rrez ",
+                "Mohamed Abderrazack",
+                "Rodr\u00edguez ",
+                "Jean Luciano",
                 "Angelo Bollano"
+            ],
+            "player_ids": [
+                "206598",
+                "169895",
+                "337141",
+                "52883",
+                "200176",
+                "337135",
+                "169909"
             ]
         },
         {
@@ -243,6 +230,9 @@
             "count": 1,
             "players": [
                 "Ji&#345;\u00ed Hanke"
+            ],
+            "player_ids": [
+                "333550"
             ]
         },
         {
@@ -258,6 +248,9 @@
             "count": 1,
             "players": [
                 "Ch\u00e9rif Gabsi"
+            ],
+            "player_ids": [
+                "322646"
             ]
         },
         {
@@ -274,6 +267,10 @@
             "players": [
                 "Roberto Serone",
                 "Helge Bron\u00e9e"
+            ],
+            "player_ids": [
+                "468533",
+                "298813"
             ]
         },
         {
@@ -289,6 +286,47 @@
             "count": 1,
             "players": [
                 "Lennart Samuelsson"
+            ],
+            "player_ids": [
+                "21883"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ARG",
+            "to": "ESP",
+            "startLat": -29.264611,
+            "startLong": -63.020732,
+            "endLat": 40.417346,
+            "endLong": -3.372453,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 2,
+            "players": [
+                "Roque Olsen",
+                "Antonio Imbelloni"
+            ],
+            "player_ids": [
+                "337127",
+                "196374"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "ARG",
+            "to": "ITA",
+            "startLat": -29.264611,
+            "startLong": -63.020732,
+            "endLat": 42.896888,
+            "endLong": 12.546747,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "Enrique Martegani"
+            ],
+            "player_ids": [
+                "466997"
             ]
         },
         {
@@ -304,6 +342,9 @@
             "count": 1,
             "players": [
                 "Fernando Riera"
+            ],
+            "player_ids": [
+                "21970"
             ]
         },
         {
@@ -318,12 +359,20 @@
             "scale": 0.5,
             "count": 6,
             "players": [
-                "Joop Stoffelen",
-                "Rinus Schaap",
-                "van der Hart",
-                "Joop Brandes",
                 "Arie de Vroet",
+                "van der Hart",
+                "Joop Stoffelen",
+                "Joop Brandes",
+                "Rinus Schaap",
                 "Piet Steenbergen"
+            ],
+            "player_ids": [
+                "439599",
+                "388172",
+                "389205",
+                "266827",
+                "643262",
+                "389204"
             ]
         },
         {
@@ -340,6 +389,10 @@
             "players": [
                 "Wim Lakenberg",
                 "Andr\u00e9 Roosenburg"
+            ],
+            "player_ids": [
+                "388177",
+                "470272"
             ]
         },
         {
@@ -355,6 +408,9 @@
             "count": 1,
             "players": [
                 "Erik Jensen"
+            ],
+            "player_ids": [
+                "298925"
             ]
         },
         {
@@ -369,9 +425,14 @@
             "scale": 0.5,
             "count": 3,
             "players": [
-                "Hans Colberg",
+                "Svend Hansen",
                 "Axel Pilmark",
-                "Svend Hansen"
+                "Hans Colberg"
+            ],
+            "player_ids": [
+                "237905",
+                "298783",
+                "298929"
             ]
         },
         {
@@ -386,8 +447,12 @@
             "scale": 0.5,
             "count": 2,
             "players": [
-                "Jean Tamini",
-                "Ernest Vaast"
+                "Ernest Vaast",
+                "Jean Tamini"
+            ],
+            "player_ids": [
+                "358242",
+                "21896"
             ]
         },
         {
@@ -402,9 +467,14 @@
             "scale": 0.5,
             "count": 3,
             "players": [
-                "Yeso Amalfi",
                 "Agostinho",
+                "Yeso Amalfi",
                 "C\u00e9sar Gonz\u00e1lez"
+            ],
+            "player_ids": [
+                "778624",
+                "273020",
+                "139820"
             ]
         },
         {
@@ -420,6 +490,9 @@
             "count": 1,
             "players": [
                 "Humberto Buchelli"
+            ],
+            "player_ids": [
+                "412032"
             ]
         },
         {
@@ -435,6 +508,9 @@
             "count": 1,
             "players": [
                 "Joe Gaetjens"
+            ],
+            "player_ids": [
+                "22001"
             ]
         },
         {
@@ -450,6 +526,9 @@
             "count": 1,
             "players": [
                 "Ed McIlvenny"
+            ],
+            "player_ids": [
+                "21999"
             ]
         },
         {
@@ -465,6 +544,9 @@
             "count": 1,
             "players": [
                 "Alberto Muro"
+            ],
+            "player_ids": [
+                "273014"
             ]
         },
         {
@@ -479,10 +561,16 @@
             "scale": 0.5,
             "count": 4,
             "players": [
-                "Lennart Samuelsson",
                 "Egon J\u00f6nsson",
                 "Gunnar Johansson",
+                "Lennart Samuelsson",
                 "Gunnar Andersson"
+            ],
+            "player_ids": [
+                "21179",
+                "21883",
+                "279835",
+                "556576"
             ]
         },
         {
@@ -498,6 +586,9 @@
             "count": 1,
             "players": [
                 "Hans Jeppsson"
+            ],
+            "player_ids": [
+                "21865"
             ]
         },
         {
@@ -512,15 +603,26 @@
             "scale": 0.5,
             "count": 9,
             "players": [
+                "Stellan Nilsson",
+                "Ingvar G\u00e4rd",
                 "B\u00f6rje Tapper",
                 "Lennart Skoglund",
-                "Stig Sundqvist",
-                "Stellan Nilsson",
                 "Knut Nordahl",
                 "Kjell Ros\u00e9n",
-                "Ingvar G\u00e4rd",
-                "Sune Andersson",
-                "Bror Mellberg"
+                "Stig Sundqvist",
+                "Bror Mellberg",
+                "Sune Andersson"
+            ],
+            "player_ids": [
+                "21882",
+                "21879",
+                "257696",
+                "21872",
+                "25764",
+                "21880",
+                "21870",
+                "21866",
+                "21867"
             ]
         },
         {
@@ -536,6 +638,9 @@
             "count": 1,
             "players": [
                 "Dan Ekner"
+            ],
+            "player_ids": [
+                "219038"
             ]
         },
         {
@@ -550,10 +655,16 @@
             "scale": 0.5,
             "count": 4,
             "players": [
-                "Syd Howarth",
+                "Thomas George Jones",
                 "Jackie Roberts",
                 "Peter Corr",
-                "Thomas George Jones"
+                "Syd Howarth"
+            ],
+            "player_ids": [
+                "220752",
+                "517880",
+                "508533",
+                "530305"
             ]
         },
         {
@@ -569,6 +680,9 @@
             "count": 1,
             "players": [
                 "William Steel"
+            ],
+            "player_ids": [
+                "508558"
             ]
         },
         {
@@ -585,6 +699,10 @@
             "players": [
                 "Willy Andresen",
                 "Torgeir Torgersen"
+            ],
+            "player_ids": [
+                "791141",
+                "791144"
             ]
         },
         {
@@ -599,9 +717,14 @@
             "scale": 0.5,
             "count": 3,
             "players": [
+                "John Lindsay ",
                 "Allan Brown",
-                "Bobby Cunning",
-                "John Lindsay "
+                "Bobby Cunning"
+            ],
+            "player_ids": [
+                "22206",
+                "924372",
+                "921785"
             ]
         },
         {
@@ -616,9 +739,14 @@
             "scale": 0.5,
             "count": 3,
             "players": [
-                "Jimmy McIlroy",
+                "Jimmy Jones",
                 "William Bingham",
-                "Jimmy Jones"
+                "Jimmy McIlroy"
+            ],
+            "player_ids": [
+                "208173",
+                "23059",
+                "23056"
             ]
         },
         {
@@ -634,6 +762,9 @@
             "count": 1,
             "players": [
                 "Stuart Williams"
+            ],
+            "player_ids": [
+                "25767"
             ]
         },
         {
@@ -649,6 +780,9 @@
             "count": 1,
             "players": [
                 "Rudi Strittich"
+            ],
+            "player_ids": [
+                "350809"
             ]
         },
         {
@@ -664,6 +798,9 @@
             "count": 1,
             "players": [
                 "Leongino Unzaim"
+            ],
+            "player_ids": [
+                "22067"
             ]
         },
         {
@@ -680,6 +817,28 @@
             "players": [
                 "Lefter K\u00fc\u00e7\u00fckandonyadis",
                 "&#350;\u00fckr\u00fc G\u00fclesin"
+            ],
+            "player_ids": [
+                "22407",
+                "324687"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "COL",
+            "to": "POR",
+            "startLat": 4.083421,
+            "startLong": -73.030988,
+            "endLat": 39.0524,
+            "endLong": -8.495397,
+            "color": "#FF0000",
+            "scale": 0.5,
+            "count": 1,
+            "players": [
+                "B\u00e9la S\u00e1rosi"
+            ],
+            "player_ids": [
+                "21591"
             ]
         },
         {
@@ -695,6 +854,9 @@
             "count": 1,
             "players": [
                 "Ferenc M\u00e9sz\u00e1ros"
+            ],
+            "player_ids": [
+                "405814"
             ]
         },
         {
@@ -710,6 +872,9 @@
             "count": 1,
             "players": [
                 "Joaquim Pacheco"
+            ],
+            "player_ids": [
+                "97167"
             ]
         }
     ]

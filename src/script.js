@@ -248,7 +248,13 @@ function updateYearDisplay() {
 // Add this to your loadInitialData function
 let allPlayers = [] // Global variable to store all players
 
-// Load initial data and create the globe
+// Add this to your global variables
+let playerDatabase = {}
+
+// Load country info
+let country_info = {}
+
+// Modify the loadInitialData function to load the player database
 async function loadInitialData() {
   try {
     // Load countries data (only need to do this once)
@@ -264,6 +270,17 @@ async function loadInitialData() {
       const name = country.country
       countryCodeToName[code] = name
     })
+
+    // Load player database if available
+    try {
+      const playerDbResponse = await fetch("./files/players_database.json")
+      const playerDbData = await playerDbResponse.json()
+      playerDatabase = playerDbData.players || {}
+      console.log(`Loaded player database with ${Object.keys(playerDatabase).length} players`)
+    } catch (error) {
+      console.warn("Player database not found, using fallback method:", error)
+      // Continue with fallback method if player database is not available
+    }
 
     // Initialize the globe with countries data
     initGlobe(countriesData)
@@ -284,12 +301,39 @@ async function loadInitialData() {
   }
 }
 
-// Add this function to process all player data from all years
+// Modify the buildPlayerDatabase function to use the player database if available
 async function buildPlayerDatabase() {
   console.log("Building player database...")
 
   // Create a map to store unique players by ID
   const playerMap = new Map()
+
+  // If we have a player database loaded, use that as the primary source
+  if (Object.keys(playerDatabase).length > 0) {
+    console.log("Using loaded player database")
+
+    // Process each player in the database
+    Object.entries(playerDatabase).forEach(([playerId, playerData]) => {
+      // Use display_name if available, but remove position in parentheses if it exists
+      let displayName = playerData.display_name || playerData.name
+      // Remove position in parentheses if it exists
+      displayName = displayName.replace(/\s+$$[^)]+$$/, "")
+
+      playerMap.set(playerId, {
+        id: playerId,
+        name: displayName,
+        birthDate: playerData.birthDate || "Unknown",
+        position: playerData.position || "Unknown",
+        transfersId: playerData.transfers_id || null,
+      })
+    })
+
+    console.log(`Player database built with ${playerMap.size} unique players from database`)
+    return Array.from(playerMap.values())
+  }
+
+  // Fallback to the old method if no database is available
+  console.log("Using fallback method to build player database")
 
   // Process each year's data
   for (let year = minYear; year <= maxYear; year++) {
@@ -306,19 +350,18 @@ async function buildPlayerDatabase() {
 
       // Check if the data has the new structure with "data" property
       if (data.data && data.data.seasons) {
+        console.log(`Year ${year} has new data structure`)
+
         // Process each season
-        Object.values(data.data.seasons).forEach((season) => {
+        Object.entries(data.data.seasons).forEach(([seasonName, season]) => {
           // Process each team
           season.forEach((team) => {
             // Process incoming transfers
             if (team.teams_in) {
-              Object.values(team.teams_in).forEach((country) => {
+              Object.entries(team.teams_in).forEach(([countryId, country]) => {
                 if (country.players) {
                   // Add each player to the map
                   Object.entries(country.players).forEach(([playerId, playerData]) => {
-                    // Log the player data to debug
-                    console.log(`Player data for ${playerId}:`, playerData)
-
                     playerMap.set(playerId, {
                       id: playerId,
                       name: playerData.name || "Unknown",
@@ -333,7 +376,7 @@ async function buildPlayerDatabase() {
 
             // Process outgoing transfers
             if (team.teams_out) {
-              Object.values(team.teams_out).forEach((country) => {
+              Object.entries(team.teams_out).forEach(([countryId, country]) => {
                 if (country.players) {
                   // Add each player to the map
                   Object.entries(country.players).forEach(([playerId, playerData]) => {
@@ -351,6 +394,7 @@ async function buildPlayerDatabase() {
           })
         })
       } else {
+        console.log(`Year ${year} has old data structure`)
         // Handle the old data structure if needed
         // This is just a fallback in case some years still use the old format
         if (data.arcs) {
@@ -398,9 +442,25 @@ async function loadArcsForYear(year) {
       allYearsData[year] = arcsData
     }
 
+    // If no filters are applied, show all arcs
+    if (!currentFilterState.filtersApplied) {
+      const arcsDataWithThickness = arcsData.arcs.map((arc) => ({
+        startLat: arc.startLat,
+        startLng: arc.startLong,
+        endLat: arc.endLat,
+        endLng: arc.endLong,
+        color: arc.color,
+        from: arc.from,
+        to: arc.to,
+        count: arc.count,
+        players: arc.players,
+      }))
+      updateArcs(arcsDataWithThickness)
+      return
+    }
+
     // Check if no countries are selected and no other filters are active
     if (
-      currentFilterState.filtersApplied &&
       currentFilterState.selectedCountryCodes.length === 0 &&
       !currentFilterState.countryToCountryFilterActive &&
       !currentFilterState.playerFilterActive
@@ -410,26 +470,8 @@ async function loadArcsForYear(year) {
       return
     }
 
-    // Process the arcs
-    const arcsDataWithThickness = arcsData.arcs.map((arc) => ({
-      startLat: arc.startLat,
-      startLng: arc.startLong,
-      endLat: arc.endLat,
-      endLng: arc.endLong,
-      color: arc.color,
-      from: arc.from,
-      to: arc.to,
-      count: arc.count,
-      players: arc.players,
-    }))
-
-    // If filters have been applied, reapply them to the new data
-    if (currentFilterState.filtersApplied) {
-      applyCurrentFilters()
-    } else {
-      // Otherwise, just show all arcs
-      updateArcs(arcsDataWithThickness)
-    }
+    // Apply the current filters to the new data
+    applyCurrentFilters()
   } catch (error) {
     console.error(`Error loading arcs for year ${year}:`, error)
   }
@@ -967,6 +1009,12 @@ function updatePlayerCareerPath(year) {
 
   console.log(`Updating player career path for ${playerName} up to year ${year}`)
 
+  // If we have a selected player ID, use the ID-based function
+  if (selectedPlayerId) {
+    updatePlayerCareerPathById(year, selectedPlayerId)
+    return
+  }
+
   // Get all arcs up to the current year
   const allArcs = []
 
@@ -1240,7 +1288,8 @@ function applyCountryToCountryFilter() {
   const destCountry = document.getElementById("destinationCountry").value
 
   if (!sourceCountry && !destCountry) {
-    alert("Por favor, selecione pelo menos um país de origem ou destino.")
+    // If both dropdowns are empty, reset the filter
+    resetCountryToCountryFilter()
     return
   }
 
@@ -1285,11 +1334,16 @@ function resetCountryToCountryFilter() {
     bidirectionalFilter: false,
   }
 
-  // Apply the filters
-  applyCurrentFilters()
+  // Completely reset the filter state if this was the only active filter
+  if (!currentFilterState.playerFilterActive && currentFilterState.selectedCountryCodes.length === 0) {
+    currentFilterState.filtersApplied = false
+  }
+
+  // Load arcs for the current year
+  loadArcsForYear(currentYear)
 }
 
-// Modify the applyPlayerCareerFilter function to use player ID
+// Modify the applyPlayerCareerFilter function to use player ID and auto-start playing
 async function applyPlayerCareerFilter() {
   const playerNameInput = document.getElementById("playerName")
   if (!playerNameInput) return
@@ -1313,6 +1367,14 @@ async function applyPlayerCareerFilter() {
   playerCareerArcs = []
   firstPlayerTransferYear = null
 
+  // Update filter state
+  currentFilterState = {
+    ...currentFilterState,
+    playerName: inputPlayerName,
+    playerFilterActive: true,
+    filtersApplied: true,
+  }
+
   // Preload all years data to find all player transfers
   await preloadAllYearsData()
 
@@ -1328,288 +1390,15 @@ async function applyPlayerCareerFilter() {
 
     // Start building the career path
     updatePlayerCareerPathById(currentYear, selectedPlayerId)
+
+    // Removed the auto-play functionality
   } else {
     alert(`Nenhuma transferência encontrada para ${playerName}.`)
     exitPlayerCareerMode()
   }
 }
 
-// New function to find the first transfer year using player ID
-async function findFirstPlayerTransferYearById(playerId) {
-  // Search through all years
-  for (let year = minYear; year <= maxYear; year++) {
-    try {
-      // Load data for this year if not already loaded
-      if (!allYearsData[year]) {
-        const linesResponse = await fetch(`./files/arcs/lines_${year}.json`)
-        const yearData = await linesResponse.json()
-        allYearsData[year] = yearData
-      }
-
-      const data = allYearsData[year]
-
-      // Check if the data has the new structure
-      if (data.data && data.data.seasons) {
-        // Check each season for the player ID
-        let playerFound = false
-
-        Object.values(data.data.seasons).forEach((season) => {
-          if (playerFound) return
-
-          season.forEach((team) => {
-            if (playerFound) return
-
-            // Check incoming transfers
-            if (team.teams_in) {
-              Object.values(team.teams_in).forEach((country) => {
-                if (playerFound) return
-
-                if (country.players && country.players[playerId]) {
-                  playerFound = true
-                }
-              })
-            }
-
-            // Check outgoing transfers
-            if (!playerFound && team.teams_out) {
-              Object.values(team.teams_out).forEach((country) => {
-                if (playerFound) return
-
-                if (country.players && country.players[playerId]) {
-                  playerFound = true
-                }
-              })
-            }
-          })
-        })
-
-        if (playerFound) {
-          firstPlayerTransferYear = year
-          return
-        }
-      } else {
-        // Handle old data structure as fallback
-        // This is less accurate but provides backward compatibility
-        const playerNameLower = playerName.toLowerCase()
-
-        const playerArcs = data.arcs.filter(
-          (arc) =>
-            arc.players &&
-            arc.players.some(
-              (player) =>
-                player.toLowerCase() === playerNameLower ||
-                (player.toLowerCase().includes(playerNameLower) &&
-                  (player.toLowerCase().startsWith(playerNameLower) ||
-                    player.toLowerCase().includes(" " + playerNameLower))),
-            ),
-        )
-
-        if (playerArcs.length > 0) {
-          firstPlayerTransferYear = year
-          return
-        }
-      }
-    } catch (error) {
-      console.error(`Error checking year ${year} for player ID ${playerId}:`, error)
-    }
-  }
-}
-
-// New function to update player career path using player ID
-function updatePlayerCareerPathById(year, playerId) {
-  if (!playerCareerMode || !playerName) return
-
-  console.log(`Updating player career path for ${playerName} (ID: ${playerId}) up to year ${year}`)
-
-  // Get all arcs up to the current year
-  const allArcs = []
-
-  // Process each year from the first transfer to the current year
-  for (let y = firstPlayerTransferYear; y <= year; y++) {
-    if (allYearsData[y]) {
-      const data = allYearsData[y]
-
-      // Check if the data has the new structure
-      if (data.data && data.data.seasons) {
-        // Process each season
-        Object.values(data.data.seasons).forEach((season) => {
-          // Process each team
-          season.forEach((team) => {
-            const teamName = team.name
-            const teamId = team.id
-
-            // Process incoming transfers
-            if (team.teams_in) {
-              Object.entries(team.teams_in).forEach(([countryId, country]) => {
-                if (country.players && country.players[playerId]) {
-                  // Found a transfer for this player
-                  const player = country.players[playerId]
-                  const fromCountry = country.country
-                  const fromCountryCode = countryId
-                  const toCountry = teamName
-                  const toCountryCode = teamId
-
-                  // Create an arc for this transfer
-                  // We need to get coordinates for the countries
-                  const fromCoords = getCountryCoordinates(fromCountryCode)
-                  const toCoords = getCountryCoordinates(toCountryCode)
-
-                  if (fromCoords && toCoords) {
-                    allArcs.push({
-                      startLat: fromCoords.lat,
-                      startLng: fromCoords.lng,
-                      endLat: toCoords.lat,
-                      endLng: toCoords.lng,
-                      color: "#4169E1", // Royal Blue for player career
-                      from: fromCountryCode,
-                      to: toCountryCode,
-                      count: 1, // Always 1 for a single player
-                      players: [player.name],
-                      year: y, // Add year information
-                      stroke: 0.2, // Fixed stroke for player transfers
-                    })
-                  }
-                }
-              })
-            }
-
-            // Process outgoing transfers
-            if (team.teams_out) {
-              Object.entries(team.teams_out).forEach(([countryId, country]) => {
-                if (country.players && country.players[playerId]) {
-                  // Found a transfer for this player
-                  const player = country.players[playerId]
-                  const toCountry = country.country
-                  const toCountryCode = countryId
-                  const fromCountry = teamName
-                  const fromCountryCode = teamId
-
-                  // Create an arc for this transfer
-                  const fromCoords = getCountryCoordinates(fromCountryCode)
-                  const toCoords = getCountryCoordinates(toCountryCode)
-
-                  if (fromCoords && toCoords) {
-                    allArcs.push({
-                      startLat: fromCoords.lat,
-                      startLng: fromCoords.lng,
-                      endLat: toCoords.lat,
-                      endLng: toCoords.lng,
-                      color: "#4169E1", // Royal Blue for player career
-                      from: fromCountryCode,
-                      to: toCountryCode,
-                      count: 1, // Always 1 for a single player
-                      players: [player.name],
-                      year: y, // Add year information
-                      stroke: 0.2, // Fixed stroke for player transfers
-                    })
-                  }
-                }
-              })
-            }
-          })
-        })
-      } else {
-        // Fallback to old data structure
-        const playerNameLower = playerName.toLowerCase()
-
-        // Filter arcs for this player in this year
-        const yearArcs = data.arcs.filter(
-          (arc) => arc.players && arc.players.some((player) => player.toLowerCase().includes(playerNameLower)),
-        )
-
-        // Process the arcs for display
-        const processedArcs = yearArcs.map((arc) => {
-          // Filter the players array to only include the matching player(s)
-          const matchingPlayers = arc.players.filter((player) => player.toLowerCase().includes(playerNameLower))
-
-          return {
-            startLat: arc.startLat,
-            startLng: arc.startLong,
-            endLat: arc.endLat,
-            endLng: arc.endLong,
-            color: "#4169E1", // Royal Blue for player career
-            from: arc.from,
-            to: arc.to,
-            count: 1, // Always 1 for a single player
-            players: matchingPlayers,
-            year: y, // Add year information
-            stroke: 0.2, // Fixed stroke for player transfers
-          }
-        })
-
-        allArcs.push(...processedArcs)
-      }
-    }
-  }
-
-  console.log(`Total arcs for player career path: ${allArcs.length}`)
-
-  // Update the visualization with all arcs
-  if (allArcs.length > 0) {
-    // Store the career arcs for this player
-    playerCareerArcs = allArcs
-
-    // Update the visualization with all arcs at once
-    const arcsWithThickness = allArcs.map((arc) => ({
-      ...arc,
-      stroke: 0.2, // Fixed stroke for player transfers
-    }))
-
-    // Create glow effect
-    const glowArcs = allArcs.map((arc) => {
-      const hexToRgb = (hex) => {
-        const r = Number.parseInt(hex.slice(1, 3), 16)
-        const g = Number.parseInt(hex.slice(3, 5), 16)
-        const b = Number.parseInt(hex.slice(5, 7), 16)
-        return { r, g, b }
-      }
-
-      const { r, g, b } = hexToRgb(arc.color)
-
-      return {
-        ...arc,
-        stroke: 0.25, // Slightly thicker for glow
-        color: `rgba(${r}, ${g}, ${b}, 0.25)`,
-      }
-    })
-
-    // Update both globes with all arcs
-    mainGlobe.arcsData(arcsWithThickness)
-    glowGlobe.arcsData(glowArcs)
-    arcsArray = arcsWithThickness
-  } else {
-    // No arcs found for this player
-    mainGlobe.arcsData([])
-    glowGlobe.arcsData([])
-    arcsArray = []
-  }
-}
-
-// Helper function to get country coordinates
-function getCountryCoordinates(countryCode) {
-  // This would need to be implemented based on your data structure
-  // You might need to create a mapping of country codes to coordinates
-  // For now, return null and handle it in the calling function
-  return null
-}
-
-// Modify the exitPlayerCareerMode function to reset the selected player ID
-function exitPlayerCareerMode() {
-  playerCareerMode = false
-  playerCareerArcs = []
-  playerName = ""
-  firstPlayerTransferYear = null
-  selectedPlayerId = null // Reset the selected player ID
-
-  // Reset the player name input
-  const playerNameInput = document.getElementById("playerName")
-  if (playerNameInput) playerNameInput.value = ""
-
-  // Load regular arcs for the current year
-  loadArcsForYear(currentYear)
-}
-
-// Modify the setupAutoFiltering function to add autocomplete functionality
+// Modify the setupAutoFiltering function to improve player search
 function setupAutoFiltering() {
   // Add event listeners to all country checkboxes
   const countryCheckboxes = document.querySelectorAll('input[name="country"]')
@@ -1700,19 +1489,31 @@ function setupAutoFiltering() {
           return
         }
 
-        // Filter players based on search term
-        playerSearchResults = allPlayers.filter((player) => player.name.toLowerCase().includes(searchTerm)).slice(0, 10) // Limit to 10 results for performance
+        // Normalize the search term to handle accented characters
+        const normalizedSearchTerm = searchTerm.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+
+        // Filter players based on search term, handling accented characters
+        playerSearchResults = allPlayers
+          .filter((player) => {
+            const normalizedName = player.name
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+            return normalizedName.includes(normalizedSearchTerm)
+          })
+          .slice(0, 10) // Limit to 10 results for performance
+
+        console.log(`Search for "${searchTerm}" found ${playerSearchResults.length} results`)
 
         // Display results
         if (playerSearchResults.length > 0) {
           playerAutocomplete.innerHTML = ""
-          // Inside setupAutoFiltering function, find the part that creates the autocomplete items and replace it:
           playerSearchResults.forEach((player) => {
             const item = document.createElement("a")
             item.href = "#"
 
             // Format birth date for display
-            let birthDateDisplay = "Unknown"
+            let birthDateDisplay = "Data desconhecida"
             if (player.birthDate && player.birthDate !== "Unknown") {
               try {
                 const birthDate = new Date(player.birthDate)
@@ -1729,15 +1530,16 @@ function setupAutoFiltering() {
               player.position && player.position !== "Unknown" ? player.position : "Posição desconhecida"
 
             item.innerHTML = `
-    <strong>${player.name}</strong>
-    <br>
-    <small>${positionDisplay} | ${birthDateDisplay}</small>
-  `
+              <strong>${player.name}</strong>
+              <br>
+              <small>${positionDisplay} | ${birthDateDisplay}</small>
+            `
 
             item.addEventListener("click", (e) => {
               e.preventDefault()
               playerNameInput.value = player.name
               selectedPlayerId = player.id
+              console.log(`Selected player: ${player.name} (ID: ${player.id})`)
               playerAutocomplete.style.display = "none"
             })
 
@@ -1757,6 +1559,445 @@ function setupAutoFiltering() {
       }
     })
   }
+}
+
+// New function to find the first transfer year using player ID
+async function findFirstPlayerTransferYearById(playerId) {
+  console.log(`Finding first transfer year for player ID: ${playerId}`)
+
+  // Check if we have this player in the database
+  if (playerDatabase[playerId] && playerDatabase[playerId].transfers && playerDatabase[playerId].transfers.length > 0) {
+    // Sort transfers by year
+    const sortedTransfers = [...playerDatabase[playerId].transfers].sort(
+      (a, b) => Number.parseInt(a.year) - Number.parseInt(b.year),
+    )
+
+    // Get the first transfer year
+    firstPlayerTransferYear = Number.parseInt(sortedTransfers[0].year)
+    console.log(`First transfer year found in database: ${firstPlayerTransferYear}`)
+    return
+  }
+
+  // If it's a placeholder ID, extract the player name
+  let playerNameForSearch = null
+  if (playerId.startsWith("placeholder_")) {
+    playerNameForSearch = playerId.replace("placeholder_", "").replace(/_/g, " ")
+    console.log(`Using player name for search: ${playerNameForSearch}`)
+  }
+
+  // Search through all years
+  for (let year = minYear; year <= maxYear; year++) {
+    try {
+      // Load data for this year if not already loaded
+      if (!allYearsData[year]) {
+        const linesResponse = await fetch(`./files/arcs/lines_${year}.json`)
+        const yearData = await linesResponse.json()
+        allYearsData[year] = yearData
+      }
+
+      const data = allYearsData[year]
+
+      // Check if the data has the new structure
+      if (data.data && data.data.seasons) {
+        // Check each season for the player ID
+        let playerFound = false
+
+        Object.values(data.data.seasons).forEach((season) => {
+          if (playerFound) return
+
+          season.forEach((team) => {
+            if (playerFound) return
+
+            // Check incoming transfers
+            if (team.teams_in) {
+              Object.values(team.teams_in).forEach((country) => {
+                if (playerFound) return
+
+                if (country.players) {
+                  if (country.players[playerId]) {
+                    playerFound = true
+                    console.log(`Found player by ID in year ${year}`)
+                  } else if (playerNameForSearch) {
+                    // Search by name for placeholder IDs
+                    const matchingPlayer = Object.values(country.players).find(
+                      (player) => player.name && player.name.toLowerCase().includes(playerNameForSearch.toLowerCase()),
+                    )
+                    if (matchingPlayer) {
+                      playerFound = true
+                      console.log(`Found player by name in year ${year}`)
+                    }
+                  }
+                }
+              })
+            }
+
+            // Check outgoing transfers
+            if (!playerFound && team.teams_out) {
+              Object.values(team.teams_out).forEach((country) => {
+                if (playerFound) return
+
+                if (country.players) {
+                  if (country.players[playerId]) {
+                    playerFound = true
+                    console.log(`Found player by ID in year ${year}`)
+                  } else if (playerNameForSearch) {
+                    // Search by name for placeholder IDs
+                    const matchingPlayer = Object.values(country.players).find(
+                      (player) => player.name && player.name.toLowerCase().includes(playerNameForSearch.toLowerCase()),
+                    )
+                    if (matchingPlayer) {
+                      playerFound = true
+                      console.log(`Found player by name in year ${year}`)
+                    }
+                  }
+                }
+              })
+            }
+          })
+        })
+
+        if (playerFound) {
+          firstPlayerTransferYear = year
+          console.log(`First transfer year found: ${year}`)
+          return
+        }
+      } else {
+        // Handle old data structure as fallback
+        if (playerNameForSearch) {
+          const playerNameLower = playerNameForSearch.toLowerCase()
+
+          const playerArcs = data.arcs.filter(
+            (arc) =>
+              arc.players &&
+              arc.players.some(
+                (player) =>
+                  player.toLowerCase() === playerNameLower ||
+                  (player.toLowerCase().includes(playerNameLower) &&
+                    (player.toLowerCase().startsWith(playerNameLower) ||
+                      player.toLowerCase().includes(" " + playerNameLower))),
+              ),
+          )
+
+          if (playerArcs.length > 0) {
+            firstPlayerTransferYear = year
+            console.log(`First transfer year found in old format: ${year}`)
+            return
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error checking year ${year} for player ID ${playerId}:`, error)
+    }
+  }
+
+  console.log("No transfer year found for this player")
+}
+
+// New function to update player career path using player ID
+function updatePlayerCareerPathById(year, playerId) {
+  if (!playerCareerMode || !playerName) return
+
+  console.log(`Updating player career path for ${playerName} (ID: ${playerId}) up to year ${year}`)
+
+  // Get all arcs up to the current year
+  const allArcs = []
+
+  // Check if we have this player in the database with transfer history
+  if (playerDatabase[playerId] && playerDatabase[playerId].transfers) {
+    console.log(`Using player database for career path`)
+
+    // Filter transfers up to the current year
+    const relevantTransfers = playerDatabase[playerId].transfers.filter(
+      (transfer) => Number.parseInt(transfer.year) <= year,
+    )
+
+    console.log(`Found ${relevantTransfers.length} transfers for player up to year ${year}`)
+
+    // Process each transfer to create arcs
+    relevantTransfers.forEach((transfer) => {
+      const fromCode = transfer.from
+      const toCode = transfer.to
+      const transferYear = transfer.year
+
+      // Get coordinates for the countries
+      const fromCoords = getCountryCoordinatesFromCode(fromCode)
+      const toCoords = getCountryCoordinatesFromCode(toCode)
+
+      if (fromCoords && toCoords) {
+        allArcs.push({
+          startLat: fromCoords.lat,
+          startLng: fromCoords.lng,
+          endLat: toCoords.lat,
+          endLng: toCoords.lng,
+          color: "#4169E1", // Royal Blue for player career
+          from: fromCode,
+          to: toCode,
+          count: 1, // Always 1 for a single player
+          players: [playerName],
+          year: transferYear, // Add year information
+          stroke: 0.2, // Fixed stroke for player transfers
+        })
+      }
+    })
+  } else {
+    // Fallback to the old method
+    console.log(`Using fallback method for career path`)
+
+    // Process each year from the first transfer to the current year
+    for (let y = firstPlayerTransferYear; y <= year; y++) {
+      if (allYearsData[y]) {
+        const data = allYearsData[y]
+
+        // Check if the data has the new structure
+        if (data.data && data.data.seasons) {
+          // Process each season
+          Object.values(data.data.seasons).forEach((season) => {
+            // Process each team
+            season.forEach((team) => {
+              const teamName = team.name
+              const teamId = team.id
+
+              // Process incoming transfers
+              if (team.teams_in) {
+                Object.entries(team.teams_in).forEach(([countryId, country]) => {
+                  if (country.players && country.players[playerId]) {
+                    // Found a transfer for this player
+                    const player = country.players[playerId]
+                    const fromCountry = country.country
+                    const fromCountryCode = countryId
+                    const toCountry = teamName
+                    const toCountryCode = teamId
+
+                    // Create an arc for this transfer
+                    // We need to get coordinates for the countries
+                    const fromCoords = getCountryCoordinates(fromCountryCode)
+                    const toCoords = getCountryCoordinates(toCountryCode)
+
+                    if (fromCoords && toCoords) {
+                      allArcs.push({
+                        startLat: fromCoords.lat,
+                        startLng: fromCoords.lng,
+                        endLat: toCoords.lat,
+                        endLng: toCoords.lng,
+                        color: "#4169E1", // Royal Blue for player career
+                        from: fromCountryCode,
+                        to: toCountryCode,
+                        count: 1, // Always 1 for a single player
+                        players: [player.name],
+                        year: y, // Add year information
+                        stroke: 0.2, // Fixed stroke for player transfers
+                      })
+                    }
+                  }
+                })
+              }
+
+              // Process outgoing transfers
+              if (team.teams_out) {
+                Object.entries(team.teams_out).forEach(([countryId, country]) => {
+                  if (country.players && country.players[playerId]) {
+                    // Found a transfer for this player
+                    const player = country.players[playerId]
+                    const toCountry = country.country
+                    const toCountryCode = countryId
+                    const fromCountry = teamName
+                    const fromCountryCode = teamId
+
+                    // Create an arc for this transfer
+                    const fromCoords = getCountryCoordinates(fromCountryCode)
+                    const toCoords = getCountryCoordinates(toCountryCode)
+
+                    if (fromCoords && toCoords) {
+                      allArcs.push({
+                        startLat: fromCoords.lat,
+                        startLng: fromCoords.lng,
+                        endLat: toCoords.lat,
+                        endLng: toCoords.lng,
+                        color: "#4169E1", // Royal Blue for player career
+                        from: fromCountryCode,
+                        to: toCountryCode,
+                        count: 1, // Always 1 for a single player
+                        players: [player.name],
+                        year: y, // Add year information
+                        stroke: 0.2, // Fixed stroke for player transfers
+                      })
+                    }
+                  }
+                })
+              }
+            })
+          })
+        } else {
+          // Fallback to old data structure
+          const playerNameLower = playerName.toLowerCase()
+
+          // Filter arcs for this player in this year
+          const yearArcs = data.arcs.filter(
+            (arc) => arc.players && arc.players.some((player) => player.toLowerCase().includes(playerNameLower)),
+          )
+
+          // Process the arcs for display
+          const processedArcs = yearArcs.map((arc) => {
+            // Filter the players array to only include the matching player(s)
+            const matchingPlayers = arc.players.filter((player) => player.toLowerCase().includes(playerNameLower))
+
+            return {
+              startLat: arc.startLat,
+              startLng: arc.startLong,
+              endLat: arc.endLat,
+              endLng: arc.endLong,
+              color: "#4169E1", // Royal Blue for player career
+              from: arc.from,
+              to: arc.to,
+              count: 1, // Always 1 for a single player
+              players: matchingPlayers,
+              year: y, // Add year information
+              stroke: 0.2, // Fixed stroke for player transfers
+            }
+          })
+
+          allArcs.push(...processedArcs)
+        }
+      }
+    }
+  }
+
+  console.log(`Total arcs for player career path: ${allArcs.length}`)
+
+  // Update the visualization with all arcs
+  if (allArcs.length > 0) {
+    // Store the career arcs for this player
+    playerCareerArcs = allArcs
+
+    // Update the visualization with all arcs at once
+    const arcsWithThickness = allArcs.map((arc) => ({
+      ...arc,
+      stroke: 0.2, // Fixed stroke for player transfers
+    }))
+
+    // Create glow effect
+    const glowArcs = allArcs.map((arc) => {
+      const hexToRgb = (hex) => {
+        const r = Number.parseInt(hex.slice(1, 3), 16)
+        const g = Number.parseInt(hex.slice(3, 5), 16)
+        const b = Number.parseInt(hex.slice(5, 7), 16)
+        return { r, g, b }
+      }
+
+      const { r, g, b } = hexToRgb(arc.color)
+
+      return {
+        ...arc,
+        stroke: 0.25, // Slightly thicker for glow
+        color: `rgba(${r}, ${g}, ${b}, 0.25)`,
+      }
+    })
+
+    // Update both globes with all arcs
+    mainGlobe.arcsData(arcsWithThickness)
+    glowGlobe.arcsData(glowArcs)
+    arcsArray = arcsWithThickness
+  } else {
+    // No arcs found for this player
+    mainGlobe.arcsData([])
+    glowGlobe.arcsData([])
+    arcsArray = []
+  }
+}
+
+// Helper function to get country coordinates from country code
+function getCountryCoordinatesFromCode(countryCode) {
+  // Find the country ID from the code
+  const countryId = Object.entries(country_info).find(([id, info]) => info.code === countryCode)?.[0]
+
+  if (countryId) {
+    return {
+      lat: country_info[countryId].lat,
+      lng: country_info[countryId].lng,
+    }
+  }
+
+  // Fallback: try to find coordinates from the arcs data
+  for (const year in allYearsData) {
+    const yearData = allYearsData[year]
+    if (yearData && yearData.arcs) {
+      // Look for arcs that have this country as origin or destination
+      const arcWithCountry = yearData.arcs.find((arc) => arc.from === countryCode || arc.to === countryCode)
+
+      if (arcWithCountry) {
+        if (arcWithCountry.from === countryCode) {
+          return {
+            lat: arcWithCountry.startLat,
+            lng: arcWithCountry.startLong,
+          }
+        } else {
+          return {
+            lat: arcWithCountry.endLat,
+            lng: arcWithCountry.endLong,
+          }
+        }
+      }
+    }
+  }
+
+  return null
+}
+
+// Helper function to get country coordinates (original function)
+function getCountryCoordinates(countryCode) {
+  // This would need to be implemented based on your data structure
+  // You might need to create a mapping of country codes to coordinates
+  // For now, return null and handle it in the calling function
+  return null
+}
+
+// Modify the resetAllFilters function to properly check all country checkboxes
+function resetAllFilters() {
+  // Reset country selection - check all checkboxes
+  const countryCheckboxes = document.querySelectorAll('input[name="country"]')
+  countryCheckboxes.forEach((checkbox) => (checkbox.checked = true))
+
+  // Reset continent checkboxes - check all
+  const continentCheckboxes = document.querySelectorAll(".continent-checkbox")
+  continentCheckboxes.forEach((checkbox) => (checkbox.checked = true))
+
+  // Reset select all checkbox
+  const selectAllCheckbox = document.getElementById("selectAll")
+  if (selectAllCheckbox) selectAllCheckbox.checked = true
+
+  // Reset transfer direction checkboxes
+  const showTransfersIn = document.getElementById("showTransfersIn")
+  const showTransfersOut = document.getElementById("showTransfersOut")
+  const showAllTransfersCheckbox = document.getElementById("showAllTransfers")
+  if (showTransfersIn) showTransfersIn.checked = true
+  if (showTransfersOut) showTransfersOut.checked = true
+  if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true
+
+  // Reset country-to-country filter dropdowns
+  const sourceDropdown = document.getElementById("sourceCountry")
+  const destDropdown = document.getElementById("destinationCountry")
+  if (sourceDropdown) sourceDropdown.value = ""
+  if (destDropdown) destDropdown.value = ""
+
+  // Reset player filter
+  resetPlayerFilter()
+
+  // Reset filter state completely
+  currentFilterState = {
+    selectedCountryCodes: [],
+    showTransfersIn: true,
+    showTransfersOut: true,
+    sourceCountryCode: null,
+    destCountryCode: null,
+    playerName: null,
+    countryToCountryFilterActive: false,
+    playerFilterActive: false,
+    bidirectionalFilter: false,
+    filtersApplied: false,
+  }
+
+  // Load arcs for the current year without any filters
+  loadArcsForYear(currentYear)
 }
 
 // Initialize all filters
@@ -1802,49 +2043,38 @@ function resetPlayerFilter() {
 
   // Exit player career mode
   exitPlayerCareerMode()
-}
 
-function resetAllFilters() {
-  // Reset country selection - check all checkboxes
-  const countryCheckboxes = document.querySelectorAll('input[name="country"]')
-  countryCheckboxes.forEach((checkbox) => (checkbox.checked = true))
-
-  // Reset continent checkboxes - check all
-  const continentCheckboxes = document.querySelectorAll(".continent-checkbox")
-  continentCheckboxes.forEach((checkbox) => (checkbox.checked = true))
-
-  // Reset select all checkbox
-  const selectAllCheckbox = document.getElementById("selectAll")
-  if (selectAllCheckbox) selectAllCheckbox.checked = true
-
-  // Reset transfer direction checkboxes
-  const showTransfersIn = document.getElementById("showTransfersIn")
-  const showTransfersOut = document.getElementById("showTransfersOut")
-  const showAllTransfersCheckbox = document.getElementById("showAllTransfers")
-  if (showTransfersIn) showTransfersIn.checked = true
-  if (showTransfersOut) showTransfersOut.checked = true
-  if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true
-
-  // Reset country-to-country filter
-  resetCountryToCountryFilter()
-
-  // Reset player filter
-  resetPlayerFilter()
-
-  // Reset filter state
+  // Update the current filter state to disable player filter
   currentFilterState = {
-    selectedCountryCodes: [],
-    showTransfersIn: true,
-    showTransfersOut: true,
-    sourceCountryCode: null,
-    destCountryCode: null,
+    ...currentFilterState,
     playerName: null,
-    countryToCountryFilterActive: false,
     playerFilterActive: false,
-    bidirectionalFilter: false,
-    filtersApplied: false,
   }
 
-  // Apply the filters
-  applyCurrentFilters()
+  // If this was the only active filter, reset filtersApplied flag
+  if (!currentFilterState.countryToCountryFilterActive && currentFilterState.selectedCountryCodes.length === 0) {
+    currentFilterState.filtersApplied = false
+  }
+
+  // Load arcs for the current year
+  loadArcsForYear(currentYear)
+}
+
+function exitPlayerCareerMode() {
+  playerCareerMode = false
+  playerName = ""
+  playerCareerArcs = []
+  firstPlayerTransferYear = null
+
+  // Reset player name input
+  const playerNameInput = document.getElementById("playerName")
+  if (playerNameInput) playerNameInput.value = ""
+  selectedPlayerId = null
+
+  // Reset the current year to the default value
+  currentYear = Number.parseInt(document.getElementById("time-slider").value) || minYear
+  document.getElementById("current-year").textContent = currentYear
+
+  // Load arcs for the current year
+  loadArcsForYear(currentYear)
 }
