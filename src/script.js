@@ -273,7 +273,7 @@ async function loadInitialData() {
 
     // Load player database if available
     try {
-      const playerDbResponse = await fetch("./files/players_database.json")
+      const playerDbResponse = await fetch("./files/players.json")
       const playerDbData = await playerDbResponse.json()
       playerDatabase = playerDbData.players || {}
       console.log(`Loaded player database with ${Object.keys(playerDatabase).length} players`)

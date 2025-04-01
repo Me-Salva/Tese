@@ -6,7 +6,7 @@ import re
 map_file_path = 'D:/Tese/Tese/test/src/files/map.json'
 transfers_folder_path = 'D:/Tese/Tese/test/src/files/transfers'
 output_folder_path = 'D:/Tese/Tese/test/src/files/arcs'
-player_db_path = 'D:/Tese/Tese/test/src/files/players_database.json'  # New output file for player database
+player_db_path = 'D:/Tese/Tese/test/src/files/players.json'  # New output file for player database
 
 def extract_year(season_name):
   match = re.search(r'\b(\d{4})/?(\d{2})?\b', season_name)
