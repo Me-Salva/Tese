@@ -9,17 +9,24 @@ output_folder_path = 'D:/Tese/Tese/test/src/files/arcs'
 player_db_path = 'D:/Tese/Tese/test/src/files/players.json'  # New output file for player database
 
 def extract_year(season_name):
-  match = re.search(r'\b(\d{4})/?(\d{2})?\b', season_name)
-  if match:
-      year = match.group(2) or match.group(1)
-      return f"20{year}" if len(year) == 2 and int(year) < 50 else f"19{year}" if len(year) == 2 else year
+    match = re.search(r'(\d{4})/(\d{4})', season_name)
+    if match:
+        return match.group(1)  # Take the second year (e.g., "2025" from "2024/2025")
 
-  match = re.search(r'\b(\d{2})\b', season_name)
-  if match:
-      year = int(match.group(1))
-      return f"20{year}" if year < 50 else f"19{year}"
+    match = re.search(r'\b(\d{4})\b', season_name)
+    if match:
+        return match.group(1)  # Return the single four-digit year
 
-  return None
+    match = re.search(r'\b(\d{2})/?(\d{2})?\b', season_name)
+    if match:
+        year = match.group(1)
+        return f"20{year}" if int(year) < 50 else f"19{year}"
+    
+    match = re.search(r'\b(\d{4})/?(\d{2})?\b', season_name)
+    if match:
+        return match.group(1)
+
+    return None
 
 with open(map_file_path, 'r', encoding='utf-8') as f:
   map_data = json.load(f)
@@ -261,7 +268,7 @@ for year, origin_data in yearly_transfer_data.items():
 
 # Write the consolidated arcs to files
 for year, arcs in yearly_arcs.items():
-  if 1951 <= int(year) <= 2025:
+  if 1950 <= int(year) <= 2025:
       lines_data = {
           "type": "Transfer",
           "arcs": arcs

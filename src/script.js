@@ -12,8 +12,8 @@ let hoveredArc = null
 let globeInitialized = false
 let isPlaying = false
 let animationInterval = null
-let currentYear = 1951
-const minYear = 1951
+let currentYear = 1950
+const minYear = 1950
 const maxYear = 2025
 
 // Player career path tracking
