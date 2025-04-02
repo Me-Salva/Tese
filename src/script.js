@@ -12,8 +12,8 @@ let hoveredArc = null
 let globeInitialized = false
 let isPlaying = false
 let animationInterval = null
-let currentYear = 1951
-const minYear = 1951
+let currentYear = 1950
+const minYear = 1950
 const maxYear = 2025
 
 // Player career path tracking
@@ -40,9 +40,6 @@ let currentFilterState = {
   bidirectionalFilter: false,
   filtersApplied: false,
 }
-
-// Add a new variable to track animation speed
-let animationSpeed = 1 // 1 = normal speed, 2 = double speed
 
 function debounce(func, wait) {
   let timeout
@@ -152,12 +149,6 @@ function setupTimeControls() {
   const playPauseBtn = document.getElementById("play-pause-btn")
   const forwardBtn = document.getElementById("forward-btn")
   const backwardBtn = document.getElementById("backward-btn")
-  const speedToggleBtn = document.getElementById("speed-toggle-btn")
-
-  // Add event listener for the speed toggle button
-  if (speedToggleBtn) {
-    speedToggleBtn.addEventListener("click", toggleAnimationSpeed)
-  }
 
   // Play/Pause button event
   playPauseBtn.addEventListener("click", () => {
@@ -175,36 +166,34 @@ function setupTimeControls() {
   })
 }
 
-// Add a new function to toggle animation speed
-function toggleAnimationSpeed() {
-  const speedToggleBtn = document.getElementById("speed-toggle-btn")
+// Toggle play/pause state
+function togglePlayPause(button) {
+  isPlaying = !isPlaying
 
-  // Toggle between 1x and 2x speed
-  if (animationSpeed === 1) {
-    animationSpeed = 2
-    speedToggleBtn.textContent = "1x"
-  } else {
-    animationSpeed = 1
-    speedToggleBtn.textContent = "2x"
-  }
-
-  // If animation is currently playing, restart it with the new speed
   if (isPlaying) {
-    stopYearAnimation()
+    // Change to pause icon
+    button.innerHTML = "&#9616;&#9616;" // Pause icon
+    button.classList.add("playing")
+
+    // Start animation
     startYearAnimation()
+  } else {
+    // Change to play icon
+    button.innerHTML = "&#9658;" // Play icon
+    button.classList.remove("playing")
+
+    // Stop animation
+    stopYearAnimation()
   }
 }
 
-// Modify the startYearAnimation function to use the animation speed
+// Start year animation
 function startYearAnimation() {
   if (animationInterval) {
     clearInterval(animationInterval)
   }
 
-  // Calculate interval based on speed (2000ms for 1x, 1000ms for 2x)
-  const interval = 2000 / animationSpeed
-
-  // Advance year based on the selected speed
+  // Advance year every 2 seconds
   animationInterval = setInterval(() => {
     if (currentYear < maxYear) {
       currentYear++
@@ -212,7 +201,7 @@ function startYearAnimation() {
     } else {
       togglePlayPause(document.getElementById("play-pause-btn"))
     }
-  }, interval)
+  }, 2000)
 }
 
 // Stop year animation
@@ -284,23 +273,13 @@ async function loadInitialData() {
 
     // Load player database if available
     try {
-      const playerDbResponse = await fetch("./files/players_database.json")
+      const playerDbResponse = await fetch("./files/players.json")
       const playerDbData = await playerDbResponse.json()
       playerDatabase = playerDbData.players || {}
       console.log(`Loaded player database with ${Object.keys(playerDatabase).length} players`)
     } catch (error) {
       console.warn("Player database not found, using fallback method:", error)
       // Continue with fallback method if player database is not available
-    }
-
-    // Load country info
-    try {
-      const countryInfoResponse = await fetch("./files/country_info.json")
-      const countryInfoData = await countryInfoResponse.json()
-      country_info = countryInfoData
-      console.log(`Loaded country info with ${Object.keys(country_info).length} countries`)
-    } catch (error) {
-      console.warn("Country info not found:", error)
     }
 
     // Initialize the globe with countries data
@@ -778,6 +757,7 @@ function initGlobe(countries) {
     .polygonSideColor(() => "#abb2b9")
     .showAtmosphere(true)
     .atmosphereColor("#f8f9f9")
+    .atmosphereAltitude(0.25)
     .arcsData([])
     .arcColor((arc) => arc.color || "#FF0000")
     .arcAltitudeAutoScale((arc) => arc.scale || 0.5)
@@ -2097,17 +2077,4 @@ function exitPlayerCareerMode() {
 
   // Load arcs for the current year
   loadArcsForYear(currentYear)
-}
-
-// Declare togglePlayPause function
-function togglePlayPause(playPauseBtn) {
-  isPlaying = !isPlaying
-
-  if (isPlaying) {
-    playPauseBtn.textContent = "Pause"
-    startYearAnimation()
-  } else {
-    playPauseBtn.textContent = "Play"
-    stopYearAnimation()
-  }
 }
