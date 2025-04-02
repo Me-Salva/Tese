@@ -132,6 +132,13 @@
     .play-pause-btn.playing:hover {
       background-color: #e53935;
     }
+    .speed-toggle-btn {
+      background-color: #f0f0f0;
+      margin-left: 10px;
+    }
+    .speed-toggle-btn:hover {
+      background-color: #e0e0e0;
+    }
     /* Advanced Filters Styles */
     .advanced-filters {
       margin-top: 15px;
@@ -368,8 +375,8 @@
   </div>
 
   <div id="time-slider-container">
-    <label for="time-slider">Ano: <span id="current-year">1950</span></label>
-    <input type="range" id="time-slider" min="1950" max="2025" value="1950" step="1">
+    <label for="time-slider">Ano: <span id="current-year">1951</span></label>
+    <input type="range" id="time-slider" min="1951" max="2025" value="1951" step="1">
   </div>
 
   <!-- Time Controls -->
@@ -377,6 +384,7 @@
     <button id="backward-btn" class="time-control-btn backward-btn">&#9664;</button>
     <button id="play-pause-btn" class="time-control-btn play-pause-btn">&#9658;</button>
     <button id="forward-btn" class="time-control-btn forward-btn">&#9654;</button>
+    <button id="speed-toggle-btn" class="time-control-btn speed-toggle-btn">2x</button>
   </div>
 
   <div id="tooltip" style="position: absolute; display: none; background: rgba(255, 255, 255, 0.9); 
