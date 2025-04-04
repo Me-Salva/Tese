@@ -2,28 +2,41 @@ import * as THREE from "three"
 import ThreeGlobe from "three-globe"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 
-var renderer, camera, scene, controls, mainGlobe, glowGlobe
-var countriesData, arcsData
-var arcsArray = []
+//=============================================================================
+// GLOBAL VARIABLES AND CONSTANTS
+//=============================================================================
+
+// Core visualization variables
+let renderer, camera, scene, controls, mainGlobe, glowGlobe
+let globeInitialized = false
+
+// Data variables
+let countriesData, arcsData
+let arcsArray = []
 const countryCodeToName = {}
+const country_info = {}
+const allYearsData = {} // Store data for all years to avoid repeated fetching
+let allPlayers = [] // Global variable to store all players
+let playerDatabase = {}
+
+// Interaction variables
 const raycaster = new THREE.Raycaster()
 const mouse = new THREE.Vector2()
 let hoveredArc = null
-let globeInitialized = false
+
+// Time control variables
 let isPlaying = false
 let animationInterval = null
 let currentYear = 1950
 const minYear = 1950
 const maxYear = 2025
+let animationSpeed = 1 // Default animation speed
 
 // Player career path tracking
 let playerCareerMode = false
 let playerCareerArcs = []
 let playerName = ""
 let firstPlayerTransferYear = null
-const allYearsData = {} // Store data for all years to avoid repeated fetching
-
-// Add these variables to your existing global variables
 let playerSearchResults = []
 let selectedPlayerId = null
 
@@ -41,6 +54,11 @@ let currentFilterState = {
   filtersApplied: false,
 }
 
+//=============================================================================
+// UTILITY FUNCTIONS
+//=============================================================================
+
+// Debounce function to limit how often a function is called
 function debounce(func, wait) {
   let timeout
   return function (...args) {
@@ -49,30 +67,110 @@ function debounce(func, wait) {
   }
 }
 
-init()
-loadInitialData()
-onWindowResize()
-animate()
+// Convert latitude and longitude to 3D vector
+function latLonToVector3(lat, lon, radius = 100) {
+  const phi = (90 - lat) * (Math.PI / 180)
+  const theta = (lon + 90) * (Math.PI / 180)
 
+  const x = -radius * Math.sin(phi) * Math.cos(theta)
+  const y = radius * Math.cos(phi)
+  const z = radius * Math.sin(phi) * Math.sin(theta)
+
+  return new THREE.Vector3(x, y, z)
+}
+
+// Generate points along an arc path with proper altitude
+function generateArcPoints(startLat, startLng, endLat, endLng, scale, numPoints = 30) {
+  const points = []
+  const start = latLonToVector3(startLat, startLng, 100)
+  const end = latLonToVector3(endLat, endLng, 100)
+
+  for (let i = 0; i <= numPoints; i++) {
+    const t = i / numPoints
+    // Create a point along the arc
+    const point = new THREE.Vector3().lerpVectors(start, end, t)
+
+    // Apply altitude curve to the point
+    const altitude = scale || 0.5
+    const altitudeFactor = Math.sin(t * Math.PI) * altitude
+    const elevated = point
+      .clone()
+      .normalize()
+      .multiplyScalar(100 * (1 + altitudeFactor * 0.4))
+
+    points.push(elevated)
+  }
+
+  return points
+}
+
+// Helper function to get country coordinates from country code
+function getCountryCoordinatesFromCode(countryCode) {
+  // Find the country ID from the code
+  const countryId = Object.entries(country_info).find(([id, info]) => info.code === countryCode)?.[0]
+
+  if (countryId) {
+    return {
+      lat: country_info[countryId].lat,
+      lng: country_info[countryId].lng,
+    }
+  }
+
+  // Fallback: try to find coordinates from the arcs data
+  for (const year in allYearsData) {
+    const yearData = allYearsData[year]
+    if (yearData && yearData.arcs) {
+      // Look for arcs that have this country as origin or destination
+      const arcWithCountry = yearData.arcs.find((arc) => arc.from === countryCode || arc.to === countryCode)
+
+      if (arcWithCountry) {
+        if (arcWithCountry.from === countryCode) {
+          return {
+            lat: arcWithCountry.startLat,
+            lng: arcWithCountry.startLong,
+          }
+        } else {
+          return {
+            lat: arcWithCountry.endLat,
+            lng: arcWithCountry.endLong,
+          }
+        }
+      }
+    }
+  }
+
+  return null
+}
+
+//=============================================================================
+// INITIALIZATION AND CORE RENDERING
+//=============================================================================
+
+// Initialize the application
 function init() {
+  // Setup renderer
   renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(window.innerWidth, window.innerHeight)
   document.body.appendChild(renderer.domElement)
 
+  // Setup scene
   scene = new THREE.Scene()
   scene.background = new THREE.Color(0xffffff)
 
+  // Setup lighting
   var ambientLight = new THREE.AmbientLight(0xffffff, 1.2)
   scene.add(ambientLight)
 
   var hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5)
   scene.add(hemisphereLight)
 
+  // Setup camera
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000)
   camera.position.set(0, 0, 400)
   scene.add(camera)
 
+  // Add directional lights
   var dLight = new THREE.DirectionalLight(0xffffff, 0.8)
   dLight.position.set(-800, 2000, 400)
   scene.add(dLight)
@@ -85,6 +183,7 @@ function init() {
   dLight2.position.set(200, -500, -200)
   scene.add(dLight2)
 
+  // Setup controls
   controls = new OrbitControls(camera, renderer.domElement)
   controls.enableDamping = true
   controls.dampingFactor = 0.05
@@ -95,166 +194,142 @@ function init() {
   controls.minPolarAngle = Math.PI / 4
   controls.maxPolarAngle = Math.PI / 2
 
+  // Setup event listeners
   window.addEventListener("resize", onWindowResize, false)
-
-  const selectAllCheckbox = document.getElementById("selectAll")
-  selectAllCheckbox.addEventListener("change", toggleAllCountries)
-
-  const continentCheckboxes = document.querySelectorAll(".continent-checkbox")
-  continentCheckboxes.forEach((checkbox) => {
-    checkbox.addEventListener("change", toggleContinent)
-  })
-
-  const timeSlider = document.getElementById("time-slider")
-  timeSlider.addEventListener(
-    "input",
-    debounce(() => {
-      currentYear = Number.parseInt(timeSlider.value)
-      document.getElementById("current-year").textContent = currentYear
-
-      if (playerCareerMode) {
-        updatePlayerCareerPath(currentYear)
-      } else {
-        loadArcsForYear(currentYear)
-      }
-    }, 200),
-  )
-
-  // Set up time control buttons
-  setupTimeControls()
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const filtersDiv = document.getElementById("filters")
-    const toggleButton = document.getElementById("toggle-filters")
-
-    filtersDiv.style.display = "none"
-    toggleButton.textContent = "Mostrar Filtros"
-
-    toggleButton.addEventListener("click", () => {
-      if (filtersDiv.style.display === "none" || filtersDiv.style.display === "") {
-        filtersDiv.style.display = "block"
-        toggleButton.textContent = "Esconder Filtros"
-      } else {
-        filtersDiv.style.display = "none"
-        toggleButton.textContent = "Mostrar Filtros"
-      }
-    })
-  })
-
   window.addEventListener("mousemove", onMouseMove, false)
+
+  // Setup UI controls
+  setupUIControls()
 }
 
-// Setup time controls (play/pause, forward, backward)
-function setupTimeControls() {
-  const playPauseBtn = document.getElementById("play-pause-btn")
-  const forwardBtn = document.getElementById("forward-btn")
-  const backwardBtn = document.getElementById("backward-btn")
-
-  // Play/Pause button event
-  playPauseBtn.addEventListener("click", () => {
-    togglePlayPause(playPauseBtn)
-  })
-
-  // Forward button event
-  forwardBtn.addEventListener("click", () => {
-    goToNextYear()
-  })
-
-  // Backward button event
-  backwardBtn.addEventListener("click", () => {
-    goToPreviousYear()
-  })
+// Handle window resize
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize(window.innerWidth, window.innerHeight)
 }
 
-// Toggle play/pause state
-function togglePlayPause(button) {
-  isPlaying = !isPlaying
-
-  if (isPlaying) {
-    // Change to pause icon
-    button.innerHTML = "&#9616;&#9616;" // Pause icon
-    button.classList.add("playing")
-
-    // Start animation
-    startYearAnimation()
-  } else {
-    // Change to play icon
-    button.innerHTML = "&#9658;" // Play icon
-    button.classList.remove("playing")
-
-    // Stop animation
-    stopYearAnimation()
-  }
+// Animation loop
+function animate() {
+  controls.update()
+  renderer.render(scene, camera)
+  requestAnimationFrame(animate)
 }
 
-// Start year animation
-function startYearAnimation() {
-  if (animationInterval) {
-    clearInterval(animationInterval)
-  }
+// Create country borders for the globe
+function createCountryBorders(countries) {
+  const borderMaterial = new THREE.LineBasicMaterial({ color: "#d6dbdf", linewidth: 1 })
+  const bordersGroup = new THREE.Group()
 
-  // Advance year every 2 seconds
-  animationInterval = setInterval(() => {
-    if (currentYear < maxYear) {
-      currentYear++
-      updateYearDisplay()
-    } else {
-      togglePlayPause(document.getElementById("play-pause-btn"))
+  countries.features.forEach((country) => {
+    const coordinates = country.geometry.coordinates
+
+    if (country.geometry.type === "Polygon") {
+      coordinates.forEach((polygon) => {
+        const points = polygon.map(([lng, lat]) => {
+          const phi = (90 - lat) * (Math.PI / 180)
+          const theta = (lng + 90) * (Math.PI / 180)
+          const radius = 100.7
+          return new THREE.Vector3(
+            -radius * Math.sin(phi) * Math.cos(theta),
+            radius * Math.cos(phi),
+            radius * Math.sin(phi) * Math.sin(theta),
+          )
+        })
+
+        const geometry = new THREE.BufferGeometry().setFromPoints(points)
+        const borderLine = new THREE.Line(geometry, borderMaterial)
+        bordersGroup.add(borderLine)
+      })
+    } else if (country.geometry.type === "MultiPolygon") {
+      coordinates.forEach((multiPolygon) => {
+        multiPolygon.forEach((polygon) => {
+          const points = polygon.map(([lng, lat]) => {
+            const phi = (90 - lat) * (Math.PI / 180)
+            const theta = (lng + 90) * (Math.PI / 180)
+            const radius = 100.7
+            return new THREE.Vector3(
+              -radius * Math.sin(phi) * Math.cos(theta),
+              radius * Math.cos(phi),
+              radius * Math.sin(phi) * Math.sin(theta),
+            )
+          })
+
+          const geometry = new THREE.BufferGeometry().setFromPoints(points)
+          const borderLine = new THREE.Line(geometry, borderMaterial)
+          bordersGroup.add(borderLine)
+        })
+      })
     }
-  }, 2000)
+  })
+
+  return bordersGroup
 }
 
-// Stop year animation
-function stopYearAnimation() {
-  if (animationInterval) {
-    clearInterval(animationInterval)
-    animationInterval = null
-  }
+// Initialize the globe with countries data
+function initGlobe(countries) {
+  if (globeInitialized) return // Only initialize once
+
+  console.log("Initializing globe")
+
+  // Create glow globe
+  glowGlobe = new ThreeGlobe({
+    waitForGlobeReady: true,
+    animateIn: true,
+  })
+    .showAtmosphere(false)
+    .arcsData([])
+    .arcColor((arc) => arc.color || "#FF0000")
+    .arcAltitudeAutoScale((arc) => arc.scale || 0.5)
+    .arcStroke((arc) => arc.stroke || 0.1)
+    .arcDashLength(1)
+    .arcDashGap(0)
+    .arcDashAnimateTime(2000)
+    .arcsTransitionDuration(1000)
+
+  glowGlobe.scale.set(100, 100, 100)
+  scene.add(glowGlobe)
+
+  // Create main globe
+  mainGlobe = new ThreeGlobe({
+    waitForGlobeReady: true,
+    animateIn: true,
+  })
+    .polygonsData(countries.features)
+    .polygonAltitude(0.005)
+    .polygonCapColor(() => "#abb2b9")
+    .polygonSideColor(() => "#abb2b9")
+    .showAtmosphere(true)
+    .atmosphereColor("#f8f9f9")
+    .atmosphereAltitude(0.25)
+    .arcsData([])
+    .arcColor((arc) => arc.color || "#FF0000")
+    .arcAltitudeAutoScale((arc) => arc.scale || 0.5)
+    .arcStroke((arc) => arc.stroke || 0.1)
+    .arcDashLength(0.25)
+    .arcDashGap(0.25)
+    .arcDashAnimateTime(2000)
+    .arcsTransitionDuration(1000)
+
+  const globeMaterial = mainGlobe.globeMaterial()
+  globeMaterial.emissive = new THREE.Color("#f8f9f9")
+  globeMaterial.emissiveIntensity = 0.2
+  globeMaterial.shininess = 0.8
+
+  mainGlobe.scale.set(100, 100, 100)
+  scene.add(mainGlobe)
+
+  const borders = createCountryBorders(countries)
+  scene.add(borders)
+
+  globeInitialized = true
 }
 
-// Go to next year
-function goToNextYear() {
-  if (currentYear < maxYear) {
-    currentYear++
-    updateYearDisplay()
-  }
-}
+//=============================================================================
+// DATA LOADING AND PROCESSING
+//=============================================================================
 
-// Go to previous year
-function goToPreviousYear() {
-  if (currentYear > minYear) {
-    currentYear--
-    updateYearDisplay()
-  }
-}
-
-// Update year display and load arcs for the current year
-function updateYearDisplay() {
-  // Update slider value
-  const timeSlider = document.getElementById("time-slider")
-  timeSlider.value = currentYear
-
-  // Update year text
-  document.getElementById("current-year").textContent = currentYear
-
-  // Load arcs for the new year or update player career path
-  if (playerCareerMode) {
-    updatePlayerCareerPath(currentYear)
-  } else {
-    loadArcsForYear(currentYear)
-  }
-}
-
-// Add this to your loadInitialData function
-let allPlayers = [] // Global variable to store all players
-
-// Add this to your global variables
-let playerDatabase = {}
-
-// Load country info
-let country_info = {}
-
-// Modify the loadInitialData function to load the player database
+// Load initial data
 async function loadInitialData() {
   try {
     // Load countries data (only need to do this once)
@@ -301,7 +376,7 @@ async function loadInitialData() {
   }
 }
 
-// Modify the buildPlayerDatabase function to use the player database if available
+// Build player database from available data
 async function buildPlayerDatabase() {
   console.log("Building player database...")
 
@@ -477,6 +552,511 @@ async function loadArcsForYear(year) {
   }
 }
 
+// Update only the arcs without recreating the globe
+function updateArcs(arcsData) {
+  arcsArray = []
+
+  const arcsWithThickness = arcsData.map((arc) => ({
+    ...arc,
+    stroke: Math.max(0.05, (arc.count / 10) * 0.25),
+  }))
+
+  const glowArcs = arcsData.map((arc) => {
+    const hexToRgb = (hex) => {
+      const r = Number.parseInt(hex.slice(1, 3), 16)
+      const g = Number.parseInt(hex.slice(3, 5), 16)
+      const b = Number.parseInt(hex.slice(5, 7), 16)
+      return { r, g, b }
+    }
+
+    const { r, g, b } = hexToRgb(arc.color || "#FF0000")
+
+    return {
+      ...arc,
+      stroke: Math.max(0.06, (arc.count / 10) * 0.3),
+      color: `rgba(${r}, ${g}, ${b}, 0.25)`,
+    }
+  })
+
+  // Update arcs with smooth transition
+  mainGlobe.arcsData(arcsWithThickness)
+  glowGlobe.arcsData(glowArcs)
+
+  arcsArray = mainGlobe.arcsData()
+
+  // Reset hover state when arcs are updated
+  if (hoveredArc) {
+    hoveredArc = null
+    hideTooltip()
+  }
+}
+
+// Preload all years data
+async function preloadAllYearsData() {
+  console.log("Preloading all years data...")
+
+  // Create an array of promises for loading all years
+  const loadPromises = []
+
+  for (let year = minYear; year <= maxYear; year++) {
+    if (!allYearsData[year]) {
+      const promise = fetch(`./files/arcs/lines_${year}.json`)
+        .then((response) => response.json())
+        .then((data) => {
+          allYearsData[year] = data
+          console.log(`Loaded data for year ${year}`)
+        })
+        .catch((error) => {
+          console.error(`Error loading data for year ${year}:`, error)
+        })
+
+      loadPromises.push(promise)
+    }
+  }
+
+  // Wait for all data to be loaded
+  await Promise.all(loadPromises)
+  console.log("All years data preloaded")
+}
+
+//=============================================================================
+// UI CONTROLS SETUP
+//=============================================================================
+
+// Setup all UI controls
+function setupUIControls() {
+  // Setup country selection controls
+  const selectAllCheckbox = document.getElementById("selectAll")
+  selectAllCheckbox.addEventListener("change", toggleAllCountries)
+
+  const continentCheckboxes = document.querySelectorAll(".continent-checkbox")
+  continentCheckboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", toggleContinent)
+  })
+
+  // Setup time slider
+  const timeSlider = document.getElementById("time-slider")
+  timeSlider.addEventListener(
+    "input",
+    debounce(() => {
+      currentYear = Number.parseInt(timeSlider.value)
+      document.getElementById("current-year").textContent = currentYear
+
+      if (playerCareerMode) {
+        updatePlayerCareerPath(currentYear)
+      } else {
+        loadArcsForYear(currentYear)
+      }
+    }, 200),
+  )
+
+  // Set up time control buttons
+  setupTimeControls()
+
+  // Setup filters toggle
+  document.addEventListener("DOMContentLoaded", () => {
+    const filtersDiv = document.getElementById("filters")
+    const toggleButton = document.getElementById("toggle-filters")
+
+    filtersDiv.style.display = "none"
+    toggleButton.textContent = "Mostrar Filtros"
+
+    toggleButton.addEventListener("click", () => {
+      if (filtersDiv.style.display === "none" || filtersDiv.style.display === "") {
+        filtersDiv.style.display = "block"
+        toggleButton.textContent = "Esconder Filtros"
+      } else {
+        filtersDiv.style.display = "none"
+        toggleButton.textContent = "Mostrar Filtros"
+      }
+    })
+  })
+}
+
+//=============================================================================
+// TIME CONTROLS
+//=============================================================================
+
+// Setup time controls (play/pause, forward, backward)
+function setupTimeControls() {
+  const playPauseBtn = document.getElementById("play-pause-btn")
+  const forwardBtn = document.getElementById("forward-btn")
+  const backwardBtn = document.getElementById("backward-btn")
+  const speedToggleBtn = document.getElementById("speed-toggle-btn")
+
+  // Play/Pause button event
+  playPauseBtn.addEventListener("click", () => {
+    togglePlayPause(playPauseBtn)
+  })
+
+  // Forward button event
+  forwardBtn.addEventListener("click", () => {
+    goToNextYear()
+  })
+
+  // Backward button event
+  backwardBtn.addEventListener("click", () => {
+    goToPreviousYear()
+  })
+
+  // Speed toggle button event
+  speedToggleBtn.addEventListener("click", () => {
+    toggleAnimationSpeed(speedToggleBtn)
+  })
+}
+
+// Toggle play/pause state
+function togglePlayPause(button) {
+  isPlaying = !isPlaying
+
+  if (isPlaying) {
+    // Change to pause icon
+    button.innerHTML = "&#9616;&#9616;" // Pause icon
+    button.classList.add("playing")
+
+    // Start animation
+    startYearAnimation()
+  } else {
+    // Change to play icon
+    button.innerHTML = "&#9658;" // Play icon
+    button.classList.remove("playing")
+
+    // Stop animation
+    stopYearAnimation()
+  }
+}
+
+// Toggle animation speed between 1x and 2x
+function toggleAnimationSpeed(button) {
+  // Toggle between 1x and 2x speed
+  animationSpeed = animationSpeed === 1 ? 2 : 1
+
+  // Update button text
+  button.textContent = animationSpeed === 2 ? "1x" : "2x"
+
+  // If animation is currently playing, restart it with the new speed
+  if (isPlaying) {
+    stopYearAnimation()
+    startYearAnimation()
+  }
+}
+
+// Start year animation
+function startYearAnimation() {
+  if (animationInterval) {
+    clearInterval(animationInterval)
+  }
+
+  // Advance year every 2 seconds (or 1 second if speed is 2x)
+  const intervalTime = animationSpeed === 2 ? 1000 : 2000
+
+  animationInterval = setInterval(() => {
+    if (currentYear < maxYear) {
+      currentYear++
+      updateYearDisplay()
+    } else {
+      togglePlayPause(document.getElementById("play-pause-btn"))
+    }
+  }, intervalTime)
+}
+
+// Stop year animation
+function stopYearAnimation() {
+  if (animationInterval) {
+    clearInterval(animationInterval)
+    animationInterval = null
+  }
+}
+
+// Go to next year
+function goToNextYear() {
+  if (currentYear < maxYear) {
+    currentYear++
+    updateYearDisplay()
+  }
+}
+
+// Go to previous year
+function goToPreviousYear() {
+  if (currentYear > minYear) {
+    currentYear--
+    updateYearDisplay()
+  }
+}
+
+// Update year display and load arcs for the current year
+function updateYearDisplay() {
+  // Update slider value
+  const timeSlider = document.getElementById("time-slider")
+  timeSlider.value = currentYear
+
+  // Update year text
+  document.getElementById("current-year").textContent = currentYear
+
+  // Load arcs for the new year or update player career path
+  if (playerCareerMode) {
+    updatePlayerCareerPath(currentYear)
+  } else {
+    loadArcsForYear(currentYear)
+  }
+}
+
+//=============================================================================
+// FILTER CONTROLS
+//=============================================================================
+
+// Initialize all filters
+function initializeFilters() {
+  initAdvancedFilters()
+  setupAutoFiltering()
+}
+
+// Initialize advanced filters
+function initAdvancedFilters() {
+  // Populate country dropdowns
+  populateCountryDropdowns()
+
+  // Set up toggle functionality for advanced filter sections
+  setupFilterToggles()
+
+  // Set up event listeners for advanced filter buttons
+  if (document.getElementById("applyCountryFilter")) {
+    document.getElementById("applyCountryFilter").addEventListener("click", applyCountryToCountryFilter)
+  }
+
+  if (document.getElementById("resetCountryFilter")) {
+    document.getElementById("resetCountryFilter").addEventListener("click", resetCountryToCountryFilter)
+  }
+
+  if (document.getElementById("applyPlayerFilter")) {
+    document.getElementById("applyPlayerFilter").addEventListener("click", applyPlayerCareerFilter)
+  }
+
+  if (document.getElementById("resetPlayerFilter")) {
+    document.getElementById("resetPlayerFilter").addEventListener("click", resetPlayerFilter)
+  }
+
+  if (document.getElementById("resetAllFilters")) {
+    document.getElementById("resetAllFilters").addEventListener("click", resetAllFilters)
+  }
+}
+
+// Populate country dropdowns with all available countries
+function populateCountryDropdowns() {
+  const sourceDropdown = document.getElementById("sourceCountry")
+  const destDropdown = document.getElementById("destinationCountry")
+
+  if (!sourceDropdown || !destDropdown) return
+
+  // Clear existing options except the first one
+  sourceDropdown.innerHTML = '<option value="">Selecione um país</option>'
+  destDropdown.innerHTML = '<option value="">Selecione um país</option>'
+
+  // Get all country names from the countryCodeToName object
+  const countryNames = Object.values(countryCodeToName).sort()
+
+  // Add options for each country
+  countryNames.forEach((country) => {
+    const sourceOption = document.createElement("option")
+    sourceOption.value = country
+    sourceOption.textContent = country
+    sourceDropdown.appendChild(sourceOption)
+
+    const destOption = document.createElement("option")
+    destOption.value = country
+    destOption.textContent = country
+    destDropdown.appendChild(destOption)
+  })
+}
+
+// Set up toggle functionality for advanced filter sections
+function setupFilterToggles() {
+  const toggles = document.querySelectorAll(".filter-toggle")
+
+  toggles.forEach((toggle) => {
+    toggle.addEventListener("click", function () {
+      this.classList.toggle("open")
+
+      // Get the corresponding content element
+      const contentId = this.id.replace("toggle-", "") + "-content"
+      const content = document.getElementById(contentId)
+
+      if (content) {
+        content.classList.toggle("open")
+      }
+    })
+  })
+}
+
+// Setup auto filtering for country checkboxes and transfer direction
+function setupAutoFiltering() {
+  // Add event listeners to all country checkboxes
+  const countryCheckboxes = document.querySelectorAll('input[name="country"]')
+  countryCheckboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      // Exit player career mode if active
+      if (playerCareerMode) {
+        exitPlayerCareerMode()
+      }
+
+      // Update the continent checkbox if all countries are unchecked
+      updateContinentCheckbox(checkbox)
+
+      applyFilter()
+    })
+  })
+
+  // Add event listeners to transfer direction checkboxes
+  const transferInCheckbox = document.getElementById("showTransfersIn")
+  const transferOutCheckbox = document.getElementById("showTransfersOut")
+  const showAllTransfersCheckbox = document.getElementById("showAllTransfers")
+
+  if (transferInCheckbox) {
+    transferInCheckbox.addEventListener("change", () => {
+      // Exit player career mode if active
+      if (playerCareerMode) {
+        exitPlayerCareerMode()
+      }
+
+      // Update the "Show All Transfers" checkbox state
+      if (transferOutCheckbox && transferOutCheckbox.checked && transferInCheckbox.checked) {
+        if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true
+      } else {
+        if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = false
+      }
+      applyFilter()
+    })
+  }
+
+  if (transferOutCheckbox) {
+    transferOutCheckbox.addEventListener("change", () => {
+      // Exit player career mode if active
+      if (playerCareerMode) {
+        exitPlayerCareerMode()
+      }
+
+      // Update the "Show All Transfers" checkbox state
+      if (transferInCheckbox && transferOutCheckbox.checked && transferInCheckbox.checked) {
+        if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true
+      } else {
+        if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = false
+      }
+      applyFilter()
+    })
+  }
+
+  // Add event listener for the "Show All Transfers" checkbox
+  if (showAllTransfersCheckbox) {
+    showAllTransfersCheckbox.addEventListener("change", () => {
+      // Exit player career mode if active
+      if (playerCareerMode) {
+        exitPlayerCareerMode()
+      }
+
+      if (showAllTransfersCheckbox.checked) {
+        if (transferInCheckbox) transferInCheckbox.checked = true
+        if (transferOutCheckbox) transferOutCheckbox.checked = true
+      } else {
+        if (transferInCheckbox) transferInCheckbox.checked = false
+        if (transferOutCheckbox) transferOutCheckbox.checked = false
+      }
+      applyFilter()
+    })
+  }
+
+  // Add autocomplete for player search
+  setupPlayerAutocomplete()
+}
+
+// Setup player autocomplete functionality
+function setupPlayerAutocomplete() {
+  const playerNameInput = document.getElementById("playerName")
+  const playerAutocomplete = document.getElementById("playerAutocomplete")
+
+  if (playerNameInput) {
+    playerNameInput.addEventListener(
+      "input",
+      debounce(() => {
+        const searchTerm = playerNameInput.value.trim().toLowerCase()
+
+        if (searchTerm.length < 2) {
+          playerAutocomplete.style.display = "none"
+          return
+        }
+
+        // Normalize the search term to handle accented characters
+        const normalizedSearchTerm = searchTerm.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+
+        // Filter players based on search term, handling accented characters
+        playerSearchResults = allPlayers
+          .filter((player) => {
+            const normalizedName = player.name
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+            return normalizedName.includes(normalizedSearchTerm)
+          })
+          .slice(0, 10) // Limit to 10 results for performance
+
+        console.log(`Search for "${searchTerm}" found ${playerSearchResults.length} results`)
+
+        // Display results
+        if (playerSearchResults.length > 0) {
+          playerAutocomplete.innerHTML = ""
+          playerSearchResults.forEach((player) => {
+            const item = document.createElement("a")
+            item.href = "#"
+
+            // Format birth date for display
+            let birthDateDisplay = "Data desconhecida"
+            if (player.birthDate && player.birthDate !== "Unknown") {
+              try {
+                const birthDate = new Date(player.birthDate)
+                if (!isNaN(birthDate.getTime())) {
+                  birthDateDisplay = birthDate.toLocaleDateString()
+                }
+              } catch (e) {
+                console.log("Error formatting date:", e)
+              }
+            }
+
+            // Format position for display
+            const positionDisplay =
+              player.position && player.position !== "Unknown" ? player.position : "Posição desconhecida"
+
+            item.innerHTML = `
+              <strong>${player.name}</strong>
+              <br>
+              <small>${positionDisplay} | ${birthDateDisplay}</small>
+            `
+
+            item.addEventListener("click", (e) => {
+              e.preventDefault()
+              playerNameInput.value = player.name
+              selectedPlayerId = player.id
+              console.log(`Selected player: ${player.name} (ID: ${player.id})`)
+              playerAutocomplete.style.display = "none"
+            })
+
+            playerAutocomplete.appendChild(item)
+          })
+          playerAutocomplete.style.display = "block"
+        } else {
+          playerAutocomplete.style.display = "none"
+        }
+      }, 300),
+    )
+
+    // Hide autocomplete when clicking outside
+    document.addEventListener("click", (e) => {
+      if (e.target !== playerNameInput && e.target !== playerAutocomplete) {
+        playerAutocomplete.style.display = "none"
+      }
+    })
+  }
+}
+
+// Toggle all countries
 function toggleAllCountries(event) {
   const selectAllCheckbox = event.target
   const countryCheckboxes = document.querySelectorAll('input[name="country"]')
@@ -493,6 +1073,7 @@ function toggleAllCountries(event) {
   setTimeout(() => applyFilter(), 0)
 }
 
+// Toggle continent countries
 function toggleContinent(event) {
   const continentCheckbox = event.target
   const continentGroup = continentCheckbox.closest(".continent-group")
@@ -508,12 +1089,79 @@ function toggleContinent(event) {
   setTimeout(() => applyFilter(), 0)
 }
 
+// Update select all checkbox state
 function updateSelectAllCheckbox() {
   const countryCheckboxes = document.querySelectorAll('input[name="country"]')
   const selectAllCheckbox = document.getElementById("selectAll")
 
   const allChecked = Array.from(countryCheckboxes).every((checkbox) => checkbox.checked)
   selectAllCheckbox.checked = allChecked
+}
+
+// Update continent checkbox state
+function updateContinentCheckbox(countryCheckbox) {
+  // Find the continent group that contains this country checkbox
+  const continentGroup = countryCheckbox.closest(".continent-group")
+  if (!continentGroup) return
+
+  // Find the continent checkbox in this group
+  const continentCheckbox = continentGroup.querySelector(".continent-checkbox")
+  if (!continentCheckbox) return
+
+  // Get all country checkboxes in this continent group
+  const countryCheckboxes = continentGroup.querySelectorAll('input[name="country"]')
+
+  // Check if all country checkboxes are unchecked
+  const allUnchecked = Array.from(countryCheckboxes).every((checkbox) => !checkbox.checked)
+
+  // Update the continent checkbox accordingly
+  continentCheckbox.checked = !allUnchecked
+
+  // Also update the "Select All" checkbox
+  updateSelectAllCheckbox()
+}
+
+// Apply filter based on selected countries and transfer directions
+function applyFilter() {
+  // Get selected countries
+  const selectedCountries = Array.from(document.querySelectorAll('input[name="country"]:checked')).map(
+    (checkbox) => checkbox.value,
+  )
+
+  // Create a reverse mapping from country names to country codes
+  const countryNameToCode = {}
+  Object.entries(countryCodeToName).forEach(([code, name]) => {
+    countryNameToCode[name] = code
+  })
+
+  // Get country codes for the selected countries
+  const selectedCountryCodes = selectedCountries.map((name) => countryNameToCode[name]).filter(Boolean)
+
+  // Get transfer direction settings
+  const showTransfersIn = document.getElementById("showTransfersIn").checked
+  const showTransfersOut = document.getElementById("showTransfersOut").checked
+
+  // Update the current filter state
+  currentFilterState = {
+    ...currentFilterState,
+    selectedCountryCodes: selectedCountryCodes,
+    showTransfersIn: showTransfersIn,
+    showTransfersOut: showTransfersOut,
+    filtersApplied: true,
+  }
+
+  // If no countries are selected and no other filters are active, show nothing
+  if (
+    selectedCountryCodes.length === 0 &&
+    !currentFilterState.countryToCountryFilterActive &&
+    !currentFilterState.playerFilterActive
+  ) {
+    updateArcs([])
+    return
+  }
+
+  // Apply the filters
+  applyCurrentFilters()
 }
 
 // Apply the current filter state to the arcs
@@ -632,651 +1280,6 @@ function applyCurrentFilters() {
   }
 }
 
-function applyFilter() {
-  // Get selected countries
-  const selectedCountries = Array.from(document.querySelectorAll('input[name="country"]:checked')).map(
-    (checkbox) => checkbox.value,
-  )
-
-  // Create a reverse mapping from country names to country codes
-  const countryNameToCode = {}
-  Object.entries(countryCodeToName).forEach(([code, name]) => {
-    countryNameToCode[name] = code
-  })
-
-  // Get country codes for the selected countries
-  const selectedCountryCodes = selectedCountries.map((name) => countryNameToCode[name]).filter(Boolean)
-
-  // Get transfer direction settings
-  const showTransfersIn = document.getElementById("showTransfersIn").checked
-  const showTransfersOut = document.getElementById("showTransfersOut").checked
-
-  // Update the current filter state
-  currentFilterState = {
-    ...currentFilterState,
-    selectedCountryCodes: selectedCountryCodes,
-    showTransfersIn: showTransfersIn,
-    showTransfersOut: showTransfersOut,
-    filtersApplied: true,
-  }
-
-  // If no countries are selected and no other filters are active, show nothing
-  if (
-    selectedCountryCodes.length === 0 &&
-    !currentFilterState.countryToCountryFilterActive &&
-    !currentFilterState.playerFilterActive
-  ) {
-    updateArcs([])
-    return
-  }
-
-  // Apply the filters
-  applyCurrentFilters()
-}
-
-function createCountryBorders(countries) {
-  const borderMaterial = new THREE.LineBasicMaterial({ color: "#d6dbdf", linewidth: 1 })
-  const bordersGroup = new THREE.Group()
-
-  countries.features.forEach((country) => {
-    const coordinates = country.geometry.coordinates
-
-    if (country.geometry.type === "Polygon") {
-      coordinates.forEach((polygon) => {
-        const points = polygon.map(([lng, lat]) => {
-          const phi = (90 - lat) * (Math.PI / 180)
-          const theta = (lng + 90) * (Math.PI / 180)
-          const radius = 100.7
-          return new THREE.Vector3(
-            -radius * Math.sin(phi) * Math.cos(theta),
-            radius * Math.cos(phi),
-            radius * Math.sin(phi) * Math.sin(theta),
-          )
-        })
-
-        const geometry = new THREE.BufferGeometry().setFromPoints(points)
-        const borderLine = new THREE.Line(geometry, borderMaterial)
-        bordersGroup.add(borderLine)
-      })
-    } else if (country.geometry.type === "MultiPolygon") {
-      coordinates.forEach((multiPolygon) => {
-        multiPolygon.forEach((polygon) => {
-          const points = polygon.map(([lng, lat]) => {
-            const phi = (90 - lat) * (Math.PI / 180)
-            const theta = (lng + 90) * (Math.PI / 180)
-            const radius = 100.7
-            return new THREE.Vector3(
-              -radius * Math.sin(phi) * Math.cos(theta),
-              radius * Math.cos(phi),
-              radius * Math.sin(phi) * Math.sin(theta),
-            )
-          })
-
-          const geometry = new THREE.BufferGeometry().setFromPoints(points)
-          const borderLine = new THREE.Line(geometry, borderMaterial)
-          bordersGroup.add(borderLine)
-        })
-      })
-    }
-  })
-
-  return bordersGroup
-}
-
-function initGlobe(countries) {
-  if (globeInitialized) return // Only initialize once
-
-  console.log("Initializing globe")
-
-  // Create glow globe
-  glowGlobe = new ThreeGlobe({
-    waitForGlobeReady: true,
-    animateIn: true,
-  })
-    .showAtmosphere(false)
-    .arcsData([])
-    .arcColor((arc) => arc.color || "#FF0000")
-    .arcAltitudeAutoScale((arc) => arc.scale || 0.5)
-    .arcStroke((arc) => arc.stroke || 0.1)
-    .arcDashLength(1)
-    .arcDashGap(0)
-    .arcDashAnimateTime(2000)
-    .arcsTransitionDuration(1000)
-
-  glowGlobe.scale.set(100, 100, 100)
-  scene.add(glowGlobe)
-
-  // Create main globe
-  mainGlobe = new ThreeGlobe({
-    waitForGlobeReady: true,
-    animateIn: true,
-  })
-    .polygonsData(countries.features)
-    .polygonAltitude(0.005)
-    .polygonCapColor(() => "#abb2b9")
-    .polygonSideColor(() => "#abb2b9")
-    .showAtmosphere(true)
-    .atmosphereColor("#f8f9f9")
-    .atmosphereAltitude(0.25)
-    .arcsData([])
-    .arcColor((arc) => arc.color || "#FF0000")
-    .arcAltitudeAutoScale((arc) => arc.scale || 0.5)
-    .arcStroke((arc) => arc.stroke || 0.1)
-    .arcDashLength(0.25)
-    .arcDashGap(0.25)
-    .arcDashAnimateTime(2000)
-    .arcsTransitionDuration(1000)
-
-  const globeMaterial = mainGlobe.globeMaterial()
-  globeMaterial.emissive = new THREE.Color("#f8f9f9")
-  globeMaterial.emissiveIntensity = 0.2
-  globeMaterial.shininess = 0.8
-
-  mainGlobe.scale.set(100, 100, 100)
-  scene.add(mainGlobe)
-
-  const borders = createCountryBorders(countries)
-  scene.add(borders)
-
-  globeInitialized = true
-}
-
-// Update only the arcs without recreating the globe
-function updateArcs(arcsData) {
-  arcsArray = []
-
-  const arcsWithThickness = arcsData.map((arc) => ({
-    ...arc,
-    stroke: Math.max(0.05, (arc.count / 10) * 0.25),
-  }))
-
-  const glowArcs = arcsData.map((arc) => {
-    const hexToRgb = (hex) => {
-      const r = Number.parseInt(hex.slice(1, 3), 16)
-      const g = Number.parseInt(hex.slice(3, 5), 16)
-      const b = Number.parseInt(hex.slice(5, 7), 16)
-      return { r, g, b }
-    }
-
-    const { r, g, b } = hexToRgb(arc.color || "#FF0000")
-
-    return {
-      ...arc,
-      stroke: Math.max(0.06, (arc.count / 10) * 0.3),
-      color: `rgba(${r}, ${g}, ${b}, 0.25)`,
-    }
-  })
-
-  // Update arcs with smooth transition
-  mainGlobe.arcsData(arcsWithThickness)
-  glowGlobe.arcsData(glowArcs)
-
-  arcsArray = mainGlobe.arcsData()
-
-  // Reset hover state when arcs are updated
-  if (hoveredArc) {
-    hoveredArc = null
-    hideTooltip()
-  }
-}
-
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight
-  camera.updateProjectionMatrix()
-  renderer.setSize(window.innerWidth, window.innerHeight)
-}
-
-function animate() {
-  controls.update()
-  renderer.render(scene, camera)
-  requestAnimationFrame(animate)
-}
-
-function latLonToVector3(lat, lon, radius = 100) {
-  const phi = (90 - lat) * (Math.PI / 180)
-  const theta = (lon + 90) * (Math.PI / 180)
-
-  const x = -radius * Math.sin(phi) * Math.cos(theta)
-  const y = radius * Math.cos(phi)
-  const z = radius * Math.sin(phi) * Math.sin(theta)
-
-  return new THREE.Vector3(x, y, z)
-}
-
-// Generate points along an arc path with proper altitude
-function generateArcPoints(startLat, startLng, endLat, endLng, scale, numPoints = 30) {
-  const points = []
-  const start = latLonToVector3(startLat, startLng, 100)
-  const end = latLonToVector3(endLat, endLng, 100)
-
-  for (let i = 0; i <= numPoints; i++) {
-    const t = i / numPoints
-    // Create a point along the arc
-    const point = new THREE.Vector3().lerpVectors(start, end, t)
-
-    // Apply altitude curve to the point
-    const altitude = scale || 0.5
-    const altitudeFactor = Math.sin(t * Math.PI) * altitude
-    const elevated = point
-      .clone()
-      .normalize()
-      .multiplyScalar(100 * (1 + altitudeFactor * 0.4))
-
-    points.push(elevated)
-  }
-
-  return points
-}
-
-function onMouseMove(event) {
-  // Update mouse coordinates
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
-
-  raycaster.setFromCamera(mouse, camera)
-
-  let closestArc = null
-  let closestDistance = Number.POSITIVE_INFINITY
-
-  if (!arcsArray || arcsArray.length === 0) return
-
-  // Check each arc
-  arcsArray.forEach((arc) => {
-    // Generate more points along the arc for better detection
-    const arcPoints = generateArcPoints(
-      arc.startLat,
-      arc.startLng,
-      arc.endLat,
-      arc.endLng,
-      arc.scale,
-      50, // Increased number of points for better detection
-    )
-
-    // Check each segment of the arc
-    let minDistanceToArc = Number.POSITIVE_INFINITY
-
-    for (let i = 0; i < arcPoints.length - 1; i++) {
-      const start = arcPoints[i]
-      const end = arcPoints[i + 1]
-
-      // Project both points to screen space
-      const startScreen = start.clone().project(camera)
-      const endScreen = end.clone().project(camera)
-
-      // Convert to screen coordinates
-      const startX = (startScreen.x * 0.5 + 0.5) * window.innerWidth
-      const startY = (startScreen.y * -0.5 + 0.5) * window.innerHeight
-      const endX = (endScreen.x * 0.5 + 0.5) * window.innerWidth
-      const endY = (endScreen.y * -0.5 + 0.5) * window.innerHeight
-
-      // Calculate distance from mouse to this line segment in screen space
-      const mouseX = event.clientX
-      const mouseY = event.clientY
-
-      // Line segment distance calculation in 2D
-      const A = mouseX - startX
-      const B = mouseY - startY
-      const C = endX - startX
-      const D = endY - startY
-
-      const dot = A * C + B * D
-      const lenSq = C * C + D * D
-      let param = -1
-
-      if (lenSq !== 0) {
-        param = dot / lenSq
-      }
-
-      let xx, yy
-
-      if (param < 0) {
-        xx = startX
-        yy = startY
-      } else if (param > 1) {
-        xx = endX
-        yy = endY
-      } else {
-        xx = startX + param * C
-        yy = startY + param * D
-      }
-
-      const dx = mouseX - xx
-      const dy = mouseY - yy
-      const distance = Math.sqrt(dx * dx + dy * dy)
-
-      if (distance < minDistanceToArc) {
-        minDistanceToArc = distance
-      }
-    }
-
-    // If this arc is closer than previous closest, update
-    if (minDistanceToArc < closestDistance) {
-      closestDistance = minDistanceToArc
-      closestArc = arc
-    }
-  })
-
-  // Threshold for hover detection - increased for better usability
-  const hoverThreshold = 20 // Increased threshold
-
-  if (closestArc && closestDistance < hoverThreshold) {
-    if (hoveredArc !== closestArc) {
-      // Set new hovered arc
-      hoveredArc = closestArc
-
-      // Show tooltip
-      showTooltip(closestArc, event.clientX, event.clientY)
-    } else {
-      // Update tooltip position even if the arc hasn't changed
-      updateTooltipPosition(event.clientX, event.clientY)
-    }
-  } else {
-    if (hoveredArc !== null) {
-      // Hide tooltip
-      hideTooltip()
-      hoveredArc = null
-    }
-  }
-}
-
-// Add this new function to update tooltip position without changing content
-function updateTooltipPosition(clientX, clientY) {
-  const tooltip = document.getElementById("tooltip")
-  if (!tooltip || tooltip.style.display === "none") return
-
-  const offsetX = 15
-  const offsetY = 15
-
-  // Ensure tooltip stays within viewport
-  const tooltipWidth = tooltip.offsetWidth || 150
-  const tooltipHeight = tooltip.offsetHeight || 80
-
-  const left = Math.min(clientX + offsetX, window.innerWidth - tooltipWidth - 5)
-  const top = Math.min(clientY + offsetY, window.innerHeight - tooltipHeight - 5)
-
-  tooltip.style.left = `${left}px`
-  tooltip.style.top = `${top}px`
-}
-
-// Fix the updatePlayerCareerPath function to properly show new arcs as years advance
-// and improve player name matching to handle players with the same name
-
-// Replace the updatePlayerCareerPath function with this improved version
-// that ensures all arcs from all years are properly displayed
-
-function updatePlayerCareerPath(year) {
-  if (!playerCareerMode || !playerName) return
-
-  console.log(`Updating player career path for ${playerName} up to year ${year}`)
-
-  // If we have a selected player ID, use the ID-based function
-  if (selectedPlayerId) {
-    updatePlayerCareerPathById(year, selectedPlayerId)
-    return
-  }
-
-  // Get all arcs up to the current year
-  const allArcs = []
-
-  // Process each year from the first transfer to the current year
-  for (let y = firstPlayerTransferYear; y <= year; y++) {
-    if (allYearsData[y]) {
-      const playerNameLower = playerName.toLowerCase()
-
-      // Filter arcs for this player in this year
-      const yearArcs = allYearsData[y].arcs.filter(
-        (arc) => arc.players && arc.players.some((player) => player.toLowerCase().includes(playerNameLower)),
-      )
-
-      console.log(`Found ${yearArcs.length} arcs for ${playerName} in year ${y}`)
-
-      // Process the arcs for display
-      const processedArcs = yearArcs.map((arc) => {
-        // Filter the players array to only include the matching player(s)
-        const matchingPlayers = arc.players.filter((player) => player.toLowerCase().includes(playerNameLower))
-
-        return {
-          startLat: arc.startLat,
-          startLng: arc.startLong,
-          endLat: arc.endLat,
-          endLng: arc.endLong,
-          color: "#4169E1", // Royal Blue for player career
-          from: arc.from,
-          to: arc.to,
-          count: 1, // Always 1 for a single player
-          players: matchingPlayers,
-          year: y, // Add year information
-          stroke: 0.2, // Fixed stroke for player transfers
-        }
-      })
-
-      allArcs.push(...processedArcs)
-    }
-  }
-
-  console.log(`Total arcs for player career path: ${allArcs.length}`)
-
-  // Update the visualization with all arcs
-  if (allArcs.length > 0) {
-    // Store the career arcs for this player
-    playerCareerArcs = allArcs
-
-    // Update the visualization with all arcs at once
-    const arcsWithThickness = allArcs.map((arc) => ({
-      ...arc,
-      stroke: 0.2, // Fixed stroke for player transfers
-    }))
-
-    // Create glow effect
-    const glowArcs = allArcs.map((arc) => {
-      const hexToRgb = (hex) => {
-        const r = Number.parseInt(hex.slice(1, 3), 16)
-        const g = Number.parseInt(hex.slice(3, 5), 16)
-        const b = Number.parseInt(hex.slice(5, 7), 16)
-        return { r, g, b }
-      }
-
-      const { r, g, b } = hexToRgb(arc.color)
-
-      return {
-        ...arc,
-        stroke: 0.25, // Slightly thicker for glow
-        color: `rgba(${r}, ${g}, ${b}, 0.25)`,
-      }
-    })
-
-    // Update both globes with all arcs
-    mainGlobe.arcsData(arcsWithThickness)
-    glowGlobe.arcsData(glowArcs)
-    arcsArray = arcsWithThickness
-  } else {
-    // No arcs found for this player
-    mainGlobe.arcsData([])
-    glowGlobe.arcsData([])
-    arcsArray = []
-  }
-}
-
-// Also update the findFirstPlayerTransferYear function to use the same matching logic
-async function findFirstPlayerTransferYear() {
-  const playerNameLower = playerName.toLowerCase()
-
-  // Search through all years
-  for (let year = minYear; year <= maxYear; year++) {
-    try {
-      // Load data for this year if not already loaded
-      if (!allYearsData[year]) {
-        const linesResponse = await fetch(`./files/arcs/lines_${year}.json`)
-        const yearData = await linesResponse.json()
-        allYearsData[year] = yearData
-      }
-
-      // Check if any arc contains this player with more precise matching
-      const playerArcs = allYearsData[year].arcs.filter(
-        (arc) =>
-          arc.players &&
-          arc.players.some(
-            (player) =>
-              player.toLowerCase() === playerNameLower ||
-              (player.toLowerCase().includes(playerNameLower) &&
-                (player.toLowerCase().startsWith(playerNameLower) ||
-                  player.toLowerCase().includes(" " + playerNameLower))),
-          ),
-      )
-
-      if (playerArcs.length > 0) {
-        firstPlayerTransferYear = year
-        return
-      }
-    } catch (error) {
-      console.error(`Error checking year ${year} for player ${playerName}:`, error)
-    }
-  }
-}
-
-// Add a new function to preload all years data
-async function preloadAllYearsData() {
-  console.log("Preloading all years data...")
-
-  // Create an array of promises for loading all years
-  const loadPromises = []
-
-  for (let year = minYear; year <= maxYear; year++) {
-    if (!allYearsData[year]) {
-      const promise = fetch(`./files/arcs/lines_${year}.json`)
-        .then((response) => response.json())
-        .then((data) => {
-          allYearsData[year] = data
-          console.log(`Loaded data for year ${year}`)
-        })
-        .catch((error) => {
-          console.error(`Error loading data for year ${year}:`, error)
-        })
-
-      loadPromises.push(promise)
-    }
-  }
-
-  // Wait for all data to be loaded
-  await Promise.all(loadPromises)
-  console.log("All years data preloaded")
-}
-
-// Update the showTooltip function to show more detailed information
-function showTooltip(arc, clientX, clientY) {
-  const tooltip = document.getElementById("tooltip")
-  if (!tooltip) return
-
-  const arcData = arc
-  const originCountry = countryCodeToName[arcData.from] || "País Desconhecido"
-  const destinationCountry = countryCodeToName[arcData.to] || "País Desconhecido"
-
-  // In player career mode, show simplified tooltip with count=1 and exact player name
-  if (playerCareerMode) {
-    // Use the actual player name from the arc's players array if available
-    const exactPlayerName = arcData.players && arcData.players.length > 0 ? arcData.players[0] : playerName
-
-    // Add year information if available
-    const yearInfo = arcData.year ? ` (${arcData.year})` : ""
-
-    tooltip.innerHTML = `
-        <strong>Origem:</strong> ${originCountry}<br>
-        <strong>Destino:</strong> ${destinationCountry}<br>
-        <strong>Jogador:</strong> ${exactPlayerName}${yearInfo}
-    `
-  } else {
-    const playerCount = arcData.count
-    const playersList = arcData.players
-    const playersDisplay = playersList && playersList.length > 0 ? playersList.join(", ") : "Nenhum jogador disponível"
-
-    tooltip.innerHTML = `
-        <strong>Origem:</strong> ${originCountry}<br>
-        <strong>Destino:</strong> ${destinationCountry}<br>
-        <strong>Jogadores (${playerCount}):</strong> ${playersDisplay}
-    `
-  }
-
-  tooltip.style.display = "block"
-  updateTooltipPosition(clientX, clientY)
-}
-
-// Initialize advanced filters
-function initAdvancedFilters() {
-  // Populate country dropdowns
-  populateCountryDropdowns()
-
-  // Set up toggle functionality for advanced filter sections
-  setupFilterToggles()
-
-  // Set up event listeners for advanced filter buttons
-  if (document.getElementById("applyCountryFilter")) {
-    document.getElementById("applyCountryFilter").addEventListener("click", applyCountryToCountryFilter)
-  }
-
-  if (document.getElementById("resetCountryFilter")) {
-    document.getElementById("resetCountryFilter").addEventListener("click", resetCountryToCountryFilter)
-  }
-
-  if (document.getElementById("applyPlayerFilter")) {
-    document.getElementById("applyPlayerFilter").addEventListener("click", applyPlayerCareerFilter)
-  }
-
-  if (document.getElementById("resetPlayerFilter")) {
-    document.getElementById("resetPlayerFilter").addEventListener("click", resetPlayerFilter)
-  }
-
-  if (document.getElementById("resetAllFilters")) {
-    document.getElementById("resetAllFilters").addEventListener("click", resetAllFilters)
-  }
-}
-
-// Populate country dropdowns with all available countries
-function populateCountryDropdowns() {
-  const sourceDropdown = document.getElementById("sourceCountry")
-  const destDropdown = document.getElementById("destinationCountry")
-
-  if (!sourceDropdown || !destDropdown) return
-
-  // Clear existing options except the first one
-  sourceDropdown.innerHTML = '<option value="">Selecione um país</option>'
-  destDropdown.innerHTML = '<option value="">Selecione um país</option>'
-
-  // Get all country names from the countryCodeToName object
-  const countryNames = Object.values(countryCodeToName).sort()
-
-  // Add options for each country
-  countryNames.forEach((country) => {
-    const sourceOption = document.createElement("option")
-    sourceOption.value = country
-    sourceOption.textContent = country
-    sourceDropdown.appendChild(sourceOption)
-
-    const destOption = document.createElement("option")
-    destOption.value = country
-    destOption.textContent = country
-    destDropdown.appendChild(destOption)
-  })
-}
-
-// Set up toggle functionality for advanced filter sections
-function setupFilterToggles() {
-  const toggles = document.querySelectorAll(".filter-toggle")
-
-  toggles.forEach((toggle) => {
-    toggle.addEventListener("click", function () {
-      this.classList.toggle("open")
-
-      // Get the corresponding content element
-      const contentId = this.id.replace("toggle-", "") + "-content"
-      const content = document.getElementById(contentId)
-
-      if (content) {
-        content.classList.toggle("open")
-      }
-    })
-  })
-}
-
 // Apply country-to-country filter
 function applyCountryToCountryFilter() {
   // Exit player career mode if active
@@ -1343,7 +1346,85 @@ function resetCountryToCountryFilter() {
   loadArcsForYear(currentYear)
 }
 
-// Modify the applyPlayerCareerFilter function to use player ID and auto-start playing
+// Reset player filter
+function resetPlayerFilter() {
+  const playerNameInput = document.getElementById("playerName")
+  if (playerNameInput) playerNameInput.value = ""
+  selectedPlayerId = null
+
+  // Exit player career mode
+  exitPlayerCareerMode()
+
+  // Update the current filter state to disable player filter
+  currentFilterState = {
+    ...currentFilterState,
+    playerName: null,
+    playerFilterActive: false,
+  }
+
+  // If this was the only active filter, reset filtersApplied flag
+  if (!currentFilterState.countryToCountryFilterActive && currentFilterState.selectedCountryCodes.length === 0) {
+    currentFilterState.filtersApplied = false
+  }
+
+  // Load arcs for the current year
+  loadArcsForYear(currentYear)
+}
+
+// Reset all filters
+function resetAllFilters() {
+  // Reset country selection - check all checkboxes
+  const countryCheckboxes = document.querySelectorAll('input[name="country"]')
+  countryCheckboxes.forEach((checkbox) => (checkbox.checked = true))
+
+  // Reset continent checkboxes - check all
+  const continentCheckboxes = document.querySelectorAll(".continent-checkbox")
+  continentCheckboxes.forEach((checkbox) => (checkbox.checked = true))
+
+  // Reset select all checkbox
+  const selectAllCheckbox = document.getElementById("selectAll")
+  if (selectAllCheckbox) selectAllCheckbox.checked = true
+
+  // Reset transfer direction checkboxes
+  const showTransfersIn = document.getElementById("showTransfersIn")
+  const showTransfersOut = document.getElementById("showTransfersOut")
+  const showAllTransfersCheckbox = document.getElementById("showAllTransfers")
+  if (showTransfersIn) showTransfersIn.checked = true
+  if (showTransfersOut) showTransfersOut.checked = true
+  if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true
+
+  // Reset country-to-country filter dropdowns
+  const sourceDropdown = document.getElementById("sourceCountry")
+  const destDropdown = document.getElementById("destinationCountry")
+  if (sourceDropdown) sourceDropdown.value = ""
+  if (destDropdown) destDropdown.value = ""
+
+  // Reset player filter
+  resetPlayerFilter()
+
+  // Reset filter state completely
+  currentFilterState = {
+    selectedCountryCodes: [],
+    showTransfersIn: true,
+    showTransfersOut: true,
+    sourceCountryCode: null,
+    destCountryCode: null,
+    playerName: null,
+    countryToCountryFilterActive: false,
+    playerFilterActive: false,
+    bidirectionalFilter: false,
+    filtersApplied: false,
+  }
+
+  // Load arcs for the current year without any filters
+  loadArcsForYear(currentYear)
+}
+
+//=============================================================================
+// PLAYER CAREER PATH FUNCTIONALITY
+//=============================================================================
+
+// Apply player career filter
 async function applyPlayerCareerFilter() {
   const playerNameInput = document.getElementById("playerName")
   if (!playerNameInput) return
@@ -1390,178 +1471,33 @@ async function applyPlayerCareerFilter() {
 
     // Start building the career path
     updatePlayerCareerPathById(currentYear, selectedPlayerId)
-
-    // Removed the auto-play functionality
   } else {
     alert(`Nenhuma transferência encontrada para ${playerName}.`)
     exitPlayerCareerMode()
   }
 }
 
-// Modify the setupAutoFiltering function to improve player search
-function setupAutoFiltering() {
-  // Add event listeners to all country checkboxes
-  const countryCheckboxes = document.querySelectorAll('input[name="country"]')
-  countryCheckboxes.forEach((checkbox) => {
-    checkbox.addEventListener("change", () => {
-      // Exit player career mode if active
-      if (playerCareerMode) {
-        exitPlayerCareerMode()
-      }
+// Exit player career mode
+function exitPlayerCareerMode() {
+  playerCareerMode = false
+  playerName = ""
+  playerCareerArcs = []
+  firstPlayerTransferYear = null
 
-      // Update the continent checkbox if all countries are unchecked
-      updateContinentCheckbox(checkbox)
-
-      applyFilter()
-    })
-  })
-
-  // Add event listeners to transfer direction checkboxes
-  const transferInCheckbox = document.getElementById("showTransfersIn")
-  const transferOutCheckbox = document.getElementById("showTransfersOut")
-  const showAllTransfersCheckbox = document.getElementById("showAllTransfers")
-
-  if (transferInCheckbox) {
-    transferInCheckbox.addEventListener("change", () => {
-      // Exit player career mode if active
-      if (playerCareerMode) {
-        exitPlayerCareerMode()
-      }
-
-      // Update the "Show All Transfers" checkbox state
-      if (transferOutCheckbox && transferOutCheckbox.checked && transferInCheckbox.checked) {
-        if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true
-      } else {
-        if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = false
-      }
-      applyFilter()
-    })
-  }
-
-  if (transferOutCheckbox) {
-    transferOutCheckbox.addEventListener("change", () => {
-      // Exit player career mode if active
-      if (playerCareerMode) {
-        exitPlayerCareerMode()
-      }
-
-      // Update the "Show All Transfers" checkbox state
-      if (transferInCheckbox && transferOutCheckbox.checked && transferInCheckbox.checked) {
-        if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true
-      } else {
-        if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = false
-      }
-      applyFilter()
-    })
-  }
-
-  // Add event listener for the "Show All Transfers" checkbox
-  if (showAllTransfersCheckbox) {
-    showAllTransfersCheckbox.addEventListener("change", () => {
-      // Exit player career mode if active
-      if (playerCareerMode) {
-        exitPlayerCareerMode()
-      }
-
-      if (showAllTransfersCheckbox.checked) {
-        if (transferInCheckbox) transferInCheckbox.checked = true
-        if (transferOutCheckbox) transferOutCheckbox.checked = true
-      } else {
-        if (transferInCheckbox) transferInCheckbox.checked = false
-        if (transferOutCheckbox) transferOutCheckbox.checked = false
-      }
-      applyFilter()
-    })
-  }
-
-  // Add autocomplete for player search
+  // Reset player name input
   const playerNameInput = document.getElementById("playerName")
-  const playerAutocomplete = document.getElementById("playerAutocomplete")
+  if (playerNameInput) playerNameInput.value = ""
+  selectedPlayerId = null
 
-  if (playerNameInput) {
-    playerNameInput.addEventListener(
-      "input",
-      debounce(() => {
-        const searchTerm = playerNameInput.value.trim().toLowerCase()
+  // Reset the current year to the default value
+  currentYear = Number.parseInt(document.getElementById("time-slider").value) || minYear
+  document.getElementById("current-year").textContent = currentYear
 
-        if (searchTerm.length < 2) {
-          playerAutocomplete.style.display = "none"
-          return
-        }
-
-        // Normalize the search term to handle accented characters
-        const normalizedSearchTerm = searchTerm.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-
-        // Filter players based on search term, handling accented characters
-        playerSearchResults = allPlayers
-          .filter((player) => {
-            const normalizedName = player.name
-              .toLowerCase()
-              .normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "")
-            return normalizedName.includes(normalizedSearchTerm)
-          })
-          .slice(0, 10) // Limit to 10 results for performance
-
-        console.log(`Search for "${searchTerm}" found ${playerSearchResults.length} results`)
-
-        // Display results
-        if (playerSearchResults.length > 0) {
-          playerAutocomplete.innerHTML = ""
-          playerSearchResults.forEach((player) => {
-            const item = document.createElement("a")
-            item.href = "#"
-
-            // Format birth date for display
-            let birthDateDisplay = "Data desconhecida"
-            if (player.birthDate && player.birthDate !== "Unknown") {
-              try {
-                const birthDate = new Date(player.birthDate)
-                if (!isNaN(birthDate.getTime())) {
-                  birthDateDisplay = birthDate.toLocaleDateString()
-                }
-              } catch (e) {
-                console.log("Error formatting date:", e)
-              }
-            }
-
-            // Format position for display
-            const positionDisplay =
-              player.position && player.position !== "Unknown" ? player.position : "Posição desconhecida"
-
-            item.innerHTML = `
-              <strong>${player.name}</strong>
-              <br>
-              <small>${positionDisplay} | ${birthDateDisplay}</small>
-            `
-
-            item.addEventListener("click", (e) => {
-              e.preventDefault()
-              playerNameInput.value = player.name
-              selectedPlayerId = player.id
-              console.log(`Selected player: ${player.name} (ID: ${player.id})`)
-              playerAutocomplete.style.display = "none"
-            })
-
-            playerAutocomplete.appendChild(item)
-          })
-          playerAutocomplete.style.display = "block"
-        } else {
-          playerAutocomplete.style.display = "none"
-        }
-      }, 300),
-    )
-
-    // Hide autocomplete when clicking outside
-    document.addEventListener("click", (e) => {
-      if (e.target !== playerNameInput && e.target !== playerAutocomplete) {
-        playerAutocomplete.style.display = "none"
-      }
-    })
-  }
+  // Load arcs for the current year
+  loadArcsForYear(currentYear)
 }
 
-// New function to find the first transfer year using player ID
+// Find first player transfer year by ID
 async function findFirstPlayerTransferYearById(playerId) {
   console.log(`Finding first transfer year for player ID: ${playerId}`)
 
@@ -1693,7 +1629,138 @@ async function findFirstPlayerTransferYearById(playerId) {
   console.log("No transfer year found for this player")
 }
 
-// New function to update player career path using player ID
+// Find first player transfer year by name
+async function findFirstPlayerTransferYear() {
+  const playerNameLower = playerName.toLowerCase()
+
+  // Search through all years
+  for (let year = minYear; year <= maxYear; year++) {
+    try {
+      // Load data for this year if not already loaded
+      if (!allYearsData[year]) {
+        const linesResponse = await fetch(`./files/arcs/lines_${year}.json`)
+        const yearData = await linesResponse.json()
+        allYearsData[year] = yearData
+      }
+
+      // Check if any arc contains this player with more precise matching
+      const playerArcs = allYearsData[year].arcs.filter(
+        (arc) =>
+          arc.players &&
+          arc.players.some(
+            (player) =>
+              player.toLowerCase() === playerNameLower ||
+              (player.toLowerCase().includes(playerNameLower) &&
+                (player.toLowerCase().startsWith(playerNameLower) ||
+                  player.toLowerCase().includes(" " + playerNameLower))),
+          ),
+      )
+
+      if (playerArcs.length > 0) {
+        firstPlayerTransferYear = year
+        return
+      }
+    } catch (error) {
+      console.error(`Error checking year ${year} for player ${playerName}:`, error)
+    }
+  }
+}
+
+// Update player career path by name
+function updatePlayerCareerPath(year) {
+  if (!playerCareerMode || !playerName) return
+
+  console.log(`Updating player career path for ${playerName} up to year ${year}`)
+
+  // If we have a selected player ID, use the ID-based function
+  if (selectedPlayerId) {
+    updatePlayerCareerPathById(year, selectedPlayerId)
+    return
+  }
+
+  // Get all arcs up to the current year
+  const allArcs = []
+
+  // Process each year from the first transfer to the current year
+  for (let y = firstPlayerTransferYear; y <= year; y++) {
+    if (allYearsData[y]) {
+      const playerNameLower = playerName.toLowerCase()
+
+      // Filter arcs for this player in this year
+      const yearArcs = allYearsData[y].arcs.filter(
+        (arc) => arc.players && arc.players.some((player) => player.toLowerCase().includes(playerNameLower)),
+      )
+
+      console.log(`Found ${yearArcs.length} arcs for ${playerName} in year ${y}`)
+
+      // Process the arcs for display
+      const processedArcs = yearArcs.map((arc) => {
+        // Filter the players array to only include the matching player(s)
+        const matchingPlayers = arc.players.filter((player) => player.toLowerCase().includes(playerNameLower))
+
+        return {
+          startLat: arc.startLat,
+          startLng: arc.startLong,
+          endLat: arc.endLat,
+          endLng: arc.endLong,
+          color: "#4169E1", // Royal Blue for player career
+          from: arc.from,
+          to: arc.to,
+          count: 1, // Always 1 for a single player
+          players: matchingPlayers,
+          year: y, // Add year information
+          stroke: 0.2, // Fixed stroke for player transfers
+        }
+      })
+
+      allArcs.push(...processedArcs)
+    }
+  }
+
+  console.log(`Total arcs for player career path: ${allArcs.length}`)
+
+  // Update the visualization with all arcs
+  if (allArcs.length > 0) {
+    // Store the career arcs for this player
+    playerCareerArcs = allArcs
+
+    // Update the visualization with all arcs at once
+    const arcsWithThickness = allArcs.map((arc) => ({
+      ...arc,
+      stroke: 0.2, // Fixed stroke for player transfers
+    }))
+
+    // Create glow effect
+    const glowArcs = allArcs.map((arc) => {
+      const hexToRgb = (hex) => {
+        const r = Number.parseInt(hex.slice(1, 3), 16)
+        const g = Number.parseInt(hex.slice(3, 5), 16)
+        const b = Number.parseInt(hex.slice(5, 7), 16)
+        return { r, g, b }
+      }
+
+      const { r, g, b } = hexToRgb(arc.color)
+
+      return {
+        ...arc,
+        stroke: 0.25, // Slightly thicker for glow
+        color: `rgba(${r}, ${g}, ${b}, 0.25)`,
+      }
+    })
+
+    // Update both globes with all arcs
+    mainGlobe.arcsData(arcsWithThickness)
+    glowGlobe.arcsData(glowArcs)
+    arcsArray = arcsWithThickness
+  } else {
+    // No arcs found for this player
+    mainGlobe.arcsData([])
+    glowGlobe.arcsData([])
+    arcsArray = []
+  }
+}
+
+// Update player career path by ID
 function updatePlayerCareerPathById(year, playerId) {
   if (!playerCareerMode || !playerName) return
 
@@ -1905,107 +1972,49 @@ function updatePlayerCareerPathById(year, playerId) {
   }
 }
 
-// Helper function to get country coordinates from country code
-function getCountryCoordinatesFromCode(countryCode) {
-  // Find the country ID from the code
-  const countryId = Object.entries(country_info).find(([id, info]) => info.code === countryCode)?.[0]
+//=============================================================================
+// TOOLTIP AND INTERACTION FUNCTIONALITY
+//=============================================================================
 
-  if (countryId) {
-    return {
-      lat: country_info[countryId].lat,
-      lng: country_info[countryId].lng,
-    }
+// Show tooltip with arc information
+function showTooltip(arc, clientX, clientY) {
+  const tooltip = document.getElementById("tooltip")
+  if (!tooltip) return
+
+  const arcData = arc
+  const originCountry = countryCodeToName[arcData.from] || "País Desconhecido"
+  const destinationCountry = countryCodeToName[arcData.to] || "País Desconhecido"
+
+  // In player career mode, show simplified tooltip with count=1 and exact player name
+  if (playerCareerMode) {
+    // Use the actual player name from the arc's players array if available
+    const exactPlayerName = arcData.players && arcData.players.length > 0 ? arcData.players[0] : playerName
+
+    // Add year information if available
+    const yearInfo = arcData.year ? ` (${arcData.year})` : ""
+
+    tooltip.innerHTML = `
+        <strong>Origem:</strong> ${originCountry}<br>
+        <strong>Destino:</strong> ${destinationCountry}<br>
+        <strong>Jogador:</strong> ${exactPlayerName}${yearInfo}
+    `
+  } else {
+    const playerCount = arcData.count
+    const playersList = arcData.players
+    const playersDisplay = playersList && playersList.length > 0 ? playersList.join(", ") : "Nenhum jogador disponível"
+
+    tooltip.innerHTML = `
+        <strong>Origem:</strong> ${originCountry}<br>
+        <strong>Destino:</strong> ${destinationCountry}<br>
+        <strong>Jogadores (${playerCount}):</strong> ${playersDisplay}
+    `
   }
 
-  // Fallback: try to find coordinates from the arcs data
-  for (const year in allYearsData) {
-    const yearData = allYearsData[year]
-    if (yearData && yearData.arcs) {
-      // Look for arcs that have this country as origin or destination
-      const arcWithCountry = yearData.arcs.find((arc) => arc.from === countryCode || arc.to === countryCode)
-
-      if (arcWithCountry) {
-        if (arcWithCountry.from === countryCode) {
-          return {
-            lat: arcWithCountry.startLat,
-            lng: arcWithCountry.startLong,
-          }
-        } else {
-          return {
-            lat: arcWithCountry.endLat,
-            lng: arcWithCountry.endLong,
-          }
-        }
-      }
-    }
-  }
-
-  return null
+  tooltip.style.display = "block"
+  updateTooltipPosition(clientX, clientY)
 }
 
-// Helper function to get country coordinates (original function)
-function getCountryCoordinates(countryCode) {
-  // This would need to be implemented based on your data structure
-  // You might need to create a mapping of country codes to coordinates
-  // For now, return null and handle it in the calling function
-  return null
-}
-
-// Modify the resetAllFilters function to properly check all country checkboxes
-function resetAllFilters() {
-  // Reset country selection - check all checkboxes
-  const countryCheckboxes = document.querySelectorAll('input[name="country"]')
-  countryCheckboxes.forEach((checkbox) => (checkbox.checked = true))
-
-  // Reset continent checkboxes - check all
-  const continentCheckboxes = document.querySelectorAll(".continent-checkbox")
-  continentCheckboxes.forEach((checkbox) => (checkbox.checked = true))
-
-  // Reset select all checkbox
-  const selectAllCheckbox = document.getElementById("selectAll")
-  if (selectAllCheckbox) selectAllCheckbox.checked = true
-
-  // Reset transfer direction checkboxes
-  const showTransfersIn = document.getElementById("showTransfersIn")
-  const showTransfersOut = document.getElementById("showTransfersOut")
-  const showAllTransfersCheckbox = document.getElementById("showAllTransfers")
-  if (showTransfersIn) showTransfersIn.checked = true
-  if (showTransfersOut) showTransfersOut.checked = true
-  if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true
-
-  // Reset country-to-country filter dropdowns
-  const sourceDropdown = document.getElementById("sourceCountry")
-  const destDropdown = document.getElementById("destinationCountry")
-  if (sourceDropdown) sourceDropdown.value = ""
-  if (destDropdown) destDropdown.value = ""
-
-  // Reset player filter
-  resetPlayerFilter()
-
-  // Reset filter state completely
-  currentFilterState = {
-    selectedCountryCodes: [],
-    showTransfersIn: true,
-    showTransfersOut: true,
-    sourceCountryCode: null,
-    destCountryCode: null,
-    playerName: null,
-    countryToCountryFilterActive: false,
-    playerFilterActive: false,
-    bidirectionalFilter: false,
-    filtersApplied: false,
-  }
-
-  // Load arcs for the current year without any filters
-  loadArcsForYear(currentYear)
-}
-
-// Initialize all filters
-function initializeFilters() {
-  initAdvancedFilters()
-  setupAutoFiltering()
-}
-
+// Hide tooltip
 function hideTooltip() {
   const tooltip = document.getElementById("tooltip")
   if (tooltip) {
@@ -2013,68 +2022,143 @@ function hideTooltip() {
   }
 }
 
-function updateContinentCheckbox(countryCheckbox) {
-  // Find the continent group that contains this country checkbox
-  const continentGroup = countryCheckbox.closest(".continent-group")
-  if (!continentGroup) return
+// Update tooltip position
+function updateTooltipPosition(clientX, clientY) {
+  const tooltip = document.getElementById("tooltip")
+  if (!tooltip || tooltip.style.display === "none") return
 
-  // Find the continent checkbox in this group
-  const continentCheckbox = continentGroup.querySelector(".continent-checkbox")
-  if (!continentCheckbox) return
+  const offsetX = 15
+  const offsetY = 15
 
-  // Get all country checkboxes in this continent group
-  const countryCheckboxes = continentGroup.querySelectorAll('input[name="country"]')
+  // Ensure tooltip stays within viewport
+  const tooltipWidth = tooltip.offsetWidth || 150
+  const tooltipHeight = tooltip.offsetHeight || 80
 
-  // Check if all country checkboxes are unchecked
-  const allUnchecked = Array.from(countryCheckboxes).every((checkbox) => !checkbox.checked)
+  const left = Math.min(clientX + offsetX, window.innerWidth - tooltipWidth - 5)
+  const top = Math.min(clientY + offsetY, window.innerHeight - tooltipHeight - 5)
 
-  // Update the continent checkbox accordingly
-  continentCheckbox.checked = !allUnchecked
-
-  // Also update the "Select All" checkbox
-  updateSelectAllCheckbox()
+  tooltip.style.left = `${left}px`
+  tooltip.style.top = `${top}px`
 }
 
-// Declare resetPlayerFilter and resetAllFilters functions
-function resetPlayerFilter() {
-  const playerNameInput = document.getElementById("playerName")
-  if (playerNameInput) playerNameInput.value = ""
-  selectedPlayerId = null
+// Handle mouse movement for arc hovering
+function onMouseMove(event) {
+  // Update mouse coordinates
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
 
-  // Exit player career mode
-  exitPlayerCareerMode()
+  raycaster.setFromCamera(mouse, camera)
 
-  // Update the current filter state to disable player filter
-  currentFilterState = {
-    ...currentFilterState,
-    playerName: null,
-    playerFilterActive: false,
+  let closestArc = null
+  let closestDistance = Number.POSITIVE_INFINITY
+
+  if (!arcsArray || arcsArray.length === 0) return
+
+  // Check each arc
+  arcsArray.forEach((arc) => {
+    // Generate more points along the arc for better detection
+    const arcPoints = generateArcPoints(
+      arc.startLat,
+      arc.startLng,
+      arc.endLat,
+      arc.endLng,
+      arc.scale,
+      50, // Increased number of points for better detection
+    )
+
+    // Check each segment of the arc
+    let minDistanceToArc = Number.POSITIVE_INFINITY
+
+    for (let i = 0; i < arcPoints.length - 1; i++) {
+      const start = arcPoints[i]
+      const end = arcPoints[i + 1]
+
+      // Project both points to screen space
+      const startScreen = start.clone().project(camera)
+      const endScreen = end.clone().project(camera)
+
+      // Convert to screen coordinates
+      const startX = (startScreen.x * 0.5 + 0.5) * window.innerWidth
+      const startY = (startScreen.y * -0.5 + 0.5) * window.innerHeight
+      const endX = (endScreen.x * 0.5 + 0.5) * window.innerWidth
+      const endY = (endScreen.y * -0.5 + 0.5) * window.innerHeight
+
+      // Calculate distance from mouse to this line segment in screen space
+      const mouseX = event.clientX
+      const mouseY = event.clientY
+
+      // Line segment distance calculation in 2D
+      const A = mouseX - startX
+      const B = mouseY - startY
+      const C = endX - startX
+      const D = endY - startY
+
+      const dot = A * C + B * D
+      const lenSq = C * C + D * D
+      let param = -1
+
+      if (lenSq !== 0) {
+        param = dot / lenSq
+      }
+
+      let xx, yy
+
+      if (param < 0) {
+        xx = startX
+        yy = startY
+      } else if (param > 1) {
+        xx = endX
+        yy = endY
+      } else {
+        xx = startX + param * C
+        yy = startY + param * D
+      }
+
+      const dx = mouseX - xx
+      const dy = mouseY - yy
+      const distance = Math.sqrt(dx * dx + dy * dy)
+
+      if (distance < minDistanceToArc) {
+        minDistanceToArc = distance
+      }
+    }
+
+    // If this arc is closer than previous closest, update
+    if (minDistanceToArc < closestDistance) {
+      closestDistance = minDistanceToArc
+      closestArc = arc
+    }
+  })
+
+  // Threshold for hover detection - increased for better usability
+  const hoverThreshold = 20 // Increased threshold
+
+  if (closestArc && closestDistance < hoverThreshold) {
+    if (hoveredArc !== closestArc) {
+      // Set new hovered arc
+      hoveredArc = closestArc
+
+      // Show tooltip
+      showTooltip(closestArc, event.clientX, event.clientY)
+    } else {
+      // Update tooltip position even if the arc hasn't changed
+      updateTooltipPosition(event.clientX, event.clientY)
+    }
+  } else {
+    if (hoveredArc !== null) {
+      // Hide tooltip
+      hideTooltip()
+      hoveredArc = null
+    }
   }
-
-  // If this was the only active filter, reset filtersApplied flag
-  if (!currentFilterState.countryToCountryFilterActive && currentFilterState.selectedCountryCodes.length === 0) {
-    currentFilterState.filtersApplied = false
-  }
-
-  // Load arcs for the current year
-  loadArcsForYear(currentYear)
 }
 
-function exitPlayerCareerMode() {
-  playerCareerMode = false
-  playerName = ""
-  playerCareerArcs = []
-  firstPlayerTransferYear = null
+//=============================================================================
+// INITIALIZATION AND EXECUTION
+//=============================================================================
 
-  // Reset player name input
-  const playerNameInput = document.getElementById("playerName")
-  if (playerNameInput) playerNameInput.value = ""
-  selectedPlayerId = null
-
-  // Reset the current year to the default value
-  currentYear = Number.parseInt(document.getElementById("time-slider").value) || minYear
-  document.getElementById("current-year").textContent = currentYear
-
-  // Load arcs for the current year
-  loadArcsForYear(currentYear)
-}
+// Initialize the application
+init()
+loadInitialData()
+onWindowResize()
+animate()
