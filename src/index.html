@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D Globe Visualization</title>
   <style>
+    /* Theme Variables */
     :root {
       /* Light theme colors */
       --water-color: #E6EEF2;
@@ -40,6 +41,7 @@
       --dropdown-small: #AAAAAA;
     }
 
+    /* Base Styles */
     body { 
       margin: 0; 
       overflow: hidden; 
@@ -48,6 +50,7 @@
       transition: background-color 0.3s, color 0.3s;
     }
     
+    /* Filter Panel Styles */
     #filters {
       position: absolute;
       top: 20px;
@@ -98,6 +101,7 @@
       cursor: pointer;
     }
     
+    /* Time Controls Styles */
     .time-controls {
       position: absolute;
       bottom: 20px;
@@ -114,8 +118,10 @@
       width: auto;
       max-width: 90%;
       border: 1px solid var(--input-border-color);
+      transition: opacity 0.3s, visibility 0.3s;
     }
     
+    /* Toggle Filters Button */
     #toggle-filters {
       position: absolute;
       top: 20px;
@@ -129,6 +135,7 @@
       cursor: pointer;
     }
     
+    /* Tooltip Styles */
     #tooltip {
       position: absolute;
       display: none;
@@ -143,6 +150,7 @@
       max-width: 250px;
     }
     
+    /* Player Name Input */
     #playerName {
       width: 150px;
       background-color: var(--background-color);
@@ -150,7 +158,7 @@
       border: 1px solid var(--input-border-color);
     }
     
-    /* Time Controls Styles */
+    /* Time Control Button Styles */
     .time-control-btn {
       border: none;
       border-radius: 4px;
@@ -254,42 +262,13 @@
       margin-bottom: 5px;
     }
     
+    /* Autocomplete Styles */
     .autocomplete-container {
       position: relative;
       display: inline-block;
       width: 100%;
     }
     
-    .autocomplete-dropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      border: 1px solid var(--input-border-color);
-      border-top: none;
-      background-color: var(--background-color);
-      z-index: 1;
-      display: none;
-    }
-    
-    .autocomplete-dropdown a {
-      padding: 10px;
-      text-decoration: none;
-      display: block;
-      color: var(--dropdown-text);
-    }
-    
-    .autocomplete-dropdown a:hover {
-      background-color: var(--hover-color);
-    }
-    
-    /* Player Autocomplete Styles */
-    .autocomplete-container {
-      position: relative;
-      display: inline-block;
-      width: 100%;
-    }
-
     .autocomplete-dropdown {
       position: absolute;
       top: 100%;
@@ -327,6 +306,7 @@
       font-size: 12px;
     }
     
+    /* Speed Button Styles */
     .speed-btn {
       background-color: #2196F3;
       color: white;
@@ -338,6 +318,7 @@
       background-color: #0b7dda;
     }
     
+    /* Slider Container Styles */
     .slider-container {
       display: flex;
       flex-direction: column;
@@ -358,7 +339,7 @@
       background-color: var(--background-color);
     }
     
-    /* Theme toggle button */
+    /* Theme Toggle Button */
     #theme-toggle {
       position: absolute;
       top: 20px;
@@ -380,6 +361,46 @@
       height: 20px;
     }
     
+    /* Player Info Panel */
+    #player-info {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--menu-background);
+      padding: 10px 15px;
+      border-radius: 8px;
+      display: none;
+      z-index: 1000;
+      text-align: center;
+      border: 1px solid var(--input-border-color);
+    }
+    
+    #player-info h3 {
+      margin: 0 0 5px 0;
+      color: var(--text-color);
+    }
+    
+    #player-info p {
+      margin: 0 0 10px 0;
+      color: var(--text-color);
+    }
+    
+    #exit-player-view {
+      padding: 5px 10px;
+      background: #F76B15;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    #exit-player-view:hover {
+      background: #F76B15;
+      opacity: 0.8;
+    }
+    
+    /* Responsive Styles */
     @media (max-width: 768px) {
       .time-controls {
         flex-wrap: wrap;
@@ -502,7 +523,6 @@
             </div>
           </div>
           <button id="applyPlayerFilter">Aplicar</button>
-          <button id="resetPlayerFilter" class="reset-btn">Limpar</button>
         </div>
       </div>
     </div>
@@ -523,7 +543,12 @@
     <button id="speed-toggle-btn" class="time-control-btn speed-btn">2x</button>
   </div>
 
-  <div id="tooltip" style="position: absolute; display: none;"></div>
+  <div id="tooltip"></div>
+  <div id="player-info">
+    <h3></h3>
+    <p></p>
+    <button id="exit-player-view">Retornar</button>
+  </div>
 
   <div id="globeViz"></div>
 
