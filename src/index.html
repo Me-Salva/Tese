@@ -1,42 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D Globe Visualization</title>
   <style>
-    body { margin: 0; overflow: hidden; }
+    :root {
+      /* Light theme colors */
+      --water-color: #E6EEF2;
+      --country-color: #D6D6D6;
+      --border-color: #999999;
+      --text-color: #333333;
+      --background-color: #FFFFFF;
+      --input-border-color: #CCCCCC;
+      --menu-background: rgba(255, 255, 255, 0.8);
+      --hover-color: #f5f5f5;
+      --dropdown-text: #333;
+      --dropdown-border: #eee;
+      --dropdown-small: #666;
+      
+      /* Arc colors (same for both themes) */
+      --arc-color: #F76B15;
+      --arc-exit-color: #156EF7;
+      --arc-player-color: #8A15F7;
+    }
+
+    [data-theme="dark"] {
+      /* Dark theme colors */
+      --water-color: #2E3A45;
+      --country-color: #4A4A4A;
+      --border-color: #AAAAAA;
+      --text-color: #F0F0F0;
+      --background-color: #1A1A1A;
+      --input-border-color: #444444;
+      --menu-background: rgba(26, 26, 26, 0.8);
+      --hover-color: #333333;
+      --dropdown-text: #F0F0F0;
+      --dropdown-border: #444444;
+      --dropdown-small: #AAAAAA;
+    }
+
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      background-color: var(--background-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+    
     #filters {
       position: absolute;
       top: 20px;
       left: 20px;
       z-index: 1000;
-      background: rgba(255, 255, 255, 0.8);
+      background: var(--menu-background);
       padding: 10px;
       border-radius: 5px;
       max-height: 95vh;
       overflow-y: auto;
       display: none;
+      color: var(--text-color);
+      border: 1px solid var(--input-border-color);
     }
+    
     #filters h3 {
       margin: 10px 0;
     }
+    
     #filters label {
       display: block;
       margin: 5px 0;
     }
+    
     .country-list {
       margin-left: 20px;
       display: block;
     }
+    
     .continent-group {
       margin-bottom: 10px;
       margin-left: 10px;
     }
+    
     #transfer-filters {
       margin-top: 10px;
       margin-left: 10px;
     }
+    
     #filters button {
       display: block;
       margin: 10px auto 0;
@@ -47,6 +97,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
+    
     .time-controls {
       position: absolute;
       bottom: 20px;
@@ -55,18 +106,20 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      background-color: rgba(255, 255, 255, 0.8);
+      background-color: var(--menu-background);
       padding: 10px 15px;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       z-index: 1000;
       width: auto;
       max-width: 90%;
+      border: 1px solid var(--input-border-color);
     }
+    
     #toggle-filters {
       position: absolute;
       top: 20px;
-      right: 20px;
+      right: 80px; /* Moved to make room for theme toggle */
       z-index: 1000;
       padding: 5px 10px;
       border: none;
@@ -75,22 +128,28 @@
       border-radius: 5px;
       cursor: pointer;
     }
+    
     #tooltip {
       position: absolute;
       display: none;
-      background: rgba(255, 255, 255, 0.9);
+      background: var(--menu-background);
       padding: 5px;
       border-radius: 3px;
       pointer-events: none;
       font-family: Arial, sans-serif;
       font-size: 12px;
-      color: #000;
-      border: 1px solid #ccc;
+      color: var(--text-color);
+      border: 1px solid var(--input-border-color);
       max-width: 250px;
     }
+    
     #playerName {
       width: 150px;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      border: 1px solid var(--input-border-color);
     }
+    
     /* Time Controls Styles */
     .time-control-btn {
       border: none;
@@ -99,105 +158,131 @@
       cursor: pointer;
       font-size: 16px;
       transition: background-color 0.2s;
+      background-color: var(--background-color);
+      color: var(--text-color);
     }
+    
     .time-control-btn:hover {
-      background-color: #e0e0e0;
+      background-color: var(--hover-color);
     }
+    
     .backward-btn, .forward-btn {
-      background-color: #f0f0f0;
+      background-color: var(--background-color);
     }
+    
     .play-pause-btn {
       background-color: #4CAF50;
       color: white;
       padding: 8px 16px;
     }
+    
     .play-pause-btn:hover {
       background-color: #3e8e41;
     }
+    
     .play-pause-btn.playing {
       background-color: #f44336;
     }
+    
     .play-pause-btn.playing:hover {
       background-color: #e53935;
     }
+    
     /* Advanced Filters Styles */
     .advanced-filters {
       margin-top: 15px;
       padding-top: 10px;
-      border-top: 1px solid #ccc;
+      border-top: 1px solid var(--input-border-color);
     }
+    
     .filter-row {
       margin-bottom: 10px;
       max-width: 160px;
     }
+    
     .filter-row select, .filter-row input {
       width: 100%;
       padding: 5px;
       margin-top: 3px;
       border-radius: 3px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--input-border-color);
+      background-color: var(--background-color);
+      color: var(--text-color);
     }
+    
     .filter-toggle {
       cursor: pointer;
       user-select: none;
       display: flex;
       align-items: center;
     }
+    
     .filter-toggle:before {
       content: '▶';
       display: inline-block;
       margin-right: 5px;
       transition: transform 0.2s;
     }
+    
     .filter-toggle.open:before {
       transform: rotate(90deg);
     }
+    
     .filter-content {
       display: none;
       margin-top: 5px;
       padding-left: 15px;
     }
+    
     .filter-content.open {
       display: block;
     }
+    
     .reset-btn {
       background-color: #f44336;
       margin-left: 10px;
     }
+    
     .sub-filter {
       margin-top: 10px;
       padding-top: 5px;
-      border-top: 1px dashed #ccc;
+      border-top: 1px dashed var(--input-border-color);
     }
+    
     .sub-filter-title {
       font-weight: bold;
       margin-bottom: 5px;
     }
+    
     .autocomplete-container {
       position: relative;
       display: inline-block;
       width: 100%;
     }
+    
     .autocomplete-dropdown {
       position: absolute;
       top: 100%;
       left: 0;
       right: 0;
-      border: 1px solid #ccc;
+      border: 1px solid var(--input-border-color);
       border-top: none;
-      background-color: #fff;
+      background-color: var(--background-color);
       z-index: 1;
       display: none;
     }
+    
     .autocomplete-dropdown a {
       padding: 10px;
       text-decoration: none;
       display: block;
-      color: #000;
+      color: var(--dropdown-text);
     }
+    
     .autocomplete-dropdown a:hover {
-      background-color: #f0f0f0;
+      background-color: var(--hover-color);
     }
+    
     /* Player Autocomplete Styles */
     .autocomplete-container {
       position: relative;
@@ -212,9 +297,9 @@
       right: 0;
       max-height: 300px;
       overflow-y: auto;
-      border: 1px solid #ccc;
+      border: 1px solid var(--input-border-color);
       border-top: none;
-      background-color: #fff;
+      background-color: var(--background-color);
       z-index: 1000;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       display: none;
@@ -224,12 +309,12 @@
       padding: 10px;
       text-decoration: none;
       display: block;
-      color: #333;
-      border-bottom: 1px solid #eee;
+      color: var(--dropdown-text);
+      border-bottom: 1px solid var(--dropdown-border);
     }
 
     .autocomplete-dropdown a:hover {
-      background-color: #f5f5f5;
+      background-color: var(--hover-color);
     }
 
     .autocomplete-dropdown a strong {
@@ -238,18 +323,21 @@
     }
 
     .autocomplete-dropdown a small {
-      color: #666;
+      color: var(--dropdown-small);
       font-size: 12px;
     }
+    
     .speed-btn {
       background-color: #2196F3;
       color: white;
       padding: 8px 12px;
       margin-left: 5px;
     }
+    
     .speed-btn:hover {
       background-color: #0b7dda;
     }
+    
     .slider-container {
       display: flex;
       flex-direction: column;
@@ -267,7 +355,31 @@
     #time-slider {
       width: 100%;
       margin: 0;
+      background-color: var(--background-color);
     }
+    
+    /* Theme toggle button */
+    #theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      padding: 5px 10px;
+      border: none;
+      background: #6200ea;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    #theme-toggle svg {
+      width: 20px;
+      height: 20px;
+    }
+    
     @media (max-width: 768px) {
       .time-controls {
         flex-wrap: wrap;
@@ -296,6 +408,11 @@
 
 <body>
   <button id="toggle-filters">Mostrar Filtros</button>
+  <button id="theme-toggle">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-icon">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+  </button>
 
   <div id="filters">
     <h3>Transferências:</h3>
@@ -406,8 +523,7 @@
     <button id="speed-toggle-btn" class="time-control-btn speed-btn">2x</button>
   </div>
 
-  <div id="tooltip" style="position: absolute; display: none; background: rgba(255, 255, 255, 0.9); 
-  padding: 5px; border-radius: 3px; pointer-events: none;"></div>
+  <div id="tooltip" style="position: absolute; display: none;"></div>
 
   <div id="globeViz"></div>
 

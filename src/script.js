@@ -40,6 +40,32 @@ let firstPlayerTransferYear = null
 let playerSearchResults = []
 let selectedPlayerId = null
 
+// Theme variables
+let currentTheme = "light"
+const themeColors = {
+  light: {
+    waterColor: "#E6EEF2",
+    countryColor: "#D6D6D6",
+    borderColor: "#999999",
+    backgroundColor: "#FFFFFF",
+    atmosphereColor: "#f8f9f9",
+  },
+  dark: {
+    waterColor: "#2E3A45",
+    countryColor: "#4A4A4A",
+    borderColor: "#AAAAAA",
+    backgroundColor: "#1A1A1A",
+    atmosphereColor: "#2E3A45",
+  },
+}
+
+// Arc colors
+const arcColors = {
+  default: "#F76B15", // Orange for general arcs
+  exit: "#156EF7", // Blue for exits in 1 country view
+  player: "#8A15F7", // Purple for player view
+}
+
 // Filter state variables
 let currentFilterState = {
   selectedCountryCodes: [],
@@ -143,11 +169,126 @@ function getCountryCoordinatesFromCode(countryCode) {
 }
 
 //=============================================================================
+// THEME MANAGEMENT
+//=============================================================================
+
+// Toggle between light and dark themes
+function toggleTheme() {
+  currentTheme = currentTheme === "light" ? "dark" : "light"
+
+  // Update HTML data attribute
+  document.documentElement.setAttribute("data-theme", currentTheme)
+
+  // Update scene background
+  if (scene) {
+    scene.background = new THREE.Color(themeColors[currentTheme].backgroundColor)
+  }
+
+  // Update globe colors if initialized
+  if (globeInitialized && mainGlobe) {
+    updateGlobeColors()
+  }
+
+  // Update theme toggle icon
+  updateThemeIcon()
+
+  // Save theme preference
+  localStorage.setItem("theme", currentTheme)
+}
+
+// Update the theme toggle icon based on current theme
+function updateThemeIcon() {
+  const themeToggle = document.getElementById("theme-toggle")
+  if (themeToggle) {
+    if (currentTheme === "dark") {
+      themeToggle.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      `
+    } else {
+      themeToggle.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      `
+    }
+  }
+}
+
+// Update globe colors based on current theme
+function updateGlobeColors() {
+  if (!mainGlobe || !glowGlobe) return
+
+  // Update main globe colors
+  mainGlobe
+    .polygonCapColor(() => themeColors[currentTheme].countryColor)
+    .polygonSideColor(() => themeColors[currentTheme].countryColor)
+    .atmosphereColor(themeColors[currentTheme].atmosphereColor)
+
+  // Update globe material
+  const globeMaterial = mainGlobe.globeMaterial()
+  globeMaterial.color = new THREE.Color(themeColors[currentTheme].waterColor)
+  globeMaterial.emissive = new THREE.Color(themeColors[currentTheme].atmosphereColor)
+  globeMaterial.emissiveIntensity = 0.2
+  globeMaterial.shininess = 0.8
+
+  // Update country borders
+  updateCountryBorders()
+}
+
+// Update country borders based on current theme
+function updateCountryBorders() {
+  // Remove old borders
+  const oldBorders = scene.getObjectByName("countryBorders")
+  if (oldBorders) {
+    scene.remove(oldBorders)
+  }
+
+  // Create new borders with current theme color
+  if (countriesData) {
+    const borders = createCountryBorders(countriesData)
+    borders.name = "countryBorders"
+    scene.add(borders)
+  }
+}
+
+// Load theme from local storage or system preference
+function loadSavedTheme() {
+  // Check for saved theme preference
+  const savedTheme = localStorage.getItem("theme")
+
+  if (savedTheme) {
+    currentTheme = savedTheme
+  } else {
+    // Check for system preference
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      currentTheme = "dark"
+    }
+  }
+
+  // Apply theme
+  document.documentElement.setAttribute("data-theme", currentTheme)
+  updateThemeIcon()
+}
+
+//=============================================================================
 // INITIALIZATION AND CORE RENDERING
 //=============================================================================
 
 // Initialize the application
 function init() {
+  // Load saved theme
+  loadSavedTheme()
+
   // Setup renderer
   renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(window.devicePixelRatio)
@@ -156,7 +297,7 @@ function init() {
 
   // Setup scene
   scene = new THREE.Scene()
-  scene.background = new THREE.Color(0xffffff)
+  scene.background = new THREE.Color(themeColors[currentTheme].backgroundColor)
 
   // Setup lighting
   var ambientLight = new THREE.AmbientLight(0xffffff, 1.2)
@@ -200,6 +341,12 @@ function init() {
 
   // Setup UI controls
   setupUIControls()
+
+  // Setup theme toggle
+  const themeToggle = document.getElementById("theme-toggle")
+  if (themeToggle) {
+    themeToggle.addEventListener("click", toggleTheme)
+  }
 }
 
 // Handle window resize
@@ -218,7 +365,10 @@ function animate() {
 
 // Create country borders for the globe
 function createCountryBorders(countries) {
-  const borderMaterial = new THREE.LineBasicMaterial({ color: "#d6dbdf", linewidth: 1 })
+  const borderMaterial = new THREE.LineBasicMaterial({
+    color: themeColors[currentTheme].borderColor,
+    linewidth: 1,
+  })
   const bordersGroup = new THREE.Group()
 
   countries.features.forEach((country) => {
@@ -279,7 +429,7 @@ function initGlobe(countries) {
   })
     .showAtmosphere(false)
     .arcsData([])
-    .arcColor((arc) => arc.color || "#FF0000")
+    .arcColor((arc) => arc.color || arcColors.default)
     .arcAltitudeAutoScale((arc) => arc.scale || 0.5)
     .arcStroke((arc) => arc.stroke || 0.1)
     .arcDashLength(1)
@@ -297,13 +447,13 @@ function initGlobe(countries) {
   })
     .polygonsData(countries.features)
     .polygonAltitude(0.005)
-    .polygonCapColor(() => "#abb2b9")
-    .polygonSideColor(() => "#abb2b9")
+    .polygonCapColor(() => themeColors[currentTheme].countryColor)
+    .polygonSideColor(() => themeColors[currentTheme].countryColor)
     .showAtmosphere(true)
-    .atmosphereColor("#f8f9f9")
+    .atmosphereColor(themeColors[currentTheme].atmosphereColor)
     .atmosphereAltitude(0.25)
     .arcsData([])
-    .arcColor((arc) => arc.color || "#FF0000")
+    .arcColor((arc) => arc.color || arcColors.default)
     .arcAltitudeAutoScale((arc) => arc.scale || 0.5)
     .arcStroke((arc) => arc.stroke || 0.1)
     .arcDashLength(0.25)
@@ -312,7 +462,8 @@ function initGlobe(countries) {
     .arcsTransitionDuration(1000)
 
   const globeMaterial = mainGlobe.globeMaterial()
-  globeMaterial.emissive = new THREE.Color("#f8f9f9")
+  globeMaterial.color = new THREE.Color(themeColors[currentTheme].waterColor)
+  globeMaterial.emissive = new THREE.Color(themeColors[currentTheme].atmosphereColor)
   globeMaterial.emissiveIntensity = 0.2
   globeMaterial.shininess = 0.8
 
@@ -320,6 +471,7 @@ function initGlobe(countries) {
   scene.add(mainGlobe)
 
   const borders = createCountryBorders(countries)
+  borders.name = "countryBorders"
   scene.add(borders)
 
   globeInitialized = true
@@ -524,7 +676,7 @@ async function loadArcsForYear(year) {
         startLng: arc.startLong,
         endLat: arc.endLat,
         endLng: arc.endLong,
-        color: arc.color,
+        color: arcColors.default, // Use the default orange color
         from: arc.from,
         to: arc.to,
         count: arc.count,
@@ -569,7 +721,7 @@ function updateArcs(arcsData) {
       return { r, g, b }
     }
 
-    const { r, g, b } = hexToRgb(arc.color || "#FF0000")
+    const { r, g, b } = hexToRgb(arc.color || arcColors.default)
 
     return {
       ...arc,
@@ -1206,10 +1358,10 @@ function applyCurrentFilters() {
 
       // Color the arcs based on direction relative to the source country
       filteredArcs = filteredArcs.map((arc) => {
-        // If arc is from source to destination, color it red (outgoing from source)
-        // If arc is from destination to source, color it green (incoming to source)
+        // If arc is from source to destination, color it blue (outgoing from source)
+        // If arc is from destination to source, color it orange (incoming to source)
         const isOutgoingFromSource = arc.from === currentFilterState.sourceCountryCode
-        const color = isOutgoingFromSource ? "#FF0000" : "#00FF00"
+        const color = isOutgoingFromSource ? arcColors.exit : arcColors.default
 
         return {
           ...arc,
@@ -1234,6 +1386,12 @@ function applyCurrentFilters() {
     filteredArcs = filteredArcs.filter((arc) => {
       return arc.players && arc.players.some((player) => player.toLowerCase().includes(playerNameLower))
     })
+
+    // Use purple color for player arcs
+    filteredArcs = filteredArcs.map((arc) => ({
+      ...arc,
+      color: arcColors.player,
+    }))
   }
 
   // If only one country is selected, color the arcs based on direction
@@ -1246,7 +1404,7 @@ function applyCurrentFilters() {
 
     filteredArcs = filteredArcs.map((arc) => {
       const isIncoming = arc.to === selectedCountryCode
-      const color = isIncoming ? "#00FF00" : "#FF0000"
+      const color = isIncoming ? arcColors.default : arcColors.exit // Orange for incoming, blue for outgoing
 
       return {
         ...arc,
@@ -1262,11 +1420,11 @@ function applyCurrentFilters() {
     startLng: arc.startLong,
     endLat: arc.endLat,
     endLng: arc.endLong,
-    color: arc.color || "#FF0000",
+    color: arc.color || arcColors.default,
     from: arc.from,
     to: arc.to,
     count: arc.count,
-    scale: arc.scale !== undefined ? arc.scale : arc.color === "#00FF00" ? 0.3 : 0.5,
+    scale: arc.scale !== undefined ? arc.scale : arc.color === arcColors.default ? 0.3 : 0.5,
     players: arc.players,
   }))
 
@@ -1703,7 +1861,7 @@ function updatePlayerCareerPath(year) {
           startLng: arc.startLong,
           endLat: arc.endLat,
           endLng: arc.endLong,
-          color: "#4169E1", // Royal Blue for player career
+          color: arcColors.player, // Purple for player career
           from: arc.from,
           to: arc.to,
           count: 1, // Always 1 for a single player
@@ -1796,7 +1954,7 @@ function updatePlayerCareerPathById(year, playerId) {
           startLng: fromCoords.lng,
           endLat: toCoords.lat,
           endLng: toCoords.lng,
-          color: "#4169E1", // Royal Blue for player career
+          color: arcColors.player, // Purple for player career
           from: fromCode,
           to: toCode,
           count: 1, // Always 1 for a single player
@@ -1846,7 +2004,7 @@ function updatePlayerCareerPathById(year, playerId) {
                         startLng: fromCoords.lng,
                         endLat: toCoords.lat,
                         endLng: toCoords.lng,
-                        color: "#4169E1", // Royal Blue for player career
+                        color: arcColors.player, // Purple for player career
                         from: fromCountryCode,
                         to: toCountryCode,
                         count: 1, // Always 1 for a single player
@@ -1880,7 +2038,7 @@ function updatePlayerCareerPathById(year, playerId) {
                         startLng: fromCoords.lng,
                         endLat: toCoords.lat,
                         endLng: toCoords.lng,
-                        color: "#4169E1", // Royal Blue for player career
+                        color: arcColors.player, // Purple for player career
                         from: fromCountryCode,
                         to: toCountryCode,
                         count: 1, // Always 1 for a single player
@@ -1913,7 +2071,7 @@ function updatePlayerCareerPathById(year, playerId) {
               startLng: arc.startLong,
               endLat: arc.endLat,
               endLng: arc.endLong,
-              color: "#4169E1", // Royal Blue for player career
+              color: arcColors.player, // Purple for player career
               from: arc.from,
               to: arc.to,
               count: 1, // Always 1 for a single player
