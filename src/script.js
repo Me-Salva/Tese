@@ -51,8 +51,8 @@ const themeColors = {
     atmosphereColor: "#f8f9f9",
   },
   dark: {
-    waterColor: "#2E3A45",
-    countryColor: "#4A4A4A",
+    waterColor: "#262E36",
+    countryColor: "#21262C",
     borderColor: "#AAAAAA",
     backgroundColor: "#1A1A1A",
     atmosphereColor: "#2E3A45",
@@ -62,8 +62,8 @@ const themeColors = {
 // Arc colors
 const arcColors = {
   default: "#F76B15", // Orange for general arcs
-  exit: "#156EF7", // Blue for exits in 1 country view
-  player: "#8A15F7", // Purple for player view
+  exit: "#1200E0", // Blue for exits in 1 country view
+  player: "#25E009", // Green for player view
 }
 
 // Filter state variables
@@ -348,9 +348,9 @@ async function buildPlayerDatabase() {
                   Object.entries(country.players).forEach(([playerId, playerData]) => {
                     playerMap.set(playerId, {
                       id: playerId,
-                      name: playerData.name || "Unknown",
-                      birthDate: playerData.dt_nascimento || "Unknown",
-                      position: playerData.posicao || "Unknown",
+                      name: playerData.name || "Desconhecido",
+                      birthDate: playerData.dt_nascimento || "Desconhecida",
+                      position: playerData.posicao || "Desconhecida",
                       transfersId: playerData.transfers_id || null,
                     })
                   })
@@ -366,9 +366,9 @@ async function buildPlayerDatabase() {
                   Object.entries(country.players).forEach(([playerId, playerData]) => {
                     playerMap.set(playerId, {
                       id: playerId,
-                      name: playerData.name || "Unknown",
-                      birthDate: playerData.dt_nascimento || "Unknown",
-                      position: playerData.posicao || "Unknown",
+                      name: playerData.name || "Desconhecido",
+                      birthDate: playerData.dt_nascimento || "Desconhecida",
+                      position: playerData.posicao || "Desconhecida",
                       transfersId: playerData.transfers_id || null,
                     })
                   })
@@ -391,8 +391,8 @@ async function buildPlayerDatabase() {
                   playerMap.set(playerId, {
                     id: playerId,
                     name: playerName,
-                    birthDate: "Unknown",
-                    position: "Unknown",
+                    birthDate: "Desconhecida",
+                    position: "Desconhecida",
                   })
                 }
               })
@@ -1579,6 +1579,10 @@ function exitPlayerCareerMode() {
   currentYear = Number.parseInt(document.getElementById("time-slider").value) || minYear
   document.getElementById("current-year").textContent = currentYear
 
+  // Make sure to clear any existing tooltip
+  hideTooltip()
+  hoveredArc = null
+
   // Load arcs for the current year with all countries
   loadArcsForYear(currentYear)
 }
@@ -1708,7 +1712,7 @@ async function showAllPlayerTransfers(playerId) {
                         count: 1, // Always 1 for a single player
                         players: [player.name],
                         year: year, // Add year information
-                        stroke: 0.2, // Fixed stroke for player transfers
+                        stroke: 0.5, // Fixed stroke for player transfers
                       })
                     }
                   }
@@ -1741,7 +1745,7 @@ async function showAllPlayerTransfers(playerId) {
               count: 1, // Always 1 for a single player
               players: matchingPlayers,
               year: year, // Add year information
-              stroke: 0.2, // Fixed stroke for player transfers
+              stroke: 0.5, // Fixed stroke for player transfers
             }
           })
 
@@ -1761,7 +1765,7 @@ async function showAllPlayerTransfers(playerId) {
     // Update the visualization with all arcs at once
     const arcsWithThickness = allArcs.map((arc) => ({
       ...arc,
-      stroke: 0.2, // Fixed stroke for player transfers
+      stroke: 0.5, // Fixed stroke for player transfers
     }))
 
     // Create glow effect
@@ -1777,7 +1781,7 @@ async function showAllPlayerTransfers(playerId) {
 
       return {
         ...arc,
-        stroke: 0.25, // Slightly thicker for glow
+        stroke: 0.6, // Slightly thicker for glow
         color: `rgba(${r}, ${g}, ${b}, 0.25)`,
       }
     })
@@ -1807,7 +1811,7 @@ async function updatePlayerCareerPath(year) {
   // Update the visualization with the arcs for the selected year
   const arcsWithThickness = yearArcs.map((arc) => ({
     ...arc,
-    stroke: 0.2, // Fixed stroke for player transfers
+    stroke: 0.5, // Fixed stroke for player transfers
   }))
 
   // Create glow effect
@@ -1823,7 +1827,7 @@ async function updatePlayerCareerPath(year) {
 
     return {
       ...arc,
-      stroke: 0.25, // Slightly thicker for glow
+      stroke: 0.6, // Slightly thicker for glow
       color: `rgba(${r}, ${g}, ${b}, 0.25)`,
     }
   })
@@ -1885,24 +1889,23 @@ function showTooltip(arc, clientX, clientY) {
   const originCountry = countryCodeToName[arcData.from] || "País Desconhecido"
   const destinationCountry = countryCodeToName[arcData.to] || "País Desconhecido"
 
-  // In player career mode, show simplified tooltip with count=1 and exact player name
+  // In player career mode, show simplified tooltip with club and country information
   if (playerCareerMode) {
     // Use the actual player name from the arc's players array if available
     const exactPlayerName = arcData.players && arcData.players.length > 0 ? arcData.players[0] : playerName
 
-    // Add year information if available
-    const yearInfo = arcData.year ? ` (${arcData.year})` : ""
+    // Get club information
+    const fromClub = arcData.fromClub || "Clube Desconhecido"
+    const toClub = arcData.toClub || "Clube Desconhecido"
 
-    // Add club information if available
-    let clubInfo = ""
-    if (arcData.fromClub && arcData.toClub) {
-      clubInfo = `<br><strong>Clube Origem:</strong> ${arcData.fromClub}<br><strong>Clube Destino:</strong> ${arcData.toClub}`
-    }
+    // Get year information
+    const transferYear = arcData.year || "Ano Desconhecido"
 
+    // Format the tooltip with the requested format
     tooltip.innerHTML = `
-        <strong>Origem:</strong> ${originCountry}<br>
-        <strong>Destino:</strong> ${destinationCountry}<br>
-        <strong>Jogador:</strong> ${exactPlayerName}${yearInfo}${clubInfo}
+        <strong>Origem:</strong> ${fromClub} (${originCountry})<br>
+        <strong>Destino:</strong> ${toClub} (${destinationCountry})<br>
+        <strong>Ano:</strong> ${transferYear}
     `
   } else {
     const playerCount = arcData.count
@@ -1953,91 +1956,129 @@ function onMouseMove(event) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
 
+  // If no arcs are displayed, exit early
+  if (!arcsArray || arcsArray.length === 0) {
+    if (hoveredArc) {
+      hideTooltip()
+      hoveredArc = null
+    }
+    return
+  }
+
+  // Set up raycaster with current mouse position
   raycaster.setFromCamera(mouse, camera)
 
   let closestArc = null
   let closestDistance = Number.POSITIVE_INFINITY
 
-  if (!arcsArray || arcsArray.length === 0) return
-
   // Check each arc
   arcsArray.forEach((arc) => {
-    // Generate more points along the arc for better detection
-    const arcPoints = generateArcPoints(
-      arc.startLat,
-      arc.startLng,
-      arc.endLat,
-      arc.endLng,
-      arc.scale,
-      50, // Increased number of points for better detection
-    )
-
-    // Check each segment of the arc
-    let minDistanceToArc = Number.POSITIVE_INFINITY
-
-    for (let i = 0; i < arcPoints.length - 1; i++) {
-      const start = arcPoints[i]
-      const end = arcPoints[i + 1]
-
-      // Project both points to screen space
-      const startScreen = start.clone().project(camera)
-      const endScreen = end.clone().project(camera)
-
-      // Convert to screen coordinates
-      const startX = (startScreen.x * 0.5 + 0.5) * window.innerWidth
-      const startY = (startScreen.y * -0.5 + 0.5) * window.innerHeight
-      const endX = (endScreen.x * 0.5 + 0.5) * window.innerWidth
-      const endY = (endScreen.y * -0.5 + 0.5) * window.innerHeight
-
-      // Calculate distance from mouse to this line segment in screen space
-      const mouseX = event.clientX
-      const mouseY = event.clientY
-
-      // Line segment distance calculation in 2D
-      const A = mouseX - startX
-      const B = mouseY - startY
-      const C = endX - startX
-      const D = endY - startY
-
-      const dot = A * C + B * D
-      const lenSq = C * C + D * D
-      let param = -1
-
-      if (lenSq !== 0) {
-        param = dot / lenSq
-      }
-
-      let xx, yy
-
-      if (param < 0) {
-        xx = startX
-        yy = startY
-      } else if (param > 1) {
-        xx = endX
-        yy = endY
-      } else {
-        xx = startX + param * C
-        yy = startY + param * D
-      }
-
-      const dx = mouseX - xx
-      const dy = mouseY - yy
-      const distance = Math.sqrt(dx * dx + dy * dy)
-
-      if (distance < minDistanceToArc) {
-        minDistanceToArc = distance
-      }
+    // Skip arcs with missing coordinates
+    if (!arc.startLat || !arc.startLng || !arc.endLat || !arc.endLng) {
+      return
     }
 
-    // If this arc is closer than previous closest, update
-    if (minDistanceToArc < closestDistance) {
-      closestDistance = minDistanceToArc
-      closestArc = arc
+    try {
+      // Generate points along the arc for detection
+      const numPoints = 50 // Increased for better detection
+      const arcScale = arc.scale || 0.5
+
+      // Create start and end points in 3D space
+      const startPoint = new THREE.Vector3().setFromSphericalCoords(
+        100,
+        ((90 - arc.startLat) * Math.PI) / 180,
+        (arc.startLng * Math.PI) / 180,
+      )
+
+      const endPoint = new THREE.Vector3().setFromSphericalCoords(
+        100,
+        ((90 - arc.endLat) * Math.PI) / 180,
+        (arc.endLng * Math.PI) / 180,
+      )
+
+      // Create a curve between the points
+      const curve = new THREE.QuadraticBezierCurve3(
+        startPoint,
+        new THREE.Vector3()
+          .addVectors(startPoint, endPoint)
+          .multiplyScalar(0.5)
+          .normalize()
+          .multiplyScalar(100 * (1 + arcScale * 0.4)),
+        endPoint,
+      )
+
+      // Get points along the curve
+      const arcPoints = curve.getPoints(numPoints)
+
+      // Check each segment of the arc
+      let minDistanceToArc = Number.POSITIVE_INFINITY
+
+      for (let i = 0; i < arcPoints.length - 1; i++) {
+        const start = arcPoints[i]
+        const end = arcPoints[i + 1]
+
+        // Project both points to screen space
+        const startScreen = start.clone().project(camera)
+        const endScreen = end.clone().project(camera)
+
+        // Convert to screen coordinates
+        const startX = (startScreen.x * 0.5 + 0.5) * window.innerWidth
+        const startY = (startScreen.y * -0.5 + 0.5) * window.innerHeight
+        const endX = (endScreen.x * 0.5 + 0.5) * window.innerWidth
+        const endY = (endScreen.y * -0.5 + 0.5) * window.innerHeight
+
+        // Calculate distance from mouse to this line segment in screen space
+        const mouseX = event.clientX
+        const mouseY = event.clientY
+
+        // Line segment distance calculation in 2D
+        const A = mouseX - startX
+        const B = mouseY - startY
+        const C = endX - startX
+        const D = endY - startY
+
+        const dot = A * C + B * D
+        const lenSq = C * C + D * D
+        let param = -1
+
+        if (lenSq !== 0) {
+          param = dot / lenSq
+        }
+
+        let xx, yy
+
+        if (param < 0) {
+          xx = startX
+          yy = startY
+        } else if (param > 1) {
+          xx = endX
+          yy = endY
+        } else {
+          xx = startX + param * C
+          yy = startY + param * D
+        }
+
+        const dx = mouseX - xx
+        const dy = mouseY - yy
+        const distance = Math.sqrt(dx * dx + dy * dy)
+
+        if (distance < minDistanceToArc) {
+          minDistanceToArc = distance
+        }
+      }
+
+      // If this arc is closer than previous closest, update
+      if (minDistanceToArc < closestDistance) {
+        closestDistance = minDistanceToArc
+        closestArc = arc
+      }
+    } catch (error) {
+      console.error("Error calculating arc points:", error)
     }
   })
 
-  // Threshold for hover detection - increased for better usability
-  const hoverThreshold = 20 // Increased threshold
+  // Threshold for hover detection
+  const hoverThreshold = 25 // Increased for better usability
 
   if (closestArc && closestDistance < hoverThreshold) {
     if (hoveredArc !== closestArc) {
@@ -2057,6 +2098,35 @@ function onMouseMove(event) {
       hoveredArc = null
     }
   }
+}
+
+// Function to generate points along a great circle arc
+function generateArcPoints(startLat, startLng, endLat, endLng, altitudeScale, numPoints) {
+  // Create start and end points
+  const startPoint = new THREE.Vector3().setFromSphericalCoords(
+    100,
+    ((90 - startLat) * Math.PI) / 180,
+    (startLng * Math.PI) / 180,
+  )
+
+  const endPoint = new THREE.Vector3().setFromSphericalCoords(
+    100,
+    ((90 - endLat) * Math.PI) / 180,
+    (endLng * Math.PI) / 180,
+  )
+
+  // Calculate midpoint with altitude
+  const midPoint = new THREE.Vector3()
+    .addVectors(startPoint, endPoint)
+    .multiplyScalar(0.5)
+    .normalize()
+    .multiplyScalar(100 * (1 + (altitudeScale || 0.5) * 0.4))
+
+  // Create a quadratic curve
+  const curve = new THREE.QuadraticBezierCurve3(startPoint, midPoint, endPoint)
+
+  // Return points along the curve
+  return curve.getPoints(numPoints || 30)
 }
 
 //=============================================================================
@@ -2108,27 +2178,6 @@ function getCountryCoordinatesFromCode(countryCode) {
   }
 
   return null
-}
-
-// Function to generate points along a great circle arc
-function generateArcPoints(startLat, startLng, endLat, endLng, altitudeScale, numPoints) {
-  const start = new THREE.Vector3().setFromSphericalCoords(
-    100 + (altitudeScale || 0.5),
-    ((90 - startLat) * Math.PI) / 180,
-    (startLng * Math.PI) / 180,
-  )
-
-  const end = new THREE.Vector3().setFromSphericalCoords(
-    100 + (altitudeScale || 0.5),
-    ((90 - endLat) * Math.PI) / 180,
-    (endLng * Math.PI) / 180,
-  )
-
-  const greatArc = new THREE.CatmullRomCurve3([start, end])
-  greatArc.curveType = "centripetal"
-  greatArc.tension = 0.8
-
-  return greatArc.getPoints(numPoints)
 }
 
 //=============================================================================
