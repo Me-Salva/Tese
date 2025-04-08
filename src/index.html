@@ -16,7 +16,8 @@
       --dropdown-text: #333;
       --dropdown-border: #eee;
       --dropdown-small: #666;
-      
+      --tab-background: rgba(255, 255, 255, 0.9);
+      --tab-border: #CCCCCC;
     }
 
     [data-theme="dark"] {
@@ -29,6 +30,8 @@
       --dropdown-text: #F0F0F0;
       --dropdown-border: #444444;
       --dropdown-small: #AAAAAA;
+      --tab-background: rgba(26, 26, 26, 0.9);
+      --tab-border: #444444;
     }
 
     /* Base Styles */
@@ -40,31 +43,71 @@
       transition: background-color 0.3s, color 0.3s;
     }
     
-    /* Filter Panel Styles */
-    #filters {
+    /* New Filter Tabs Styles */
+    .filter-tabs-container {
       position: absolute;
-      top: 20px;
-      left: 20px;
+      top: 0;
+      left: 0;
       z-index: 1000;
-      background: var(--menu-background);
-      padding: 10px;
-      border-radius: 5px;
-      max-height: 95vh;
-      overflow-y: auto;
-      display: none;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    
+    .filter-tabs {
+      display: flex;
+      margin-top: 10px;
+      margin-left: 10px;
+    }
+    
+    .filter-tab {
+      padding: 8px 15px;
+      background-color: var(--tab-background);
+      border: 1px solid var(--tab-border);
+      border-bottom: none;
+      border-radius: 5px 5px 0 0;
+      margin-right: 5px;
+      cursor: pointer;
+      font-weight: bold;
       color: var(--text-color);
-      border: 1px solid var(--input-border-color);
+      transition: background-color 0.2s;
     }
     
-    #filters h3 {
-      margin: 10px 0;
+    .filter-tab:hover {
+      background-color: var(--hover-color);
     }
     
-    #filters label {
+    .filter-tab.active {
+      background-color: var(--menu-background);
+      border-bottom: 1px solid var(--menu-background);
+      position: relative;
+      z-index: 1001;
+    }
+    
+    .filter-panels {
+      display: flex;
+      width: 100%;
+      overflow-x: auto;
+    }
+    
+    .filter-panel {
+      display: none;
+      background-color: var(--menu-background);
+      border: 1px solid var(--tab-border);
+      border-radius: 0 5px 5px 5px;
+      padding: 15px;
+      margin-left: 10px;
+      margin-right: 10px;
+      max-height: 80vh;
+      overflow-y: auto;
+      min-width: 250px;
+    }
+    
+    .filter-panel.active {
       display: block;
-      margin: 5px 0;
     }
     
+    /* Country Filter Panel Styles */
     .country-list {
       margin-left: 20px;
       display: block;
@@ -80,7 +123,8 @@
       margin-left: 10px;
     }
     
-    #filters button {
+    /* Button Styles */
+    .filter-panel button {
       display: block;
       margin: 10px auto 0;
       padding: 5px 10px;
@@ -89,6 +133,11 @@
       color: white;
       border-radius: 5px;
       cursor: pointer;
+    }
+    
+    .reset-btn {
+      background-color: #f44336;
+      margin-left: 10px;
     }
     
     /* Time Controls Styles */
@@ -109,20 +158,6 @@
       max-width: 90%;
       border: 1px solid var(--input-border-color);
       transition: opacity 0.3s, visibility 0.3s;
-    }
-    
-    /* Toggle Filters Button */
-    #toggle-filters {
-      position: absolute;
-      top: 20px;
-      right: 80px; /* Moved to make room for theme toggle */
-      z-index: 1000;
-      padding: 5px 10px;
-      border: none;
-      background: #ff5733;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
     }
     
     /* Tooltip Styles */
@@ -186,13 +221,7 @@
       background-color: #e53935;
     }
     
-    /* Advanced Filters Styles */
-    .advanced-filters {
-      margin-top: 15px;
-      padding-top: 10px;
-      border-top: 1px solid var(--input-border-color);
-    }
-    
+    /* Filter Row Styles */
     .filter-row {
       margin-bottom: 10px;
       max-width: 160px;
@@ -206,50 +235,6 @@
       border: 1px solid var(--input-border-color);
       background-color: var(--background-color);
       color: var(--text-color);
-    }
-    
-    .filter-toggle {
-      cursor: pointer;
-      user-select: none;
-      display: flex;
-      align-items: center;
-    }
-    
-    .filter-toggle:before {
-      content: '▶';
-      display: inline-block;
-      margin-right: 5px;
-      transition: transform 0.2s;
-    }
-    
-    .filter-toggle.open:before {
-      transform: rotate(90deg);
-    }
-    
-    .filter-content {
-      display: none;
-      margin-top: 5px;
-      padding-left: 15px;
-    }
-    
-    .filter-content.open {
-      display: block;
-    }
-    
-    .reset-btn {
-      background-color: #f44336;
-      margin-left: 10px;
-    }
-    
-    .sub-filter {
-      margin-top: 10px;
-      padding-top: 5px;
-      border-top: 1px dashed var(--input-border-color);
-    }
-    
-    .sub-filter-title {
-      font-weight: bold;
-      margin-bottom: 5px;
     }
     
     /* Autocomplete Styles */
@@ -402,6 +387,20 @@
         width: 100%;
         margin: 0 0 10px 0;
       }
+      
+      .filter-tabs {
+        flex-direction: column;
+      }
+      
+      .filter-tab {
+        margin-bottom: 5px;
+        border-radius: 5px;
+      }
+      
+      .filter-panel {
+        width: 90%;
+        margin: 0 auto;
+      }
     }
   </style>
 
@@ -418,107 +417,102 @@
 </head>
 
 <body>
-  <button id="toggle-filters">Mostrar Filtros</button>
-  <button id="theme-toggle">
+  <button id="theme-toggle" style="position: absolute; top: 20px; right: 20px; z-index: 1100; padding: 5px 10px; border: none; background: #6200ea; color: white; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-icon">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
     </svg>
   </button>
 
-  <div id="filters">
-    <h3>Transferências:</h3>
-
-    <label><input type="checkbox" id="showAllTransfers" checked> <strong>Todas</strong></label>
-
-    <div id="transfer-filters">
-      <label><input type="checkbox" id="showTransfersIn" checked> Entradas</label>
-      <label><input type="checkbox" id="showTransfersOut" checked> Saídas</label>
+  <!-- New Filter Tabs Structure -->
+  <div class="filter-tabs-container">
+    <div class="filter-tabs">
+      <div class="filter-tab" data-panel="country-filter">Transferências</div>
+      <div class="filter-tab" data-panel="country-to-country-filter">1-1</div>
+      <div class="filter-tab" data-panel="player-filter">Jogador</div>
     </div>
-
-    <h3>Países Selecionados:</h3>
-
-    <label><input type="checkbox" id="selectAll" checked> <strong>Todos</strong></label>
-
-    <div class="continent-group">
-      <label><input type="checkbox" class="continent-checkbox" checked> <strong>América do Norte</strong></label>
-      <div class="country-list">
-        <label><input type="checkbox" name="country" value="Estados Unidos" checked> EUA</label>
-        <label><input type="checkbox" name="country" value="México" checked> México</label>
-      </div>
-    </div>
-
-    <div class="continent-group">
-      <label><input type="checkbox" class="continent-checkbox" checked> <strong>América do Sul</strong></label>
-      <div class="country-list">
-        <label><input type="checkbox" name="country" value="Argentina" checked> Argentina</label>
-        <label><input type="checkbox" name="country" value="Brasil" checked> Brasil</label>
-      </div>
-    </div>
-
-    <div class="continent-group">
-      <label><input type="checkbox" class="continent-checkbox" checked> <strong>Ásia</strong></label>
-      <div class="country-list">
-        <label><input type="checkbox" name="country" value="Arábia Saudita" checked> Arábia Saudita</label>
-        <label><input type="checkbox" name="country" value="China" checked> China</label>
-      </div>
-    </div>
-
-    <div class="continent-group">
-      <label><input type="checkbox" class="continent-checkbox" checked> <strong>Europa</strong></label>
-      <div class="country-list">
-        <label><input type="checkbox" name="country" value="Alemanha" checked> Alemanha</label>
-        <label><input type="checkbox" name="country" value="Bélgica" checked> Bélgica</label>
-        <label><input type="checkbox" name="country" value="Espanha" checked> Espanha</label>
-        <label><input type="checkbox" name="country" value="França" checked> França</label>
-        <label><input type="checkbox" name="country" value="Inglaterra" checked> Inglaterra</label>
-        <label><input type="checkbox" name="country" value="Itália" checked> Itália</label>
-        <label><input type="checkbox" name="country" value="Países Baixos" checked> Países Baixos</label>
-        <label><input type="checkbox" name="country" value="Portugal" checked> Portugal</label>
-        <label><input type="checkbox" name="country" value="Turquia" checked> Turquia</label>
-      </div>
-    </div>
-
-    <div class="advanced-filters">
-      <h3 class="filter-toggle" id="toggle-advanced-filters">Filtros Avançados</h3>
-      <div class="filter-content" id="advanced-filters-content">
-        <!-- Country to Country Filter -->
-        <div class="sub-filter">
-          <div class="sub-filter-title">Filtro por País a País</div>
-          <div class="filter-row">
-            <label for="sourceCountry">País 1:</label>
-            <select id="sourceCountry">
-              <option value="">Selecione um país</option>
-              <!-- Options will be populated by JavaScript -->
-            </select>
-          </div>
-          <div class="filter-row">
-            <label for="destinationCountry">País 2:</label>
-            <select id="destinationCountry">
-              <option value="">Selecione um país</option>
-              <!-- Options will be populated by JavaScript -->
-            </select>
-          </div>
-          <button id="applyCountryFilter">Aplicar</button>
-          <button id="resetCountryFilter" class="reset-btn">Limpar</button>
+    
+    <div class="filter-panels">
+      <!-- Country Filter Panel -->
+      <div id="country-filter" class="filter-panel">
+        <h3>Transferências:</h3>
+        <label><input type="checkbox" id="showAllTransfers" checked> <strong>Todas</strong></label>
+        <div id="transfer-filters">
+          <label><input type="checkbox" id="showTransfersIn" checked> Entradas</label>
+          <label><input type="checkbox" id="showTransfersOut" checked> Saídas</label>
         </div>
-        
-        <!-- Player Filter -->
-        <div class="sub-filter">
-          <div class="sub-filter-title">Filtro por Jogador</div>
-          <div class="filter-row">
-            <label for="playerName">Nome do Jogador:</label>
-            <div class="autocomplete-container">
-              <input type="text" id="playerName" placeholder="Digite o nome do jogador">
-              <div id="playerAutocomplete" class="autocomplete-dropdown"></div>
-            </div>
+
+        <h3>Países Selecionados:</h3>
+        <label><input type="checkbox" id="selectAll" checked> <strong>Todos</strong></label>
+
+        <div class="continent-group">
+          <label><input type="checkbox" class="continent-checkbox" checked> <strong>América do Norte</strong></label>
+          <div class="country-list">
+            <label><input type="checkbox" name="country" value="Estados Unidos" checked> EUA</label>
+            <label><input type="checkbox" name="country" value="México" checked> México</label>
           </div>
-          <button id="applyPlayerFilter">Aplicar</button>
+        </div>
+
+        <div class="continent-group">
+          <label><input type="checkbox" class="continent-checkbox" checked> <strong>América do Sul</strong></label>
+          <div class="country-list">
+            <label><input type="checkbox" name="country" value="Argentina" checked> Argentina</label>
+            <label><input type="checkbox" name="country" value="Brasil" checked> Brasil</label>
+          </div>
+        </div>
+
+        <div class="continent-group">
+          <label><input type="checkbox" class="continent-checkbox" checked> <strong>Ásia</strong></label>
+          <div class="country-list">
+            <label><input type="checkbox" name="country" value="Arábia Saudita" checked> Arábia Saudita</label>
+            <label><input type="checkbox" name="country" value="China" checked> China</label>
+          </div>
+        </div>
+
+        <div class="continent-group">
+          <label><input type="checkbox" class="continent-checkbox" checked> <strong>Europa</strong></label>
+          <div class="country-list">
+            <label><input type="checkbox" name="country" value="Alemanha" checked> Alemanha</label>
+            <label><input type="checkbox" name="country" value="Bélgica" checked> Bélgica</label>
+            <label><input type="checkbox" name="country" value="Espanha" checked> Espanha</label>
+            <label><input type="checkbox" name="country" value="França" checked> França</label>
+            <label><input type="checkbox" name="country" value="Inglaterra" checked> Inglaterra</label>
+            <label><input type="checkbox" name="country" value="Itália" checked> Itália</label>
+            <label><input type="checkbox" name="country" value="Países Baixos" checked> Países Baixos</label>
+            <label><input type="checkbox" name="country" value="Portugal" checked> Portugal</label>
+            <label><input type="checkbox" name="country" value="Turquia" checked> Turquia</label>
+          </div>
         </div>
       </div>
-    </div>
 
-    <br>
-    <button id="resetAllFilters" class="reset-btn">Limpar Todos os Filtros</button>
+      <!-- Country to Country Filter Panel -->
+      <div id="country-to-country-filter" class="filter-panel">
+        <h3>Escolha 2 países</h3>
+        <div class="filter-row">
+          <select id="sourceCountry">
+            <option value="">Selecione um país</option>
+            <!-- Options will be populated by JavaScript -->
+          </select>
+        </div>
+        <div class="filter-row">
+          <select id="destinationCountry">
+            <option value="">Selecione um país</option>
+            <!-- Options will be populated by JavaScript -->
+          </select>
+        </div>
+        <button id="resetCountryFilter" class="reset-btn" style="margin-top: 10px;">Limpar</button>
+      </div>
+
+      <!-- Player Filter Panel -->
+      <div id="player-filter" class="filter-panel">
+        <h3>Escolha um jogador</h3>
+        <div class="filter-row">
+          <div class="autocomplete-container">
+            <input type="text" id="playerName" placeholder="Digite o nome do jogador">
+            <div id="playerAutocomplete" class="autocomplete-dropdown"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Time Controls -->

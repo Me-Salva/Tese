@@ -121,6 +121,9 @@ function init() {
   const themeToggle = document.getElementById("theme-toggle")
   if (themeToggle) {
     themeToggle.addEventListener("click", toggleTheme)
+    console.log("Theme toggle button initialized")
+  } else {
+    console.error("Theme toggle button not found")
   }
 }
 
@@ -253,6 +256,13 @@ async function loadInitialData() {
       const code = country.text
       const name = country.country
       countryCodeToName[code] = name
+
+      // Also store country coordinates for later use
+      country_info[country.id] = {
+        code: country.text,
+        lat: country.lat,
+        lng: country.lng,
+      }
     })
 
     // Load player database if available
@@ -727,30 +737,43 @@ function setupUIControls() {
   // Set up time control buttons
   setupTimeControls()
 
-  // Setup filters toggle
-  document.addEventListener("DOMContentLoaded", () => {
-    const filtersDiv = document.getElementById("filters")
-    const toggleButton = document.getElementById("toggle-filters")
-
-    filtersDiv.style.display = "none"
-    toggleButton.textContent = "Mostrar Filtros"
-
-    toggleButton.addEventListener("click", () => {
-      if (filtersDiv.style.display === "none" || filtersDiv.style.display === "") {
-        filtersDiv.style.display = "block"
-        toggleButton.textContent = "Esconder Filtros"
-      } else {
-        filtersDiv.style.display = "none"
-        toggleButton.textContent = "Mostrar Filtros"
-      }
-    })
-  })
+  // Setup filter tabs
+  setupFilterTabs()
 
   // Setup exit player view button
   const exitPlayerViewBtn = document.getElementById("exit-player-view")
   if (exitPlayerViewBtn) {
     exitPlayerViewBtn.addEventListener("click", exitPlayerCareerMode)
   }
+}
+
+// Setup filter tabs
+function setupFilterTabs() {
+  const filterTabs = document.querySelectorAll(".filter-tab")
+  const filterPanels = document.querySelectorAll(".filter-panel")
+
+  // Add click event to each tab
+  filterTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      // Get the panel ID from the tab's data attribute
+      const panelId = tab.getAttribute("data-panel")
+      const panel = document.getElementById(panelId)
+
+      // Check if this tab is already active
+      const isActive = tab.classList.contains("active")
+
+      // Remove active class from all tabs and panels
+      filterTabs.forEach((t) => t.classList.remove("active"))
+      filterPanels.forEach((p) => p.classList.remove("active"))
+
+      // If the tab wasn't active before, make it active
+      // Otherwise, leave everything inactive (hidden)
+      if (!isActive) {
+        tab.classList.add("active")
+        panel.classList.add("active")
+      }
+    })
+  })
 }
 
 //=============================================================================
@@ -908,28 +931,14 @@ function initAdvancedFilters() {
   // Populate country dropdowns
   populateCountryDropdowns()
 
-  // Set up toggle functionality for advanced filter sections
-  setupFilterToggles()
-
-  // Set up event listeners for advanced filter buttons
-  if (document.getElementById("applyCountryFilter")) {
-    document.getElementById("applyCountryFilter").addEventListener("click", applyCountryToCountryFilter)
-  }
-
-  if (document.getElementById("resetCountryFilter")) {
-    document.getElementById("resetCountryFilter").addEventListener("click", resetCountryToCountryFilter)
-  }
-
-  if (document.getElementById("applyPlayerFilter")) {
-    document.getElementById("applyPlayerFilter").addEventListener("click", applyPlayerCareerFilter)
-  }
-
-  if (document.getElementById("resetAllFilters")) {
-    document.getElementById("resetAllFilters").addEventListener("click", resetAllFilters)
+  // Set up event listener for reset country filter button
+  const resetCountryFilterBtn = document.getElementById("resetCountryFilter")
+  if (resetCountryFilterBtn) {
+    resetCountryFilterBtn.addEventListener("click", resetCountryToCountryFilter)
   }
 }
 
-// Populate country dropdowns with all available countries
+// Modify the populateCountryDropdowns function to add event listeners for automatic filtering
 function populateCountryDropdowns() {
   const sourceDropdown = document.getElementById("sourceCountry")
   const destDropdown = document.getElementById("destinationCountry")
@@ -955,24 +964,22 @@ function populateCountryDropdowns() {
     destOption.textContent = country
     destDropdown.appendChild(destOption)
   })
-}
 
-// Set up toggle functionality for advanced filter sections
-function setupFilterToggles() {
-  const toggles = document.querySelectorAll(".filter-toggle")
+  // Add event listeners for automatic filtering
+  sourceDropdown.addEventListener("change", () => {
+    if (sourceDropdown.value && destDropdown.value) {
+      applyCountryToCountryFilter()
+    } else if (!sourceDropdown.value && !destDropdown.value) {
+      resetCountryToCountryFilter()
+    }
+  })
 
-  toggles.forEach((toggle) => {
-    toggle.addEventListener("click", function () {
-      this.classList.toggle("open")
-
-      // Get the corresponding content element
-      const contentId = this.id.replace("toggle-", "") + "-content"
-      const content = document.getElementById(contentId)
-
-      if (content) {
-        content.classList.toggle("open")
-      }
-    })
+  destDropdown.addEventListener("change", () => {
+    if (sourceDropdown.value && destDropdown.value) {
+      applyCountryToCountryFilter()
+    } else if (!sourceDropdown.value && !destDropdown.value) {
+      resetCountryToCountryFilter()
+    }
   })
 }
 
@@ -1056,7 +1063,7 @@ function setupAutoFiltering() {
   setupPlayerAutocomplete()
 }
 
-// Setup player autocomplete functionality
+// Modify the setupPlayerAutocomplete function to apply filter automatically
 function setupPlayerAutocomplete() {
   const playerNameInput = document.getElementById("playerName")
   const playerAutocomplete = document.getElementById("playerAutocomplete")
@@ -1124,6 +1131,9 @@ function setupPlayerAutocomplete() {
               selectedPlayerId = player.id
               console.log(`Selected player: ${player.name} (ID: ${player.id})`)
               playerAutocomplete.style.display = "none"
+
+              // Automatically apply the player filter when a player is selected
+              applyPlayerCareerFilter()
             })
 
             playerAutocomplete.appendChild(item)
@@ -1238,7 +1248,7 @@ function applyFilter() {
     filtersApplied: true,
   }
 
-  // If no countries are selected and no other filters are active, show nothing
+  // If no countries are selected and no other filters are active
   if (
     selectedCountryCodes.length === 0 &&
     !currentFilterState.countryToCountryFilterActive &&
@@ -1437,60 +1447,6 @@ function resetCountryToCountryFilter() {
   }
 
   // Load arcs for the current year
-  loadArcsForYear(currentYear)
-}
-
-// Reset all filters
-function resetAllFilters() {
-  // Reset country selection - check all checkboxes
-  const countryCheckboxes = document.querySelectorAll('input[name="country"]')
-  countryCheckboxes.forEach((checkbox) => (checkbox.checked = true))
-
-  // Reset continent checkboxes - check all
-  const continentCheckboxes = document.querySelectorAll(".continent-checkbox")
-  continentCheckboxes.forEach((checkbox) => (checkbox.checked = true))
-
-  // Reset select all checkbox
-  const selectAllCheckbox = document.getElementById("selectAll")
-  if (selectAllCheckbox) selectAllCheckbox.checked = true
-
-  // Reset transfer direction checkboxes
-  const showTransfersIn = document.getElementById("showTransfersIn")
-  const showTransfersOut = document.getElementById("showTransfersOut")
-  const showAllTransfersCheckbox = document.getElementById("showAllTransfers")
-  if (showTransfersIn) showTransfersIn.checked = true
-  if (showTransfersOut) showTransfersOut.checked = true
-  if (showAllTransfersCheckbox) showAllTransfersCheckbox.checked = true
-
-  // Reset country-to-country filter dropdowns
-  const sourceDropdown = document.getElementById("sourceCountry")
-  const destDropdown = document.getElementById("destinationCountry")
-  if (sourceDropdown) sourceDropdown.value = ""
-  if (destDropdown) destDropdown.value = ""
-
-  // Reset player filter
-  if (playerCareerMode) {
-    exitPlayerCareerMode()
-  }
-  const playerNameInput = document.getElementById("playerName")
-  if (playerNameInput) playerNameInput.value = ""
-  selectedPlayerId = null
-
-  // Reset filter state completely
-  currentFilterState = {
-    selectedCountryCodes: [],
-    showTransfersIn: true,
-    showTransfersOut: true,
-    sourceCountryCode: null,
-    destCountryCode: null,
-    playerName: null,
-    countryToCountryFilterActive: false,
-    playerFilterActive: false,
-    bidirectionalFilter: false,
-    filtersApplied: false,
-  }
-
-  // Load arcs for the current year without any filters
   loadArcsForYear(currentYear)
 }
 
@@ -1806,7 +1762,7 @@ async function showAllPlayerTransfers(playerId) {
 // Function to update player career path
 async function updatePlayerCareerPath(year) {
   // Filter the career arcs for the selected year
-  const yearArcs = playerCareerArcs.filter((arc) => arc.year === year)
+  const yearArcs = playerCareerArcs.filter((arc) => arc.year === year);
 
   // Update the visualization with the arcs for the selected year
   const arcsWithThickness = yearArcs.map((arc) => ({
@@ -1838,7 +1794,7 @@ async function updatePlayerCareerPath(year) {
   arcsArray = arcsWithThickness
 }
 
-// Function to show player info panel
+// Function to show player info panel\
 function showPlayerInfo(name) {
   const playerInfo = document.getElementById("player-info")
   if (playerInfo) {
@@ -2078,7 +2034,7 @@ function onMouseMove(event) {
   })
 
   // Threshold for hover detection
-  const hoverThreshold = 25 // Increased for better usability
+  const hoverThreshold = 20 // Increased for better usability
 
   if (closestArc && closestDistance < hoverThreshold) {
     if (hoveredArc !== closestArc) {
@@ -2100,35 +2056,6 @@ function onMouseMove(event) {
   }
 }
 
-// Function to generate points along a great circle arc
-function generateArcPoints(startLat, startLng, endLat, endLng, altitudeScale, numPoints) {
-  // Create start and end points
-  const startPoint = new THREE.Vector3().setFromSphericalCoords(
-    100,
-    ((90 - startLat) * Math.PI) / 180,
-    (startLng * Math.PI) / 180,
-  )
-
-  const endPoint = new THREE.Vector3().setFromSphericalCoords(
-    100,
-    ((90 - endLat) * Math.PI) / 180,
-    (endLng * Math.PI) / 180,
-  )
-
-  // Calculate midpoint with altitude
-  const midPoint = new THREE.Vector3()
-    .addVectors(startPoint, endPoint)
-    .multiplyScalar(0.5)
-    .normalize()
-    .multiplyScalar(100 * (1 + (altitudeScale || 0.5) * 0.4))
-
-  // Create a quadratic curve
-  const curve = new THREE.QuadraticBezierCurve3(startPoint, midPoint, endPoint)
-
-  // Return points along the curve
-  return curve.getPoints(numPoints || 30)
-}
-
 //=============================================================================
 // UTILITY FUNCTIONS
 //=============================================================================
@@ -2146,7 +2073,7 @@ function debounce(func, wait) {
 function getCountryCoordinatesFromCode(countryCode) {
   // Find the country ID from the code
   const countryId = Object.entries(country_info).find(([id, info]) => info.code === countryCode)?.[0]
-
+  
   if (countryId) {
     return {
       lat: country_info[countryId].lat,
