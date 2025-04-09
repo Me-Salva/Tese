@@ -62,7 +62,7 @@ const themeColors = {
 // Arc colors
 const arcColors = {
   default: "#F76B15", // Orange for general arcs
-  exit: "#1200E0", // Blue for exits in 1 country view
+  exit: "#2DA6E0", // Blue for exits in 1 country view
   player: "#25E009", // Green for player view
 }
 
@@ -116,6 +116,7 @@ function init() {
 
   // Setup UI controls
   setupUIControls()
+  setupLegendTooltip();
 
   // Setup theme toggle
   const themeToggle = document.getElementById("theme-toggle")
@@ -745,6 +746,29 @@ function setupUIControls() {
   if (exitPlayerViewBtn) {
     exitPlayerViewBtn.addEventListener("click", exitPlayerCareerMode)
   }
+}
+
+function setupLegendTooltip() {
+  const infoBtn = document.getElementById("legend-info");
+  const tooltip = document.getElementById("legend-tooltip");
+
+  if (!infoBtn || !tooltip) return;
+
+  infoBtn.addEventListener("mouseenter", () => {
+    tooltip.style.display = "block";
+  });
+
+  infoBtn.addEventListener("mouseleave", () => {
+    tooltip.style.display = "none";
+  });
+
+  tooltip.addEventListener("mouseenter", () => {
+    tooltip.style.display = "block";
+  });
+
+  tooltip.addEventListener("mouseleave", () => {
+    tooltip.style.display = "none";
+  });
 }
 
 // Setup filter tabs

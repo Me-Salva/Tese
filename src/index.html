@@ -459,24 +459,6 @@
       border-radius: 4px;
     }
     
-    /* Theme Toggle Button */
-    #theme-toggle {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      z-index: 1000;
-      padding: 8px 12px;
-      border: none;
-      background: var(--button-primary);
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.2s;
-    }
-    
     #theme-toggle:hover {
       background: var(--button-primary-hover);
     }
@@ -527,6 +509,59 @@
     #exit-player-view:hover {
       background: var(--button-exit-hover);
     }
+
+    #top-right-buttons {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: row; /* This is the default, but explicit is good */
+      gap: 10px;
+      z-index: 1100;
+    }
+
+    /* Uniform button style */
+    #top-right-buttons button {
+      width: 40px;
+      height: 40px;
+      background: var(--button-primary);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0; /* Ensure no margins are interfering */
+      padding: 0; /* Ensure no padding is interfering */
+    }
+
+    #top-right-buttons button svg {
+      display: block; /* Removes any extra spacing around SVG */
+    }
+
+    #legend-info svg {
+      width: 20px;
+      height: 20px;
+      padding: 2px; /* Gives the icon some breathing room */
+    }
+
+    /* Tooltip */
+    #legend-tooltip {
+      display: none;
+      position: fixed;
+      top: 65px;
+      right: 20px; /* Changed from 70px to 20px to align with buttons */
+      background: var(--menu-background);
+      color: var(--text-color);
+      border: 1px solid var(--input-border-color);
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 1200;
+      font-size: 13px;
+      max-width: 220px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
     
     /* Responsive Styles */
     @media (max-width: 768px) {
@@ -570,11 +605,37 @@
 </head>
 
 <body>
-  <button id="theme-toggle" style="position: absolute; top: 20px; right: 20px; z-index: 1100; padding: 8px 12px; border: none; background: var(--button-primary); color: white; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-icon">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-    </svg>
-  </button>
+  <!-- Top-right buttons container -->
+  <div id="top-right-buttons">
+    
+    <!-- Info Button -->
+    <button id="legend-info" title="Legenda das cores">
+      <svg xmlns="http://www.w3.org/2000/svg" 
+           viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12" y2="8"></line>
+      </svg>
+    </button>
+
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle">
+      <svg xmlns="http://www.w3.org/2000/svg"
+           viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-icon">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Tooltip for color legend -->
+  <div id="legend-tooltip">
+    <strong>Legenda:</strong><br>
+    <span style="color:#F76B15;">🟠 Geral/Entradas</span><br>
+    <span style="color:#2DA6E0;">🔵 Saídas</span><br>
+    <span style="color:#25E009;">🟢 Jogador</span>
+  </div>
 
   <!-- New Filter Tabs Structure -->
   <div class="filter-tabs-container">
