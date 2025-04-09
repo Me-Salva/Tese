@@ -84,6 +84,7 @@
       display: flex;
       flex-direction: column;
       width: 100%;
+      pointer-events: none; /* Make container transparent to mouse events */
     }
     
     .filter-tabs {
@@ -93,6 +94,7 @@
       gap: 5px;
       position: relative;
       z-index: 1; /* Lower z-index than panels */
+      pointer-events: auto; /* Re-enable pointer events for tabs */
     }
     
     .filter-tab {
@@ -132,6 +134,7 @@
       position: relative;
       z-index: 2; /* Higher than tabs but lower than active tab */
       margin-top: -1px; /* Pull up to overlap with tabs */
+      pointer-events: none; /* Make panels transparent to mouse events by default */
     }
     
     .filter-panel {
@@ -146,6 +149,7 @@
       overflow-y: auto;
       min-width: 254px;
       box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      pointer-events: auto; /* Re-enable pointer events for visible panels */
     }
 
     .filter-panel.active {
@@ -697,25 +701,5 @@
 
   <div id="globeViz"></div>
   <script type="module" src="script.js"></script>
-  
-  <!-- Add this script to position the dropdown correctly -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const playerNameInput = document.getElementById('playerName');
-      const playerAutocomplete = document.getElementById('playerAutocomplete');
-      
-      // Update the position of the dropdown when the input changes
-      playerNameInput.addEventListener('input', function() {
-        if (playerNameInput.value.trim().length >= 2) {
-          // Get the position of the input
-          const rect = playerNameInput.getBoundingClientRect();
-          
-          // Position the dropdown below the input
-          playerAutocomplete.style.top = (rect.bottom) + 'px';
-          playerAutocomplete.style.left = rect.left + 'px';
-        }
-      });
-    });
-  </script>
 </body>
 </html>
