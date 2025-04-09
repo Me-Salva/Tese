@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D Globe Visualization</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* Theme Variables */
     :root {
@@ -18,6 +21,20 @@
       --dropdown-small: #666;
       --tab-background: rgba(255, 255, 255, 0.9);
       --tab-border: #CCCCCC;
+      --button-primary: #5A6978;
+      --button-primary-hover: #4A5968;
+      --button-secondary: #7D8A99;
+      --button-secondary-hover: #6D7A89;
+      --button-reset: #8D8D8D;
+      --button-reset-hover: #7D7D7D;
+      --button-play: #6B7F94;
+      --button-play-hover: #5B6F84;
+      --button-play-active: #8D8D8D;
+      --button-play-active-hover: #7D7D7D;
+      --button-exit: #7D8A99;
+      --button-exit-hover: #6D7A89;
+      --filter-active-bg: #e6f0f9; /* New color for active filter */
+      --filter-active-border: #4a90e2; /* New color for active filter border */
     }
 
     [data-theme="dark"] {
@@ -32,6 +49,20 @@
       --dropdown-small: #AAAAAA;
       --tab-background: rgba(26, 26, 26, 0.9);
       --tab-border: #444444;
+      --button-primary: #5A6978;
+      --button-primary-hover: #4A5968;
+      --button-secondary: #7D8A99;
+      --button-secondary-hover: #6D7A89;
+      --button-reset: #8D8D8D;
+      --button-reset-hover: #7D7D7D;
+      --button-play: #6B7F94;
+      --button-play-hover: #5B6F84;
+      --button-play-active: #8D8D8D;
+      --button-play-active-hover: #7D7D7D;
+      --button-exit: #7D8A99;
+      --button-exit-hover: #6D7A89;
+      --filter-active-bg: #2a3a4a; /* New color for active filter in dark mode */
+      --filter-active-border: #4a90e2; /* New color for active filter border in dark mode */
     }
 
     /* Base Styles */
@@ -41,6 +72,7 @@
       background-color: var(--background-color);
       color: var(--text-color);
       transition: background-color 0.3s, color 0.3s;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
     
     /* New Filter Tabs Styles */
@@ -56,21 +88,29 @@
     
     .filter-tabs {
       display: flex;
-      margin-top: 10px;
-      margin-left: 10px;
+      margin-top: 15px;
+      margin-left: 15px;
+      gap: 5px;
+      position: relative;
+      z-index: 1; /* Lower z-index than panels */
     }
     
     .filter-tab {
       padding: 8px 15px;
       background-color: var(--tab-background);
       border: 1px solid var(--tab-border);
-      border-bottom: none;
-      border-radius: 5px 5px 0 0;
+      border-radius: 8px 8px 0 0;
       margin-right: 5px;
       cursor: pointer;
-      font-weight: bold;
+      font-weight: 600;
       color: var(--text-color);
-      transition: background-color 0.2s;
+      transition: all 0.2s ease;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+      font-size: 14px;
+      user-select: none; /* Prevent text selection */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
     }
     
     .filter-tab:hover {
@@ -78,33 +118,62 @@
     }
     
     .filter-tab.active {
-      background-color: var(--menu-background);
-      border-bottom: 1px solid var(--menu-background);
+      background-color: var(--filter-active-bg);
+      border-color: var(--filter-active-border);
+      color: var(--filter-active-border);
       position: relative;
-      z-index: 1001;
+      z-index: 3; /* Higher than panels to show the tab */
     }
     
     .filter-panels {
       display: flex;
       width: 100%;
       overflow-x: auto;
+      position: relative;
+      z-index: 2; /* Higher than tabs but lower than active tab */
+      margin-top: -1px; /* Pull up to overlap with tabs */
     }
     
     .filter-panel {
       display: none;
       background-color: var(--menu-background);
       border: 1px solid var(--tab-border);
-      border-radius: 0 5px 5px 5px;
-      padding: 15px;
-      margin-left: 10px;
-      margin-right: 10px;
+      border-radius: 0; /* Removed rounded corners */
+      padding: 18px;
+      margin-left: 15px;
+      margin-right: 15px;
       max-height: 80vh;
       overflow-y: auto;
-      min-width: 250px;
+      min-width: 254px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    }
+
+    .filter-panel.active {
+      display: block !important; /* Force display with !important */
+      border: 1px solid var(--filter-active-border);
+      background-color: var(--filter-active-bg);
     }
     
-    .filter-panel.active {
-      display: block;
+    .filter-panel h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .filter-panel label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .filter-panel input[type="checkbox"] {
+      margin: 0;
+      width: 16px;
+      height: 16px;
     }
     
     /* Country Filter Panel Styles */
@@ -125,19 +194,28 @@
     
     /* Button Styles */
     .filter-panel button {
-      display: block;
-      margin: 10px auto 0;
       padding: 5px 10px;
       border: none;
-      background: #007bff;
+      background: var(--button-primary);
       color: white;
       border-radius: 5px;
       cursor: pointer;
+      transition: background-color 0.2s;
     }
     
+    .filter-panel button:hover {
+      background-color: var(--button-primary-hover);
+    }
+    
+    /* Reset button specific styles */
     .reset-btn {
-      background-color: #f44336;
-      margin-left: 10px;
+      background-color: var(--button-reset) !important;
+      margin: 10px 0 0 0 !important; /* Override any other margins */
+      display: inline-block !important; /* Override block display */
+    }
+    
+    .reset-btn:hover {
+      background-color: var(--button-reset-hover) !important;
     }
     
     /* Time Controls Styles */
@@ -165,76 +243,102 @@
       position: absolute;
       display: none;
       background: var(--menu-background);
-      padding: 5px;
-      border-radius: 3px;
+      padding: 8px 12px;
+      border-radius: 4px;
       pointer-events: none;
-      font-family: Arial, sans-serif;
       font-size: 12px;
       color: var(--text-color);
       border: 1px solid var(--input-border-color);
       max-width: 250px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     
     /* Player Name Input */
     #playerName {
-      width: 150px;
+      width: 160px;
       background-color: var(--background-color);
       color: var(--text-color);
       border: 1px solid var(--input-border-color);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-family: inherit;
     }
     
     /* Time Control Button Styles */
     .time-control-btn {
       border: none;
-      border-radius: 4px;
-      padding: 8px 12px;
+      border-radius: 6px;
+      padding: 8px 10px;
       cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.2s;
-      background-color: var(--background-color);
-      color: var(--text-color);
+      font-size: 14px;
+      transition: all 0.2s;
+      background-color: var(--button-secondary);
+      color: white;
+      font-family: inherit;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      min-height: 32px;
     }
-    
+
     .time-control-btn:hover {
-      background-color: var(--hover-color);
+      background-color: var(--button-secondary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 5px rgba(0,0,0,0.15);
+    }
+
+    .time-control-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
     
     .backward-btn, .forward-btn {
-      background-color: var(--background-color);
+      background-color: var(--button-secondary);
+      color: white;
+      font-size: 14px;
+    }
+    
+    .backward-btn:hover, .forward-btn:hover {
+      background-color: var(--button-secondary-hover);
     }
     
     .play-pause-btn {
-      background-color: #4CAF50;
+      background-color: var(--button-play);
       color: white;
-      padding: 8px 16px;
+      padding: 10px 16px;
+      font-size: 14px;
     }
     
     .play-pause-btn:hover {
-      background-color: #3e8e41;
+      background-color: var(--button-play-hover);
     }
     
     .play-pause-btn.playing {
-      background-color: #f44336;
+      background-color: var(--button-play-active);
     }
     
     .play-pause-btn.playing:hover {
-      background-color: #e53935;
+      background-color: var(--button-play-active-hover);
     }
     
     /* Filter Row Styles */
     .filter-row {
       margin-bottom: 10px;
       max-width: 160px;
+      position: relative; /* Added to establish a positioning context */
     }
     
     .filter-row select, .filter-row input {
       width: 100%;
-      padding: 5px;
+      padding: 6px 10px;
       margin-top: 3px;
-      border-radius: 3px;
+      border-radius: 4px;
       border: 1px solid var(--input-border-color);
       background-color: var(--background-color);
       color: var(--text-color);
+      font-family: inherit;
     }
     
     /* Autocomplete Styles */
@@ -245,18 +349,17 @@
     }
     
     .autocomplete-dropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
+      position: fixed; /* Changed from absolute to fixed */
+      width: 160px; /* Match the width of the input */
       max-height: 300px;
       overflow-y: auto;
       border: 1px solid var(--input-border-color);
       border-top: none;
       background-color: var(--background-color);
-      z-index: 1000;
+      z-index: 1500; /* Higher z-index to appear above everything */
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       display: none;
+      border-radius: 0 0 4px 4px;
     }
 
     .autocomplete-dropdown a {
@@ -283,14 +386,14 @@
     
     /* Speed Button Styles */
     .speed-btn {
-      background-color: #2196F3;
+      background-color: var(--button-secondary);
       color: white;
       padding: 8px 12px;
       margin-left: 5px;
     }
     
     .speed-btn:hover {
-      background-color: #0b7dda;
+      background-color: var(--button-secondary-hover);
     }
     
     /* Slider Container Styles */
@@ -306,12 +409,50 @@
     .slider-container label {
       margin-bottom: 5px;
       font-size: 14px;
+      font-weight: 500;
     }
 
     #time-slider {
       width: 100%;
       margin: 0;
       background-color: var(--background-color);
+      height: 8px;
+      border-radius: 4px;
+      background: #e0e0e0;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    #time-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--button-primary);
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      margin-top: -5px; /* This is the key fix for vertical alignment */
+    }
+
+    #time-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--button-primary);
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    #time-slider::-webkit-slider-runnable-track {
+      height: 8px;
+      border-radius: 4px;
+    }
+
+    #time-slider::-moz-range-track {
+      height: 8px;
+      border-radius: 4px;
     }
     
     /* Theme Toggle Button */
@@ -320,15 +461,20 @@
       top: 20px;
       right: 20px;
       z-index: 1000;
-      padding: 5px 10px;
+      padding: 8px 12px;
       border: none;
-      background: #6200ea;
+      background: var(--button-primary);
       color: white;
       border-radius: 5px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: background-color 0.2s;
+    }
+    
+    #theme-toggle:hover {
+      background: var(--button-primary-hover);
     }
     
     #theme-toggle svg {
@@ -343,36 +489,39 @@
       left: 50%;
       transform: translateX(-50%);
       background: var(--menu-background);
-      padding: 10px 15px;
+      padding: 12px 18px;
       border-radius: 8px;
       display: none;
       z-index: 1000;
       text-align: center;
       border: 1px solid var(--input-border-color);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     
     #player-info h3 {
       margin: 0 0 5px 0;
       color: var(--text-color);
+      font-weight: 600;
     }
     
     #player-info p {
-      margin: 0 0 10px 0;
+      margin: 0 0 12px 0;
       color: var(--text-color);
     }
     
     #exit-player-view {
-      padding: 5px 10px;
-      background: #F76B15;
+      padding: 6px 12px;
+      background: var(--button-exit);
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      font-family: inherit;
+      transition: background-color 0.2s;
     }
     
     #exit-player-view:hover {
-      background: #F76B15;
-      opacity: 0.8;
+      background: var(--button-exit-hover);
     }
     
     /* Responsive Styles */
@@ -417,7 +566,7 @@
 </head>
 
 <body>
-  <button id="theme-toggle" style="position: absolute; top: 20px; right: 20px; z-index: 1100; padding: 5px 10px; border: none; background: #6200ea; color: white; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+  <button id="theme-toggle" style="position: absolute; top: 20px; right: 20px; z-index: 1100; padding: 8px 12px; border: none; background: var(--button-primary); color: white; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-icon">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
     </svg>
@@ -499,7 +648,7 @@
             <!-- Options will be populated by JavaScript -->
           </select>
         </div>
-        <button id="resetCountryFilter" class="reset-btn" style="margin-top: 10px;">Limpar</button>
+        <button id="resetCountryFilter" class="reset-btn">Limpar</button>
       </div>
 
       <!-- Player Filter Panel -->
@@ -517,9 +666,21 @@
 
   <!-- Time Controls -->
   <div class="time-controls">
-    <button id="backward-btn" class="time-control-btn backward-btn">&#9664;</button>
-    <button id="play-pause-btn" class="time-control-btn play-pause-btn">&#9658;</button>
-    <button id="forward-btn" class="time-control-btn forward-btn">&#9654;</button>
+    <button id="backward-btn" class="time-control-btn backward-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="19 20 9 12 19 4 19 20"></polygon>
+      </svg>
+    </button>
+    <button id="play-pause-btn" class="time-control-btn play-pause-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+      </svg>
+    </button>
+    <button id="forward-btn" class="time-control-btn forward-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 4 15 12 5 20 5 4"></polygon>
+      </svg>
+    </button>
     <div class="slider-container">
       <label for="time-slider">Ano: <span id="current-year">1950</span></label>
       <input type="range" id="time-slider" min="1950" max="2025" value="1950" step="1">
@@ -535,7 +696,26 @@
   </div>
 
   <div id="globeViz"></div>
-
   <script type="module" src="script.js"></script>
+  
+  <!-- Add this script to position the dropdown correctly -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const playerNameInput = document.getElementById('playerName');
+      const playerAutocomplete = document.getElementById('playerAutocomplete');
+      
+      // Update the position of the dropdown when the input changes
+      playerNameInput.addEventListener('input', function() {
+        if (playerNameInput.value.trim().length >= 2) {
+          // Get the position of the input
+          const rect = playerNameInput.getBoundingClientRect();
+          
+          // Position the dropdown below the input
+          playerAutocomplete.style.top = (rect.bottom) + 'px';
+          playerAutocomplete.style.left = rect.left + 'px';
+        }
+      });
+    });
+  </script>
 </body>
 </html>

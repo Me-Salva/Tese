@@ -44,7 +44,7 @@ let selectedPlayerId = null
 let currentTheme = "light"
 const themeColors = {
   light: {
-    waterColor: "#E6EEF2",
+    waterColor: "#E6EEF2", // Reverted to original color
     countryColor: "#D6D6D6",
     borderColor: "#999999",
     backgroundColor: "#FFFFFF",
@@ -764,13 +764,16 @@ function setupFilterTabs() {
 
       // Remove active class from all tabs and panels
       filterTabs.forEach((t) => t.classList.remove("active"))
-      filterPanels.forEach((p) => p.classList.remove("active"))
+      filterPanels.forEach((p) => {
+        p.style.display = "none"
+        p.classList.remove("active")
+      })
 
       // If the tab wasn't active before, make it active
-      // Otherwise, leave everything inactive (hidden)
       if (!isActive) {
         tab.classList.add("active")
         panel.classList.add("active")
+        panel.style.display = "block"
       }
     })
   })
@@ -808,20 +811,29 @@ function setupTimeControls() {
   })
 }
 
-// Toggle play/pause state
+// Update the togglePlayPause function to handle SVG icons instead of HTML entities
 function togglePlayPause(button) {
   isPlaying = !isPlaying
 
   if (isPlaying) {
     // Change to pause icon
-    button.innerHTML = "&#9616;&#9616;" // Pause icon
+    button.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="6" y="4" width="4" height="16"></rect>
+        <rect x="14" y="4" width="4" height="16"></rect>
+      </svg>
+    `
     button.classList.add("playing")
 
     // Start animation
     startYearAnimation()
   } else {
     // Change to play icon
-    button.innerHTML = "&#9658;" // Play icon
+    button.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+      </svg>
+    `
     button.classList.remove("playing")
 
     // Stop animation
@@ -1762,7 +1774,7 @@ async function showAllPlayerTransfers(playerId) {
 // Function to update player career path
 async function updatePlayerCareerPath(year) {
   // Filter the career arcs for the selected year
-  const yearArcs = playerCareerArcs.filter((arc) => arc.year === year);
+  const yearArcs = playerCareerArcs.filter((arc) => arc.year === year)
 
   // Update the visualization with the arcs for the selected year
   const arcsWithThickness = yearArcs.map((arc) => ({
@@ -2056,6 +2068,35 @@ function onMouseMove(event) {
   }
 }
 
+// Function to generate points along a great circle arc
+function generateArcPoints(startLat, startLng, endLat, endLng, altitudeScale = 0.5, numPoints = 30) {
+  // Create start and end points
+  const startPoint = new THREE.Vector3().setFromSphericalCoords(
+    100,
+    ((90 - startLat) * Math.PI) / 180,
+    (startLng * Math.PI) / 180,
+  )
+
+  const endPoint = new THREE.Vector3().setFromSphericalCoords(
+    100,
+    ((90 - endLat) * Math.PI) / 180,
+    (endLng * Math.PI) / 180,
+  )
+
+  // Calculate midpoint with altitude
+  const midPoint = new THREE.Vector3()
+    .addVectors(startPoint, endPoint)
+    .multiplyScalar(0.5)
+    .normalize()
+    .multiplyScalar(100 * (1 + altitudeScale * 0.4))
+
+  // Create a quadratic curve
+  const curve = new THREE.QuadraticBezierCurve3(startPoint, midPoint, endPoint)
+
+  // Return points along the curve
+  return curve.getPoints(numPoints)
+}
+
 //=============================================================================
 // UTILITY FUNCTIONS
 //=============================================================================
@@ -2073,7 +2114,7 @@ function debounce(func, wait) {
 function getCountryCoordinatesFromCode(countryCode) {
   // Find the country ID from the code
   const countryId = Object.entries(country_info).find(([id, info]) => info.code === countryCode)?.[0]
-  
+
   if (countryId) {
     return {
       lat: country_info[countryId].lat,
