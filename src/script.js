@@ -2070,7 +2070,7 @@ function onMouseMove(event) {
   })
 
   // Threshold for hover detection
-  const hoverThreshold = 20 // Increased for better usability
+  const hoverThreshold = 10 // Increased for better usability
 
   if (closestArc && closestDistance < hoverThreshold) {
     if (hoveredArc !== closestArc) {
