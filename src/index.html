@@ -35,6 +35,11 @@
       --button-exit-hover: #6D7A89;
       --filter-active-bg: #e6f0f9; /* New color for active filter */
       --filter-active-border: #4a90e2; /* New color for active filter border */
+      
+      /* Arc colors */
+      --arc-default: #F76B15; /* Orange for general arcs */
+      --arc-exit: #1200E0; /* Blue for exits in 1 country view */
+      --arc-player: #25E009; /* Green for player view */
     }
 
     [data-theme="dark"] {
@@ -63,6 +68,8 @@
       --button-exit-hover: #6D7A89;
       --filter-active-bg: #2a3a4a; /* New color for active filter in dark mode */
       --filter-active-border: #4a90e2; /* New color for active filter border in dark mode */
+      
+      /* Arc colors remain the same in dark mode */
     }
 
     /* Base Styles */
@@ -459,6 +466,55 @@
       border-radius: 4px;
     }
     
+    /* Top right buttons container */
+    #top-right-buttons {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 1100;
+    }
+    
+    /* Info Button and Legend Tooltip */
+    #info-button {
+      width: 40px;
+      height: 40px;
+      background: var(--button-primary);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+    }
+    
+    #info-button:hover {
+      background: var(--button-primary-hover);
+    }
+    
+    #info-button svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    /* Theme Toggle Button */
+    #theme-toggle {
+      width: 40px;
+      height: 40px;
+      background: var(--button-primary);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+    }
+    
     #theme-toggle:hover {
       background: var(--button-primary-hover);
     }
@@ -466,6 +522,22 @@
     #theme-toggle svg {
       width: 20px;
       height: 20px;
+    }
+    
+    #legend-tooltip {
+      position: absolute;
+      top: 70px;
+      right: 20px;
+      background: var(--menu-background);
+      padding: 12px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--input-border-color);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      z-index: 1100;
+      width: 220px;
+      display: none;
+      font-size: 14px;
+      color: var(--text-color);
     }
     
     /* Player Info Panel */
@@ -504,63 +576,70 @@
       cursor: pointer;
       font-family: inherit;
       transition: background-color 0.2s;
+      margin-top: 10px;
     }
     
     #exit-player-view:hover {
       background: var(--button-exit-hover);
     }
-
-    #top-right-buttons {
-      position: fixed;
-      top: 20px;
-      right: 20px;
+    
+    /* Country flags container */
+    .country-flags {
       display: flex;
-      flex-direction: row; /* This is the default, but explicit is good */
-      gap: 10px;
-      z-index: 1100;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 5px;
+      align-items: center;
+      margin-top: 10px;
+    }
+    
+    /* Flag image styles */
+    .country-flags img {
+      width: 24px;
+      height: 16px;
+      object-fit: cover;
+      border-radius: 2px;
+      border: 1px solid var(--input-border-color);
+      background-color: var(--background-color);
+    }
+    
+    /* Flag loading and error states */
+    .country-flags img.loading {
+      animation: pulse 1.5s infinite;
     }
 
-    /* Uniform button style */
-    #top-right-buttons button {
-      width: 40px;
-      height: 40px;
-      background: var(--button-primary);
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+    .country-flags img.error {
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
+    }
+
+    /* Country code fallback */
+    .country-code-fallback {
+      width: 24px;
+      height: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0; /* Ensure no margins are interfering */
-      padding: 0; /* Ensure no padding is interfering */
-    }
-
-    #top-right-buttons button svg {
-      display: block; /* Removes any extra spacing around SVG */
-    }
-
-    #legend-info svg {
-      width: 20px;
-      height: 20px;
-      padding: 2px; /* Gives the icon some breathing room */
-    }
-
-    /* Tooltip */
-    #legend-tooltip {
-      display: none;
-      position: fixed;
-      top: 65px;
-      right: 20px; /* Changed from 70px to 20px to align with buttons */
-      background: var(--menu-background);
-      color: var(--text-color);
+      background-color: var(--background-color);
       border: 1px solid var(--input-border-color);
-      padding: 10px;
-      border-radius: 5px;
-      z-index: 1200;
-      font-size: 13px;
-      max-width: 220px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 2px;
+      font-size: 8px;
+      font-weight: bold;
+      color: var(--text-color);
+    }
+    
+    /* Arrow between flags */
+    .flag-arrow {
+      color: var(--text-color);
+      font-size: 14px;
+      margin: 0 2px;
+    }
+    
+    /* Animation for loading state */
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
     }
     
     /* Responsive Styles */
@@ -589,6 +668,15 @@
         width: 90%;
         margin: 0 auto;
       }
+      
+      #top-right-buttons {
+        flex-direction: column;
+      }
+      
+      #legend-tooltip {
+        right: 10px;
+        width: 180px;
+      }
     }
   </style>
 
@@ -607,29 +695,24 @@
 <body>
   <!-- Top-right buttons container -->
   <div id="top-right-buttons">
-    
     <!-- Info Button -->
-    <button id="legend-info" title="Legenda das cores">
-      <svg xmlns="http://www.w3.org/2000/svg" 
-           viewBox="0 0 24 24"
-           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <button id="info-button">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="12" y1="16" x2="12" y2="12"></line>
-        <line x1="12" y1="8" x2="12" y2="8"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
       </svg>
     </button>
-
+    
     <!-- Theme Toggle Button -->
     <button id="theme-toggle">
-      <svg xmlns="http://www.w3.org/2000/svg"
-           viewBox="0 0 24 24"
-           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-icon">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
       </svg>
     </button>
   </div>
-
-  <!-- Tooltip for color legend -->
+  
+  <!-- Legend Tooltip -->
   <div id="legend-tooltip">
     <strong>Legenda:</strong><br>
     <span style="color:#F76B15;">🟠 Geral/Entradas</span><br>
@@ -757,10 +840,12 @@
   <div id="player-info">
     <h3></h3>
     <p></p>
+    <div class="country-flags"></div>
     <button id="exit-player-view">Retornar</button>
   </div>
 
   <div id="globeViz"></div>
+  
   <script type="module" src="script.js"></script>
 </body>
 </html>

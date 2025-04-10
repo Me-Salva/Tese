@@ -40,6 +40,11 @@ let firstPlayerTransferYear = null
 let playerSearchResults = []
 let selectedPlayerId = null
 
+// Player career animation variables
+let playerTransferAnimationInterval = null
+let currentTransferIndex = 0
+const transferAnimationDuration = 3000 // 3 seconds per transfer
+
 // Theme variables
 let currentTheme = "light"
 const themeColors = {
@@ -80,6 +85,9 @@ let currentFilterState = {
   filtersApplied: false,
 }
 
+// Add a new variable to store country flags for the player
+let playerCountryFlags = []
+
 //=============================================================================
 // INITIALIZATION AND MAIN EXECUTION
 //=============================================================================
@@ -116,7 +124,7 @@ function init() {
 
   // Setup UI controls
   setupUIControls()
-  setupLegendTooltip();
+  setupLegendTooltip()
 
   // Setup theme toggle
   const themeToggle = document.getElementById("theme-toggle")
@@ -272,6 +280,7 @@ async function loadInitialData() {
       const playerDbData = await playerDbResponse.json()
       playerDatabase = playerDbData.players || {}
       console.log(`Loaded player database with ${Object.keys(playerDatabase).length} players`)
+      preloadFlagImages()
     } catch (error) {
       console.warn("Player database not found, using fallback method:", error)
       // Continue with fallback method if player database is not available
@@ -312,7 +321,7 @@ async function buildPlayerDatabase() {
       // Use display_name if available, but remove position in parentheses if it exists
       let displayName = playerData.display_name || playerData.name
       // Remove position in parentheses if it exists
-      displayName = displayName.replace(/\s+$$[^)]+$$/, "")
+      displayName = displayName.replace(/\s+$[^)]+$/, "")
 
       playerMap.set(playerId, {
         id: playerId,
@@ -320,6 +329,7 @@ async function buildPlayerDatabase() {
         birthDate: playerData.birthDate || "Unknown",
         position: playerData.position || "Unknown",
         transfersId: playerData.transfers_id || null,
+        country_flags: playerData.country_flags || {}, // Include country flags
       })
     })
 
@@ -363,6 +373,7 @@ async function buildPlayerDatabase() {
                       birthDate: playerData.dt_nascimento || "Desconhecida",
                       position: playerData.posicao || "Desconhecida",
                       transfersId: playerData.transfers_id || null,
+                      country_flags: {},
                     })
                   })
                 }
@@ -381,6 +392,7 @@ async function buildPlayerDatabase() {
                       birthDate: playerData.dt_nascimento || "Desconhecida",
                       position: playerData.posicao || "Desconhecida",
                       transfersId: playerData.transfers_id || null,
+                      country_flags: {},
                     })
                   })
                 }
@@ -404,6 +416,7 @@ async function buildPlayerDatabase() {
                     name: playerName,
                     birthDate: "Desconhecida",
                     position: "Desconhecida",
+                    country_flags: {},
                   })
                 }
               })
@@ -749,26 +762,26 @@ function setupUIControls() {
 }
 
 function setupLegendTooltip() {
-  const infoBtn = document.getElementById("legend-info");
-  const tooltip = document.getElementById("legend-tooltip");
+  const infoBtn = document.getElementById("info-button")
+  const tooltip = document.getElementById("legend-tooltip")
 
-  if (!infoBtn || !tooltip) return;
+  if (!infoBtn || !tooltip) return
 
   infoBtn.addEventListener("mouseenter", () => {
-    tooltip.style.display = "block";
-  });
+    tooltip.style.display = "block"
+  })
 
   infoBtn.addEventListener("mouseleave", () => {
-    tooltip.style.display = "none";
-  });
+    tooltip.style.display = "none"
+  })
 
   tooltip.addEventListener("mouseenter", () => {
-    tooltip.style.display = "block";
-  });
+    tooltip.style.display = "block"
+  })
 
   tooltip.addEventListener("mouseleave", () => {
-    tooltip.style.display = "none";
-  });
+    tooltip.style.display = "none"
+  })
 }
 
 // Setup filter tabs
@@ -1477,9 +1490,18 @@ function resetCountryToCountryFilter() {
     bidirectionalFilter: false,
   }
 
-  // Completely reset the filter state if this was the only active filter
-  if (!currentFilterState.playerFilterActive && currentFilterState.selectedCountryCodes.length === 0) {
+  // Completely reset the filter state if this was the only active filter and not in player career mode
+  if (
+    !playerCareerMode &&
+    !currentFilterState.playerFilterActive &&
+    currentFilterState.selectedCountryCodes.length === 0
+  ) {
     currentFilterState.filtersApplied = false
+  }
+
+  // If in player career mode, don't reload arcs
+  if (playerCareerMode) {
+    return
   }
 
   // Load arcs for the current year
@@ -1539,6 +1561,12 @@ function exitPlayerCareerMode() {
   playerCareerArcs = []
   firstPlayerTransferYear = null
 
+  // Stop the transfer animation if it's running
+  if (playerTransferAnimationInterval) {
+    clearInterval(playerTransferAnimationInterval)
+    playerTransferAnimationInterval = null
+  }
+
   // Reset player name input
   const playerNameInput = document.getElementById("playerName")
   if (playerNameInput) playerNameInput.value = ""
@@ -1594,8 +1622,15 @@ async function showAllPlayerTransfers(playerId) {
     const transfers = playerDatabase[playerId].transfers
     console.log(`Found ${transfers.length} transfers for player`)
 
+    // Sort transfers by year (chronologically)
+    const sortedTransfers = [...transfers].sort((a, b) => {
+      const yearA = Number.parseInt(a.year)
+      const yearB = Number.parseInt(b.year)
+      return yearA - yearB
+    })
+
     // Process each transfer to create arcs
-    transfers.forEach((transfer) => {
+    sortedTransfers.forEach((transfer) => {
       // Use the new field names from the updated database structure
       const fromCode = transfer.from_country || transfer.from
       const toCode = transfer.to_country || transfer.to
@@ -1613,7 +1648,7 @@ async function showAllPlayerTransfers(playerId) {
           startLng: fromCoords.lng,
           endLat: toCoords.lat,
           endLng: toCoords.lng,
-          color: arcColors.player, // Purple for player career
+          color: arcColors.player, // Green for player career
           from: fromCode,
           to: toCode,
           count: 1, // Always 1 for a single player
@@ -1664,7 +1699,7 @@ async function showAllPlayerTransfers(playerId) {
                         startLng: fromCoords.lng,
                         endLat: toCoords.lat,
                         endLng: toCoords.lng,
-                        color: arcColors.player, // Purple for player career
+                        color: arcColors.player, // Green for player career
                         from: fromCountryCode,
                         to: toCountryCode,
                         count: 1, // Always 1 for a single player
@@ -1698,7 +1733,7 @@ async function showAllPlayerTransfers(playerId) {
                         startLng: fromCoords.lng,
                         endLat: toCoords.lat,
                         endLng: toCoords.lng,
-                        color: arcColors.player, // Purple for player career
+                        color: arcColors.player, // Green for player career
                         from: fromCountryCode,
                         to: toCountryCode,
                         count: 1, // Always 1 for a single player
@@ -1731,7 +1766,7 @@ async function showAllPlayerTransfers(playerId) {
               startLng: arc.startLong,
               endLat: arc.endLat,
               endLng: arc.endLong,
-              color: arcColors.player, // Purple for player career
+              color: arcColors.player, // Green for player career
               from: arc.from,
               to: arc.to,
               count: 1, // Always 1 for a single player
@@ -1749,19 +1784,70 @@ async function showAllPlayerTransfers(playerId) {
 
   console.log(`Total arcs for player career path: ${allArcs.length}`)
 
-  // Update the tooltip to show club information if available
-  if (allArcs.length > 0) {
-    // Store the career arcs for this player
-    playerCareerArcs = allArcs
+  // Sort the arcs by year (chronologically)
+  playerCareerArcs = allArcs.sort((a, b) => {
+    const yearA = Number.parseInt(a.year)
+    const yearB = Number.parseInt(b.year)
+    return yearA - yearB
+  })
 
-    // Update the visualization with all arcs at once
-    const arcsWithThickness = allArcs.map((arc) => ({
-      ...arc,
-      stroke: 0.5, // Fixed stroke for player transfers
-    }))
+  // Extract country flags for the player's path
+  playerCountryFlags = []
+  console.log("Extracting country flags for player path")
 
-    // Create glow effect
-    const glowArcs = allArcs.map((arc) => {
+  // First add the origin country of the first transfer
+  if (playerCareerArcs.length > 0) {
+    const firstTransfer = playerCareerArcs[0]
+    const fromCountryCode = firstTransfer.from
+    console.log(`First transfer origin country: ${fromCountryCode}`)
+
+    // Try to find the flag URL for this country
+    const flagUrl = findCountryFlagUrl(fromCountryCode)
+    if (flagUrl) {
+      playerCountryFlags.push({
+        code: fromCountryCode,
+        flag: flagUrl,
+        name: countryCodeToName[fromCountryCode] || fromCountryCode,
+      })
+    } else {
+      // Fallback to a default flag or country code display
+      playerCountryFlags.push({
+        code: fromCountryCode,
+        flag: `https://flagcdn.com/w20/${fromCountryCode.toLowerCase()}.png`,
+        name: countryCodeToName[fromCountryCode] || fromCountryCode,
+      })
+    }
+  }
+
+  // Then add all destination countries in order (including duplicates)
+  playerCareerArcs.forEach((arc) => {
+    const toCountryCode = arc.to
+    console.log(`Transfer destination country: ${toCountryCode}`)
+
+    // Try to find the flag URL for this country
+    const flagUrl = findCountryFlagUrl(toCountryCode)
+    if (flagUrl) {
+      playerCountryFlags.push({
+        code: toCountryCode,
+        flag: flagUrl,
+        name: countryCodeToName[toCountryCode] || toCountryCode,
+      })
+    } else {
+      // Fallback to a default flag or country code display
+      playerCountryFlags.push({
+        code: toCountryCode,
+        flag: `https://flagcdn.com/w20/${toCountryCode.toLowerCase()}.png`,
+        name: countryCodeToName[toCountryCode] || toCountryCode,
+      })
+    }
+  })
+
+  console.log(`Total flags collected: ${playerCountryFlags.length}`)
+
+  // Update the visualization with all arcs at once
+  if (playerCareerArcs.length > 0) {
+    // Create glow effect for all arcs (these will always be visible)
+    const glowArcs = playerCareerArcs.map((arc) => {
       const hexToRgb = (hex) => {
         const r = Number.parseInt(hex.slice(1, 3), 16)
         const g = Number.parseInt(hex.slice(3, 5), 16)
@@ -1778,10 +1864,11 @@ async function showAllPlayerTransfers(playerId) {
       }
     })
 
-    // Update both globes with all arcs
-    mainGlobe.arcsData(arcsWithThickness)
+    // Update glow globe with all arcs
     glowGlobe.arcsData(glowArcs)
-    arcsArray = arcsWithThickness
+
+    // Start the animation for the main arcs
+    startPlayerTransferAnimation()
 
     // Show player info panel
     showPlayerInfo(playerName)
@@ -1795,77 +1882,344 @@ async function showAllPlayerTransfers(playerId) {
   }
 }
 
-// Function to update player career path
-async function updatePlayerCareerPath(year) {
-  // Filter the career arcs for the selected year
-  const yearArcs = playerCareerArcs.filter((arc) => arc.year === year)
+// Function to start the player transfer animation
+function startPlayerTransferAnimation() {
+  // Clear any existing animation interval
+  if (playerTransferAnimationInterval) {
+    clearInterval(playerTransferAnimationInterval)
+  }
 
-  // Update the visualization with the arcs for the selected year
-  const arcsWithThickness = yearArcs.map((arc) => ({
-    ...arc,
-    stroke: 0.5, // Fixed stroke for player transfers
-  }))
+  // Reset the current transfer index
+  currentTransferIndex = 0
 
-  // Create glow effect
-  const glowArcs = yearArcs.map((arc) => {
-    const hexToRgb = (hex) => {
-      const r = Number.parseInt(hex.slice(1, 3), 16)
-      const g = Number.parseInt(hex.slice(3, 5), 16)
-      const b = Number.parseInt(hex.slice(5, 7), 16)
-      return { r, g, b }
-    }
+  // Show the first transfer
+  showCurrentTransfer()
 
-    const { r, g, b } = hexToRgb(arc.color)
-
-    return {
-      ...arc,
-      stroke: 0.6, // Slightly thicker for glow
-      color: `rgba(${r}, ${g}, ${b}, 0.25)`,
-    }
-  })
-
-  // Update both globes with all arcs
-  mainGlobe.arcsData(arcsWithThickness)
-  glowGlobe.arcsData(glowArcs)
-  arcsArray = arcsWithThickness
+  // Set up the animation interval
+  playerTransferAnimationInterval = setInterval(() => {
+    // Move to the next transfer
+    currentTransferIndex = (currentTransferIndex + 1) % playerCareerArcs.length
+    showCurrentTransfer()
+  }, transferAnimationDuration)
 }
 
-// Function to show player info panel\
-function showPlayerInfo(name) {
+// Function to show the current transfer
+function showCurrentTransfer() {
+  if (playerCareerArcs.length === 0) return
+
+  // Get the current transfer arc
+  const currentArc = playerCareerArcs[currentTransferIndex]
+
+  // Create an array with just the current arc
+  const singleArcWithThickness = [
+    {
+      ...currentArc,
+      stroke: 0.5, // Fixed stroke for player transfers
+    },
+  ]
+
+  // Update the main globe with just this arc
+  mainGlobe.arcsData(singleArcWithThickness)
+  arcsArray = singleArcWithThickness
+
+  // Update the player info to show the current transfer year
   const playerInfo = document.getElementById("player-info")
   if (playerInfo) {
     const title = playerInfo.querySelector("h3")
-    const text = playerInfo.querySelector("p")
+    if (title) {
+      const fromClub = currentArc.fromClub || countryCodeToName[currentArc.from] || "Unknown"
+      const toClub = currentArc.toClub || countryCodeToName[currentArc.to] || "Unknown"
 
-    // Find player data to get position and birth date
-    let position = "Posição desconhecida"
-    let birthDate = "Data desconhecida"
+      // Remove birth year from player name if present (e.g., "Danilo Pereira (1991)")
+      const cleanName = playerName.replace(/\s*$$\d{4}$$$/g, "")
+      title.textContent = `${cleanName} (${currentArc.year})`
 
-    if (selectedPlayerId && playerDatabase[selectedPlayerId]) {
-      const playerData = playerDatabase[selectedPlayerId]
-      position = playerData.position || position
-      birthDate = playerData.birthDate || birthDate
+      const text = playerInfo.querySelector("p")
+      if (text) {
+        text.textContent = `${fromClub} → ${toClub}`
+      }
+    }
+  }
+}
 
-      // Format birth date if it's a valid date
-      if (birthDate !== "Data desconhecida" && birthDate !== "Unknown") {
-        try {
-          const date = new Date(birthDate)
-          if (!isNaN(date.getTime())) {
-            birthDate = date.toLocaleDateString()
+// Function to update player career path
+async function updatePlayerCareerPath(year) {
+  // This function is no longer needed for the animation
+  // but we'll keep it for compatibility
+  // The animation is now handled by startPlayerTransferAnimation
+}
+
+// Helper function to find country flag URL from country code
+function findCountryFlagUrl(countryCode) {
+  console.log(`Finding flag URL for country code: ${countryCode}`)
+
+  // First check if the player has this flag in their country_flags property
+  if (
+    selectedPlayerId &&
+    playerDatabase[selectedPlayerId] &&
+    playerDatabase[selectedPlayerId].country_flags &&
+    playerDatabase[selectedPlayerId].country_flags[countryCode]
+  ) {
+    const flagUrl = playerDatabase[selectedPlayerId].country_flags[countryCode]
+    console.log(`Found flag URL in player database for ${countryCode}: ${flagUrl}`)
+    return flagUrl
+  }
+
+  // If not found in player database, try to find it in the country_flags global object
+  // Search through all years data to find the flag URL
+  for (const year in allYearsData) {
+    const data = allYearsData[year]
+
+    // Check if the data has the new structure with "data" property
+    if (data.data && data.data.seasons) {
+      // Search through each season
+      for (const seasonName in data.data.seasons) {
+        const season = data.data.seasons[seasonName]
+
+        // Search through each club
+        for (const club of season) {
+          // Check incoming transfers
+          if (club.teams_in) {
+            for (const [id, country] of Object.entries(club.teams_in)) {
+              if (country_info[id] && country_info[id].code === countryCode && country.logo) {
+                console.log(`Found flag URL for ${countryCode}: ${country.logo}`)
+                return country.logo
+              }
+            }
           }
-        } catch (e) {
-          console.log("Error formatting date:", e)
+
+          // Check outgoing transfers
+          if (club.teams_out) {
+            for (const [id, country] of Object.entries(club.teams_out)) {
+              if (country_info[id] && country_info[id].code === countryCode && country.logo) {
+                console.log(`Found flag URL for ${countryCode}: ${country.logo}`)
+                return country.logo
+              }
+            }
+          }
         }
       }
     }
+  }
 
-    if (title && text) {
-      title.textContent = name
-      text.textContent = `${position} | ${birthDate}`
+  // If no flag URL is found, use a fallback from flagcdn.com
+  const fallbackUrl = `https://flagcdn.com/w20/${countryCode.toLowerCase()}.png`
+  console.log(`Using fallback flag URL for ${countryCode}: ${fallbackUrl}`)
+  return fallbackUrl
+}
+
+// Function to preload flag images
+function preloadFlagImages() {
+  console.log("Preloading flag images...")
+
+  // Create a set to store unique flag URLs
+  const flagUrls = new Set()
+
+  // Collect flag URLs from player database
+  for (const playerId in playerDatabase) {
+    const player = playerDatabase[playerId]
+    if (player.country_flags) {
+      for (const countryCode in player.country_flags) {
+        const flagUrl = player.country_flags[countryCode]
+        if (flagUrl) {
+          flagUrls.add(flagUrl)
+        }
+      }
+    }
+  }
+
+  console.log(`Found ${flagUrls.size} unique flag URLs to preload`)
+
+  // Preload each flag image
+  flagUrls.forEach((url) => {
+    const img = new Image()
+    img.crossOrigin = "anonymous" // Important for CORS
+    img.onload = () => console.log(`Preloaded flag: ${url}`)
+    img.onerror = () => console.error(`Failed to preload flag: ${url}`)
+    img.src = url
+  })
+}
+
+// Debug function to inspect player data and flag URLs
+function debugPlayerFlags(playerId) {
+  console.log("Debugging player flags for ID:", playerId)
+
+  if (!playerDatabase[playerId]) {
+    console.error("Player not found in database!")
+    return
+  }
+
+  const player = playerDatabase[playerId]
+  console.log("Player name:", player.name || player.display_name)
+
+  if (player.country_flags) {
+    console.log("Country flags found in player data:", player.country_flags)
+    Object.entries(player.country_flags).forEach(([code, url]) => {
+      console.log(`Flag for ${code}:`, url)
+      // Test if the URL is valid
+      const img = new Image()
+      img.onload = () => console.log(`Flag for ${code} loaded successfully`)
+      img.onerror = () => console.error(`Failed to load flag for ${code} from URL: ${url}`)
+      img.src = url
+    })
+  } else {
+    console.error("No country_flags property found in player data!")
+    console.log("Full player data:", player)
+  }
+}
+
+// Replace the showPlayerInfo function with this corrected version
+function showPlayerInfo(name) {
+  const playerInfo = document.getElementById("player-info")
+  if (!playerInfo) return
+
+  const title = playerInfo.querySelector("h3")
+  const text = playerInfo.querySelector("p")
+
+  // Find player data to get position and birth date
+  let position = "Posição desconhecida"
+  let birthDate = "Data desconhecida"
+
+  if (selectedPlayerId && playerDatabase[selectedPlayerId]) {
+    const playerData = playerDatabase[selectedPlayerId]
+    position = playerData.position || position
+    birthDate = playerData.birthDate || birthDate
+
+    // Format birth date if it's a valid date
+    if (birthDate !== "Data desconhecida" && birthDate !== "Unknown") {
+      try {
+        const date = new Date(birthDate)
+        if (!isNaN(date.getTime())) {
+          birthDate = date.toLocaleDateString()
+        }
+      } catch (e) {
+        console.log("Error formatting date:", e)
+      }
+    }
+  }
+
+  if (title && text) {
+    title.textContent = name
+    text.textContent = `${position} | ${birthDate}`
+  }
+
+  // Add country flags if available
+  const flagsContainer = playerInfo.querySelector(".country-flags")
+  if (flagsContainer) {
+    flagsContainer.innerHTML = "" // Clear existing flags
+
+    // Filter out duplicate transfers (same from/to countries in consecutive years)
+    const filteredTransfers = []
+    let previousTransfer = null
+
+    playerCareerArcs.forEach((arc) => {
+      // Check if this is a duplicate transfer (same from/to countries as previous one)
+      if (
+        previousTransfer &&
+        previousTransfer.from === arc.from &&
+        previousTransfer.to === arc.to &&
+        Math.abs(Number(previousTransfer.year) - Number(arc.year)) <= 1
+      ) {
+        console.log(
+          `Skipping duplicate transfer: ${arc.from} to ${arc.to} in ${arc.year} (previous was in ${previousTransfer.year})`,
+        )
+        return
+      }
+
+      filteredTransfers.push(arc)
+      previousTransfer = arc
+    })
+
+    // First add the origin country of the first transfer
+    if (filteredTransfers.length > 0) {
+      const firstTransfer = filteredTransfers[0]
+      const fromCountryCode = firstTransfer.from
+      console.log(`First transfer origin country: ${fromCountryCode}`)
+
+      // Get country flags from player database
+      if (
+        selectedPlayerId &&
+        playerDatabase[selectedPlayerId] &&
+        playerDatabase[selectedPlayerId].country_flags &&
+        playerDatabase[selectedPlayerId].country_flags[fromCountryCode]
+      ) {
+        const flagUrl = playerDatabase[selectedPlayerId].country_flags[fromCountryCode]
+        const flagImg = document.createElement("img")
+        flagImg.src = flagUrl
+        flagImg.alt = countryCodeToName[fromCountryCode] || fromCountryCode
+        flagImg.title = countryCodeToName[fromCountryCode] || fromCountryCode
+        flagImg.style.width = "24px"
+        flagImg.style.height = "24px"
+        flagImg.style.objectFit = "cover"
+        flagImg.style.borderRadius = "5px"
+        flagImg.style.border = "none"
+        flagsContainer.appendChild(flagImg)
+      } else {
+        // If no flag URL is available, show country code as fallback
+        const codeSpan = document.createElement("span")
+        codeSpan.textContent = fromCountryCode
+        codeSpan.style.display = "inline-block"
+        codeSpan.style.padding = "0 5px"
+        codeSpan.style.backgroundColor = "#000"
+        codeSpan.style.color = "#fff"
+        codeSpan.style.fontSize = "10px"
+        codeSpan.style.fontWeight = "bold"
+        codeSpan.style.borderRadius = "5px"
+        codeSpan.title = countryCodeToName[fromCountryCode] || fromCountryCode
+        flagsContainer.appendChild(codeSpan)
+      }
     }
 
-    playerInfo.style.display = "block"
+    // Then add all destination countries in order
+    filteredTransfers.forEach((arc, index) => {
+      // Add arrow between flags
+      if (index > 0 || filteredTransfers.length > 0) {
+        const arrow = document.createElement("span")
+        arrow.innerHTML = "→"
+        arrow.style.margin = "0 2px"
+        arrow.style.color = "var(--text-color)"
+        flagsContainer.appendChild(arrow)
+      }
+
+      const toCountryCode = arc.to
+      console.log(`Transfer destination country: ${toCountryCode}`)
+
+      // Get country flags from player database
+      if (
+        selectedPlayerId &&
+        playerDatabase[selectedPlayerId] &&
+        playerDatabase[selectedPlayerId].country_flags &&
+        playerDatabase[selectedPlayerId].country_flags[toCountryCode]
+      ) {
+        const flagUrl = playerDatabase[selectedPlayerId].country_flags[toCountryCode]
+        const flagImg = document.createElement("img")
+        flagImg.src = flagUrl
+        flagImg.alt = countryCodeToName[toCountryCode] || toCountryCode
+        flagImg.title = countryCodeToName[toCountryCode] || toCountryCode
+        flagImg.style.width = "24px"
+        flagImg.style.height = "24px"
+        flagImg.style.objectFit = "cover"
+        flagImg.style.borderRadius = "5px"
+        flagImg.style.border = "none"
+        flagsContainer.appendChild(flagImg)
+      } else {
+        // If no flag URL is available, show country code as fallback
+        const codeSpan = document.createElement("span")
+        codeSpan.textContent = toCountryCode
+        codeSpan.style.display = "inline-block"
+        codeSpan.style.padding = "0 5px"
+        codeSpan.style.backgroundColor = "#000"
+        codeSpan.style.color = "#fff"
+        codeSpan.style.fontSize = "10px"
+        codeSpan.style.fontWeight = "bold"
+        codeSpan.style.borderRadius = "5px"
+        codeSpan.title = countryCodeToName[toCountryCode] || toCountryCode
+        flagsContainer.appendChild(codeSpan)
+      }
+    })
   }
+
+  playerInfo.style.display = "block"
 }
 
 //=============================================================================

@@ -40,6 +40,9 @@ country_info = {
     for entry in map_data["coordinates"]
 }
 
+# Create a mapping of country codes to flag URLs
+country_flags = {}
+
 transfer_files = [f for f in os.listdir(transfers_folder_path) if f.endswith('.json')]
 
 # Create a player database to store detailed player information
@@ -83,6 +86,10 @@ for transfer_file in transfer_files:
                     if int(country_id) in country_info:
                         origin_country_code = country_info[int(country_id)]["code"]
                         
+                        # Store the flag URL for this country if available
+                        if "logo" in transfer_info and transfer_info["logo"]:
+                            country_flags[origin_country_code] = transfer_info["logo"]
+                        
                         if "players" in transfer_info:
                             players = transfer_info["players"]
                             if isinstance(players, dict):
@@ -110,7 +117,8 @@ for transfer_file in transfer_files:
                                             "name": player["name"],
                                             "position": player.get("posicao", "Unknown"),
                                             "birthDate": player.get("dt_nascimento", "Unknown"),
-                                            "transfers": []
+                                            "transfers": [],
+                                            "country_flags": {}  # Add a dictionary to store country flags
                                         }
                                     
                                     # Add this transfer to player's history
@@ -123,6 +131,13 @@ for transfer_file in transfer_files:
                                         "to_club_id": current_club_id,
                                         "to_club_name": current_club_name
                                     })
+                                    
+                                    # Store country flags for this player
+                                    if origin_country_code not in player_database[player_id]["country_flags"] and origin_country_code in country_flags:
+                                        player_database[player_id]["country_flags"][origin_country_code] = country_flags[origin_country_code]
+                                    
+                                    if destination_country_code not in player_database[player_id]["country_flags"] and destination_country_code in country_flags:
+                                        player_database[player_id]["country_flags"][destination_country_code] = country_flags[destination_country_code]
                             elif isinstance(players, list):
                                 for player in players:
                                     if "name" in player and "id" in player:
@@ -149,7 +164,8 @@ for transfer_file in transfer_files:
                                                 "name": player["name"],
                                                 "position": player.get("posicao", "Unknown"),
                                                 "birthDate": player.get("dt_nascimento", "Unknown"),
-                                                "transfers": []
+                                                "transfers": [],
+                                                "country_flags": {}  # Add a dictionary to store country flags
                                             }
                                         
                                         # Add this transfer to player's history
@@ -162,6 +178,13 @@ for transfer_file in transfer_files:
                                             "to_club_id": current_club_id,
                                             "to_club_name": current_club_name
                                         })
+                                        
+                                        # Store country flags for this player
+                                        if origin_country_code not in player_database[player_id]["country_flags"] and origin_country_code in country_flags:
+                                            player_database[player_id]["country_flags"][origin_country_code] = country_flags[origin_country_code]
+                                        
+                                        if destination_country_code not in player_database[player_id]["country_flags"] and destination_country_code in country_flags:
+                                            player_database[player_id]["country_flags"][destination_country_code] = country_flags[destination_country_code]
 
             # Process outgoing transfers (players leaving this club)
             if isinstance(transfers_out, dict):
@@ -170,6 +193,10 @@ for transfer_file in transfer_files:
                         continue
                     if int(country_id) in country_info:
                         destination_country_code_out = country_info[int(country_id)]["code"]
+                        
+                        # Store the flag URL for this country if available
+                        if "logo" in transfer_info and transfer_info["logo"]:
+                            country_flags[destination_country_code_out] = transfer_info["logo"]
                         
                         if "players" in transfer_info:
                             players = transfer_info["players"]
@@ -197,7 +224,8 @@ for transfer_file in transfer_files:
                                             "name": player["name"],
                                             "position": player.get("posicao", "Unknown"),
                                             "birthDate": player.get("dt_nascimento", "Unknown"),
-                                            "transfers": []
+                                            "transfers": [],
+                                            "country_flags": {}  # Add a dictionary to store country flags
                                         }
                                     
                                     # Add this transfer to player's history
@@ -210,6 +238,13 @@ for transfer_file in transfer_files:
                                         "to_club_id": player.get("club_id"),
                                         "to_club_name": player.get("club_descr")
                                     })
+                                    
+                                    # Store country flags for this player
+                                    if destination_country_code not in player_database[player_id]["country_flags"] and destination_country_code in country_flags:
+                                        player_database[player_id]["country_flags"][destination_country_code] = country_flags[destination_country_code]
+                                    
+                                    if destination_country_code_out not in player_database[player_id]["country_flags"] and destination_country_code_out in country_flags:
+                                        player_database[player_id]["country_flags"][destination_country_code_out] = country_flags[destination_country_code_out]
                             elif isinstance(players, list):
                                 for player in players:
                                     if "name" in player and "id" in player:
@@ -236,7 +271,8 @@ for transfer_file in transfer_files:
                                                 "name": player["name"],
                                                 "position": player.get("posicao", "Unknown"),
                                                 "birthDate": player.get("dt_nascimento", "Unknown"),
-                                                "transfers": []
+                                                "transfers": [],
+                                                "country_flags": {}  # Add a dictionary to store country flags
                                             }
                                         
                                         # Add this transfer to player's history
@@ -249,6 +285,13 @@ for transfer_file in transfer_files:
                                             "to_club_id": player.get("club_id"),
                                             "to_club_name": player.get("club_descr")
                                         })
+                                        
+                                        # Store country flags for this player
+                                        if destination_country_code not in player_database[player_id]["country_flags"] and destination_country_code in country_flags:
+                                            player_database[player_id]["country_flags"][destination_country_code] = country_flags[destination_country_code]
+                                        
+                                        if destination_country_code_out not in player_database[player_id]["country_flags"] and destination_country_code_out in country_flags:
+                                            player_database[player_id]["country_flags"][destination_country_code_out] = country_flags[destination_country_code_out]
 
 # Process players with the same name
 player_name_map = defaultdict(list)
