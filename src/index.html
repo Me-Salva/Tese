@@ -33,8 +33,8 @@
       --button-play-active-hover: #7D7D7D;
       --button-exit: #7D8A99;
       --button-exit-hover: #6D7A89;
-      --filter-active-bg: #e6f0f9; /* New color for active filter */
-      --filter-active-border: #4a90e2; /* New color for active filter border */
+      --filter-active-bg: #e6f0f9;
+      --filter-active-border: #4a90e2;
       
       /* Arc colors */
       --arc-default: #F76B15; /* Orange for general arcs */
@@ -66,10 +66,8 @@
       --button-play-active-hover: #7D7D7D;
       --button-exit: #7D8A99;
       --button-exit-hover: #6D7A89;
-      --filter-active-bg: #2a3a4a; /* New color for active filter in dark mode */
-      --filter-active-border: #4a90e2; /* New color for active filter border in dark mode */
-      
-      /* Arc colors remain the same in dark mode */
+      --filter-active-bg: #2a3a4a;
+      --filter-active-border: #4a90e2;
     }
 
     /* Base Styles */
@@ -82,7 +80,7 @@
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
     
-    /* New Filter Tabs Styles */
+    /* Filter Tabs Styles */
     .filter-tabs-container {
       position: absolute;
       top: 0;
@@ -91,7 +89,7 @@
       display: flex;
       flex-direction: column;
       width: 100%;
-      pointer-events: none; /* Make container transparent to mouse events */
+      pointer-events: none;
     }
     
     .filter-tabs {
@@ -100,8 +98,8 @@
       margin-left: 15px;
       gap: 5px;
       position: relative;
-      z-index: 1; /* Lower z-index than panels */
-      pointer-events: auto; /* Re-enable pointer events for tabs */
+      z-index: 1;
+      pointer-events: auto;
     }
     
     .filter-tab {
@@ -116,7 +114,7 @@
       transition: all 0.2s ease;
       box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
       font-size: 14px;
-      user-select: none; /* Prevent text selection */
+      user-select: none;
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
@@ -131,7 +129,7 @@
       border-color: var(--filter-active-border);
       color: var(--filter-active-border);
       position: relative;
-      z-index: 3; /* Higher than panels to show the tab */
+      z-index: 3;
     }
     
     .filter-panels {
@@ -139,16 +137,16 @@
       width: 100%;
       overflow-x: auto;
       position: relative;
-      z-index: 2; /* Higher than tabs but lower than active tab */
-      margin-top: -1px; /* Pull up to overlap with tabs */
-      pointer-events: none; /* Make panels transparent to mouse events by default */
+      z-index: 2;
+      margin-top: -1px;
+      pointer-events: none;
     }
     
     .filter-panel {
       display: none;
       background-color: var(--menu-background);
       border: 1px solid var(--tab-border);
-      border-radius: 0; /* Removed rounded corners */
+      border-radius: 0;
       padding: 18px;
       margin-left: 15px;
       margin-right: 15px;
@@ -156,11 +154,11 @@
       overflow-y: auto;
       min-width: 254px;
       box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-      pointer-events: auto; /* Re-enable pointer events for visible panels */
+      pointer-events: auto;
     }
 
     .filter-panel.active {
-      display: block !important; /* Force display with !important */
+      display: block !important;
       border: 1px solid var(--filter-active-border);
       background-color: var(--filter-active-bg);
     }
@@ -221,8 +219,8 @@
     /* Reset button specific styles */
     .reset-btn {
       background-color: var(--button-reset) !important;
-      margin: 10px 0 0 0 !important; /* Override any other margins */
-      display: inline-block !important; /* Override block display */
+      margin: 10px 0 0 0 !important;
+      display: inline-block !important;
     }
     
     .reset-btn:hover {
@@ -338,7 +336,7 @@
     .filter-row {
       margin-bottom: 10px;
       max-width: 160px;
-      position: relative; /* Added to establish a positioning context */
+      position: relative;
     }
     
     .filter-row select, .filter-row input {
@@ -360,14 +358,14 @@
     }
     
     .autocomplete-dropdown {
-      position: fixed; /* Changed from absolute to fixed */
-      width: 160px; /* Match the width of the input */
+      position: fixed;
+      width: 160px;
       max-height: 300px;
       overflow-y: auto;
       border: 1px solid var(--input-border-color);
       border-top: none;
       background-color: var(--background-color);
-      z-index: 1500; /* Higher z-index to appear above everything */
+      z-index: 1500;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       display: none;
       border-radius: 0 0 4px 4px;
@@ -443,7 +441,7 @@
       cursor: pointer;
       border: 2px solid #fff;
       box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-      margin-top: -5px; /* This is the key fix for vertical alignment */
+      margin-top: -5px;
     }
 
     #time-slider::-moz-range-thumb {
@@ -720,7 +718,7 @@
     <span style="color:#25E009;">🟢 Jogador</span>
   </div>
 
-  <!-- New Filter Tabs Structure -->
+  <!-- Filter Tabs Structure -->
   <div class="filter-tabs-container">
     <div class="filter-tabs">
       <div class="filter-tab" data-panel="country-filter">Transferências</div>

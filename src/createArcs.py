@@ -3,33 +3,38 @@ from collections import defaultdict
 import os
 import re
 
+# File paths configuration
 map_file_path = 'D:/Tese/Tese/test/src/files/map.json'
 transfers_folder_path = 'D:/Tese/Tese/test/src/files/transfers'
 output_folder_path = 'D:/Tese/Tese/test/src/files/arcs'
 player_db_path = 'D:/Tese/Tese/test/src/files/players.json'
 
 def extract_year(season_name):
+    """Extract year from season name, using first year for season formats like '2017/2018'"""
+    # Check for season format like "2017/2018"
     match = re.search(r'(\d{4})/(\d{4})', season_name)
     if match:
-        # MODIFIED: Use the FIRST year of the season instead of the second
-        # This ensures transfers in "2017/2018" are recorded as 2017
-        return match.group(1)
+        return match.group(1)  # Use first year for consistency
 
+    # Check for standalone year like "2018"
     match = re.search(r'\b(\d{4})\b', season_name)
     if match:
         return match.group(1)
-
+    
+    # Check for short year format like "17/18"
     match = re.search(r'\b(\d{2})/?(\d{2})?\b', season_name)
     if match:
         year = match.group(1)
         return f"20{year}" if int(year) < 50 else f"19{year}"
     
+    # Check for mixed format like "2017/18"
     match = re.search(r'\b(\d{4})/?(\d{2})?\b', season_name)
     if match:
         return match.group(1)
 
     return None
 
+# Load country coordinates from map file
 with open(map_file_path, 'r', encoding='utf-8') as f:
     map_data = json.load(f)
 
@@ -42,22 +47,24 @@ country_info = {
     for entry in map_data["coordinates"]
 }
 
-# Create a mapping of country codes to flag URLs
+# Dictionary to store country flag URLs
 country_flags = {}
 
+# Get all transfer JSON files
 transfer_files = [f for f in os.listdir(transfers_folder_path) if f.endswith('.json')]
 
-# Create a player database to store detailed player information
+# Player database to store detailed player information
 player_database = {}
 
-# We'll use this to track unique transfers by player, year, from country, to country, and clubs
+# Track unique transfers to avoid duplicates
 transfer_key_set = set()
 
+# Process each transfer file
 for transfer_file in transfer_files:
     transfer_file_path = os.path.join(transfers_folder_path, transfer_file)
     print(f"Processing file: {transfer_file}")
     
-    # Extract the destination country code from filename (e.g., "transfersESP.json" -> "ESP")
+    # Extract destination country code from filename
     destination_country_code = transfer_file.split("_")[-1].split(".")[0]
 
     with open(transfer_file_path, 'r', encoding='utf-8') as f:
@@ -66,6 +73,7 @@ for transfer_file in transfer_files:
     seasons = transfers_data["data"]["seasons"]
     sorted_seasons = sorted(seasons.items(), key=lambda x: x[0])
 
+    # Process each season
     for season_name, clubs in sorted_seasons:
         print(f"Processing season: {season_name}")
         year = extract_year(season_name)
@@ -73,6 +81,7 @@ for transfer_file in transfer_files:
             print(f"Warning: Could not extract year from season name: {season_name}")
             continue
 
+        # Process each club
         for club in clubs:
             current_club_id = club.get("id")
             current_club_name = club.get("name")
@@ -88,31 +97,32 @@ for transfer_file in transfer_files:
                     if int(country_id) in country_info:
                         origin_country_code = country_info[int(country_id)]["code"]
                         
-                        # Store the flag URL for this country if available
+                        # Store flag URL if available
                         if "logo" in transfer_info and transfer_info["logo"]:
                             country_flags[origin_country_code] = transfer_info["logo"]
                         
                         if "players" in transfer_info:
                             players = transfer_info["players"]
+                            # Handle players as dictionary
                             if isinstance(players, dict):
                                 for player_id, player in players.items():
-                                    # Create a unique key for this transfer
+                                    # Create unique key for this transfer
                                     transfer_key = (
                                         player_id, 
                                         year, 
                                         origin_country_code, 
                                         destination_country_code,
-                                        player.get("club_id"),  # origin club id
-                                        current_club_id        # destination club id
+                                        player.get("club_id"),
+                                        current_club_id
                                     )
                                     
-                                    # Skip if we've already processed this transfer
+                                    # Skip if already processed
                                     if transfer_key in transfer_key_set:
                                         continue
                                     
                                     transfer_key_set.add(transfer_key)
                                     
-                                    # Store player in database if not already there
+                                    # Add player to database if not already there
                                     if player_id not in player_database:
                                         player_database[player_id] = {
                                             "id": player_id,
@@ -120,10 +130,10 @@ for transfer_file in transfer_files:
                                             "position": player.get("posicao", "Unknown"),
                                             "birthDate": player.get("dt_nascimento", "Unknown"),
                                             "transfers": [],
-                                            "country_flags": {}  # Add a dictionary to store country flags
+                                            "country_flags": {}
                                         }
                                     
-                                    # Add this transfer to player's history
+                                    # Add transfer to player's history
                                     player_database[player_id]["transfers"].append({
                                         "year": year,
                                         "from_country": origin_country_code,
@@ -140,6 +150,7 @@ for transfer_file in transfer_files:
                                     
                                     if destination_country_code not in player_database[player_id]["country_flags"] and destination_country_code in country_flags:
                                         player_database[player_id]["country_flags"][destination_country_code] = country_flags[destination_country_code]
+                            # Handle players as list
                             elif isinstance(players, list):
                                 for player in players:
                                     if "name" in player and "id" in player:
@@ -153,13 +164,11 @@ for transfer_file in transfer_files:
                                             current_club_id
                                         )
                                         
-                                        # Skip if we've already processed this transfer
                                         if transfer_key in transfer_key_set:
                                             continue
                                         
                                         transfer_key_set.add(transfer_key)
                                         
-                                        # Store player in database
                                         if player_id not in player_database:
                                             player_database[player_id] = {
                                                 "id": player_id,
@@ -167,10 +176,9 @@ for transfer_file in transfer_files:
                                                 "position": player.get("posicao", "Unknown"),
                                                 "birthDate": player.get("dt_nascimento", "Unknown"),
                                                 "transfers": [],
-                                                "country_flags": {}  # Add a dictionary to store country flags
+                                                "country_flags": {}
                                             }
                                         
-                                        # Add this transfer to player's history
                                         player_database[player_id]["transfers"].append({
                                             "year": year,
                                             "from_country": origin_country_code,
@@ -181,7 +189,6 @@ for transfer_file in transfer_files:
                                             "to_club_name": current_club_name
                                         })
                                         
-                                        # Store country flags for this player
                                         if origin_country_code not in player_database[player_id]["country_flags"] and origin_country_code in country_flags:
                                             player_database[player_id]["country_flags"][origin_country_code] = country_flags[origin_country_code]
                                         
@@ -196,7 +203,6 @@ for transfer_file in transfer_files:
                     if int(country_id) in country_info:
                         destination_country_code_out = country_info[int(country_id)]["code"]
                         
-                        # Store the flag URL for this country if available
                         if "logo" in transfer_info and transfer_info["logo"]:
                             country_flags[destination_country_code_out] = transfer_info["logo"]
                         
@@ -213,13 +219,11 @@ for transfer_file in transfer_files:
                                         player.get("club_id")
                                     )
                                     
-                                    # Skip if we've already processed this transfer
                                     if transfer_key in transfer_key_set:
                                         continue
                                     
                                     transfer_key_set.add(transfer_key)
                                     
-                                    # Store player in database if not already there
                                     if player_id not in player_database:
                                         player_database[player_id] = {
                                             "id": player_id,
@@ -227,10 +231,9 @@ for transfer_file in transfer_files:
                                             "position": player.get("posicao", "Unknown"),
                                             "birthDate": player.get("dt_nascimento", "Unknown"),
                                             "transfers": [],
-                                            "country_flags": {}  # Add a dictionary to store country flags
+                                            "country_flags": {}
                                         }
                                     
-                                    # Add this transfer to player's history
                                     player_database[player_id]["transfers"].append({
                                         "year": year,
                                         "from_country": destination_country_code,
@@ -241,7 +244,6 @@ for transfer_file in transfer_files:
                                         "to_club_name": player.get("club_descr")
                                     })
                                     
-                                    # Store country flags for this player
                                     if destination_country_code not in player_database[player_id]["country_flags"] and destination_country_code in country_flags:
                                         player_database[player_id]["country_flags"][destination_country_code] = country_flags[destination_country_code]
                                     
@@ -260,13 +262,11 @@ for transfer_file in transfer_files:
                                             player.get("club_id")
                                         )
                                         
-                                        # Skip if we've already processed this transfer
                                         if transfer_key in transfer_key_set:
                                             continue
                                         
                                         transfer_key_set.add(transfer_key)
                                         
-                                        # Store player in database
                                         if player_id not in player_database:
                                             player_database[player_id] = {
                                                 "id": player_id,
@@ -274,10 +274,9 @@ for transfer_file in transfer_files:
                                                 "position": player.get("posicao", "Unknown"),
                                                 "birthDate": player.get("dt_nascimento", "Unknown"),
                                                 "transfers": [],
-                                                "country_flags": {}  # Add a dictionary to store country flags
+                                                "country_flags": {}
                                             }
                                         
-                                        # Add this transfer to player's history
                                         player_database[player_id]["transfers"].append({
                                             "year": year,
                                             "from_country": destination_country_code,
@@ -288,21 +287,19 @@ for transfer_file in transfer_files:
                                             "to_club_name": player.get("club_descr")
                                         })
                                         
-                                        # Store country flags for this player
                                         if destination_country_code not in player_database[player_id]["country_flags"] and destination_country_code in country_flags:
                                             player_database[player_id]["country_flags"][destination_country_code] = country_flags[destination_country_code]
                                         
                                         if destination_country_code_out not in player_database[player_id]["country_flags"] and destination_country_code_out in country_flags:
                                             player_database[player_id]["country_flags"][destination_country_code_out] = country_flags[destination_country_code_out]
 
-# ADDED: Deduplicate transfers for each player
+# Deduplicate transfers for each player
 for player_id, player_data in player_database.items():
     if "transfers" in player_data:
-        # Create a dictionary to track unique transfers
         unique_transfers = {}
         
         for transfer in player_data["transfers"]:
-            # Create a key that ignores the year but includes all other relevant data
+            # Create key that ignores year but includes all other relevant data
             transfer_key = (
                 transfer["from_country"],
                 transfer["to_country"],
@@ -310,29 +307,26 @@ for player_id, player_data in player_database.items():
                 transfer.get("to_club_id", "")
             )
             
-            # If we already have this transfer, check if years are consecutive
+            # Check for consecutive year duplicates
             if transfer_key in unique_transfers:
                 existing_transfer = unique_transfers[transfer_key]
                 year_diff = abs(int(existing_transfer["year"]) - int(transfer["year"]))
                 
-                # If years are consecutive (difference of 1), it's likely a duplicate
-                # Keep the one with the earlier year to match the user's preference
+                # If years are consecutive (difference of 1), keep the earlier year
                 if year_diff <= 1:
                     if int(transfer["year"]) < int(existing_transfer["year"]):
                         unique_transfers[transfer_key] = transfer
-                    # Otherwise keep the existing one
                 else:
-                    # If years are not consecutive, treat as a separate transfer
-                    # Modify the key to include the year
+                    # If years are not consecutive, treat as separate transfer
                     new_key = transfer_key + (transfer["year"],)
                     unique_transfers[new_key] = transfer
             else:
                 unique_transfers[transfer_key] = transfer
         
-        # Replace the original transfers with deduplicated ones
+        # Replace original transfers with deduplicated ones
         player_data["transfers"] = list(unique_transfers.values())
 
-# Process players with the same name
+# Handle players with the same name by adding birth year or index
 player_name_map = defaultdict(list)
 for player_id, player_data in player_database.items():
     player_name_map[player_data["name"]].append(player_id)
@@ -355,16 +349,16 @@ for name, ids in player_name_map.items():
     else:
         player_database[ids[0]]["display_name"] = name
 
-# Write the player database to a file
+# Write player database to file
 with open(player_db_path, 'w', encoding='utf-8') as f:
     json.dump({"players": player_database}, f, indent=4)
 
 print(f"✅ Player database successfully generated with {len(player_database)} players!")
 
-# Now generate arcs based on the player database (to ensure we're using deduplicated data)
+# Generate arcs based on the deduplicated player database
 yearly_transfer_data = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: {'count': 0, 'players': set(), 'player_ids': set()})))
 
-# Rebuild transfer data from the deduplicated player database
+# Rebuild transfer data from player database
 for player_id, player_data in player_database.items():
     for transfer in player_data["transfers"]:
         year = transfer["year"]
@@ -375,7 +369,7 @@ for player_id, player_data in player_database.items():
         yearly_transfer_data[year][from_country][to_country]['player_ids'].add(player_id)
         yearly_transfer_data[year][from_country][to_country]['count'] += 1
 
-# Generate arcs
+# Generate arc files for each year
 for year, origin_data in yearly_transfer_data.items():
     arcs = []
     for origin_code, destination_data in origin_data.items():
@@ -409,7 +403,7 @@ for year, origin_data in yearly_transfer_data.items():
                         "player_ids": list(data['player_ids'])
                     })
     
-    # Write arcs for this year
+    # Write arcs for this year if within valid range
     if 1950 <= int(year) <= 2025:
         lines_data = {
             "type": "Transfer",
