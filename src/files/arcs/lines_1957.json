@@ -13,16 +13,16 @@
             "scale": 0.5,
             "count": 5,
             "players": [
-                "Omar Sivori",
-                "Luis Pentrelli",
-                "Umberto Maschio",
                 "Antonio Angelillo",
-                "Ernesto Grillo"
+                "Luis Pentrelli",
+                "Ernesto Grillo",
+                "Umberto Maschio",
+                "Omar Sivori"
             ],
             "player_ids": [
-                "80261",
-                "26090",
                 "26091",
+                "26090",
+                "80261",
                 "49488",
                 "438468"
             ]
@@ -97,14 +97,14 @@
             "scale": 0.5,
             "count": 3,
             "players": [
+                "Zeola",
                 "Wilson Sorio",
-                "Del Vecchio",
-                "Zeola"
+                "Del Vecchio"
             ],
             "player_ids": [
-                "608629",
+                "398640",
                 "466524",
-                "398640"
+                "608629"
             ]
         },
         {
@@ -140,8 +140,8 @@
             "count": 4,
             "players": [
                 "Osvaldo Silva",
-                "Edison",
                 "Ivson",
+                "Edison",
                 "Vadinho (1933)"
             ],
             "player_ids": [
@@ -199,13 +199,13 @@
             "scale": 0.5,
             "count": 3,
             "players": [
-                "Jos\u00e9 Maria Pellejero",
                 "Massey ",
+                "Jos\u00e9 Maria Pellejero",
                 "Jorge Mendon\u00e7a"
             ],
             "player_ids": [
-                "205278",
                 "398831",
+                "205278",
                 "167821"
             ]
         },
@@ -275,8 +275,8 @@
             "scale": 0.5,
             "count": 2,
             "players": [
-                "Peter (1936)",
-                "Laszlo Kazsas"
+                "Laszlo Kazsas",
+                "Peter (1936)"
             ],
             "player_ids": [
                 "199061",
@@ -513,8 +513,8 @@
             "scale": 0.5,
             "count": 2,
             "players": [
-                "Jos\u00e9 Santamaria",
-                "Villamide"
+                "Villamide",
+                "Jos\u00e9 Santamaria"
             ],
             "player_ids": [
                 "198926",
@@ -587,8 +587,8 @@
             "scale": 0.5,
             "count": 2,
             "players": [
-                "Will Garcia",
-                "Jos\u00e9 Cardona"
+                "Jos\u00e9 Cardona",
+                "Will Garcia"
             ],
             "player_ids": [
                 "391433",
@@ -633,32 +633,6 @@
         },
         {
             "type": "transfer",
-            "from": "INO",
-            "to": "ING",
-            "startLat": 54.721271,
-            "startLong": -6.558959,
-            "endLat": 52.288958,
-            "endLong": -0.238655,
-            "color": "#F76B15",
-            "scale": 0.5,
-            "count": 5,
-            "players": [
-                "Amby Fogarty",
-                "Francis Coyle",
-                "Dick Keith",
-                "Wilbur Cush",
-                "Thomas Heron"
-            ],
-            "player_ids": [
-                "23064",
-                "23057",
-                "502831",
-                "23054",
-                "394048"
-            ]
-        },
-        {
-            "type": "transfer",
             "from": "ING",
             "to": "NZE",
             "startLat": 52.288958,
@@ -687,8 +661,8 @@
             "scale": 0.5,
             "count": 2,
             "players": [
-                "John Charles ",
-                "Tony Marchi"
+                "Tony Marchi",
+                "John Charles "
             ],
             "player_ids": [
                 "257253",
@@ -749,10 +723,34 @@
                 "Don Kichenbrand "
             ],
             "player_ids": [
-                "23100",
                 "275376",
-                "544532",
-                "635448"
+                "635448",
+                "23100",
+                "544532"
+            ]
+        },
+        {
+            "type": "transfer",
+            "from": "INO",
+            "to": "ING",
+            "startLat": 54.721271,
+            "startLong": -6.558959,
+            "endLat": 52.288958,
+            "endLong": -0.238655,
+            "color": "#F76B15",
+            "scale": 0.5,
+            "count": 4,
+            "players": [
+                "Francis Coyle",
+                "Wilbur Cush",
+                "Thomas Heron",
+                "Amby Fogarty"
+            ],
+            "player_ids": [
+                "23057",
+                "394048",
+                "23064",
+                "502831"
             ]
         },
         {
@@ -839,18 +837,18 @@
             "scale": 0.5,
             "count": 5,
             "players": [
-                "Bozidar Sencar",
-                "Helmut Fottner",
                 "Josef Seemann",
+                "Helmut Fottner",
+                "Hans-Josef Knauf",
                 "Herman Weber",
-                "Hans-Josef Knauf"
+                "Bozidar Sencar"
             ],
             "player_ids": [
-                "245797",
                 "924279",
+                "245797",
                 "304741",
-                "338558",
-                "1499977"
+                "1499977",
+                "338558"
             ]
         },
         {
@@ -869,8 +867,8 @@
                 "Frank Mijnals"
             ],
             "player_ids": [
-                "565433",
-                "565434"
+                "565434",
+                "565433"
             ]
         }
     ]

@@ -11,6 +11,8 @@ player_db_path = 'D:/Tese/Tese/test/src/files/players.json'
 def extract_year(season_name):
     match = re.search(r'(\d{4})/(\d{4})', season_name)
     if match:
+        # MODIFIED: Use the FIRST year of the season instead of the second
+        # This ensures transfers in "2017/2018" are recorded as 2017
         return match.group(1)
 
     match = re.search(r'\b(\d{4})\b', season_name)
@@ -292,6 +294,43 @@ for transfer_file in transfer_files:
                                         
                                         if destination_country_code_out not in player_database[player_id]["country_flags"] and destination_country_code_out in country_flags:
                                             player_database[player_id]["country_flags"][destination_country_code_out] = country_flags[destination_country_code_out]
+
+# ADDED: Deduplicate transfers for each player
+for player_id, player_data in player_database.items():
+    if "transfers" in player_data:
+        # Create a dictionary to track unique transfers
+        unique_transfers = {}
+        
+        for transfer in player_data["transfers"]:
+            # Create a key that ignores the year but includes all other relevant data
+            transfer_key = (
+                transfer["from_country"],
+                transfer["to_country"],
+                transfer.get("from_club_id", ""),
+                transfer.get("to_club_id", "")
+            )
+            
+            # If we already have this transfer, check if years are consecutive
+            if transfer_key in unique_transfers:
+                existing_transfer = unique_transfers[transfer_key]
+                year_diff = abs(int(existing_transfer["year"]) - int(transfer["year"]))
+                
+                # If years are consecutive (difference of 1), it's likely a duplicate
+                # Keep the one with the earlier year to match the user's preference
+                if year_diff <= 1:
+                    if int(transfer["year"]) < int(existing_transfer["year"]):
+                        unique_transfers[transfer_key] = transfer
+                    # Otherwise keep the existing one
+                else:
+                    # If years are not consecutive, treat as a separate transfer
+                    # Modify the key to include the year
+                    new_key = transfer_key + (transfer["year"],)
+                    unique_transfers[new_key] = transfer
+            else:
+                unique_transfers[transfer_key] = transfer
+        
+        # Replace the original transfers with deduplicated ones
+        player_data["transfers"] = list(unique_transfers.values())
 
 # Process players with the same name
 player_name_map = defaultdict(list)
