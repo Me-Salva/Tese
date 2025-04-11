@@ -1860,7 +1860,7 @@ async function showAllPlayerTransfers(playerId) {
       return {
         ...arc,
         stroke: 0.6, // Slightly thicker for glow
-        color: `rgba(${r}, ${g}, ${b}, 0.15)`,
+        color: `rgba(${r}, ${g}, ${b}, 0.25)`,
       }
     })
 
