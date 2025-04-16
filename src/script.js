@@ -2042,7 +2042,7 @@ function showCurrentTransfer() {
         playerLink.style.color = "inherit"
         playerLink.style.textDecoration = "none"
         playerLink.style.borderBottom = "1px dotted"
-        playerLink.title = "Ver perfil no zerozero.pt"
+        playerLink.title = "Ver perfil do jogador"
 
         // Clear the title and append the link with year
         title.textContent = ""
