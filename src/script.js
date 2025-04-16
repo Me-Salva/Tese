@@ -1717,7 +1717,7 @@ async function showAllPlayerTransfers(playerId) {
 
           // Filter arcs for this player in this year
           const yearArcs = data.arcs.filter(
-            (arc) => arc.players && arc.players.some((player) => player.toLowerCase().includes(playerNameLower))
+            (arc) => arc.players && arc.players.some((player) => player.toLowerCase().includes(playerNameLower)),
           )
 
           // Process the arcs for display
@@ -1747,7 +1747,7 @@ async function showAllPlayerTransfers(playerId) {
   }
 
   // Sort the arcs by year (chronologically)
-  let sortedArcs = allArcs.sort((a, b) => {
+  const sortedArcs = allArcs.sort((a, b) => {
     const yearA = Number.parseInt(a.year)
     const yearB = Number.parseInt(b.year)
     return yearA - yearB
@@ -1756,80 +1756,35 @@ async function showAllPlayerTransfers(playerId) {
   // Deduplicate transfers with the same origin and destination in consecutive years
   // Prefer the EARLIER year
   const uniqueTransfers = new Map()
-  
-  sortedArcs.forEach(transfer => {
+
+  sortedArcs.forEach((transfer) => {
     // Create a unique key that ignores the year but includes all other relevant data
-    const dedupeKey = `${transfer.from}-${transfer.to}-${transfer.fromClub || ''}-${transfer.toClub || ''}`
-    
+    const dedupeKey = `${transfer.from}-${transfer.to}-${transfer.fromClub || ""}-${transfer.toClub || ""}`
+
     // If we already have this transfer and the years are consecutive, skip it
     if (uniqueTransfers.has(dedupeKey)) {
       const existingTransfer = uniqueTransfers.get(dedupeKey)
-      const yearDiff = Math.abs(parseInt(existingTransfer.year) - parseInt(transfer.year))
-      
+      const yearDiff = Math.abs(Number.parseInt(existingTransfer.year) - Number.parseInt(transfer.year))
+
       // If years are consecutive (difference of 1), it's likely a duplicate
       if (yearDiff <= 1) {
         // Keep the one with the EARLIER year
-        if (parseInt(transfer.year) < parseInt(existingTransfer.year)) {
+        if (Number.parseInt(transfer.year) < Number.parseInt(existingTransfer.year)) {
           uniqueTransfers.set(dedupeKey, transfer)
         }
         return // Skip adding this transfer again
       }
     }
-    
+
     // Otherwise, add it to our map
     uniqueTransfers.set(dedupeKey, transfer)
   })
-  
+
   // Replace the original array with deduplicated transfers
   playerCareerArcs = Array.from(uniqueTransfers.values())
 
   // Extract country flags for the player's path
   playerCountryFlags = []
-
-  // First add the origin country of the first transfer
-  if (playerCareerArcs.length > 0) {
-    const firstTransfer = playerCareerArcs[0]
-    const fromCountryCode = firstTransfer.from
-
-    // Try to find the flag URL for this country
-    const flagUrl = findCountryFlagUrl(fromCountryCode)
-    if (flagUrl) {
-      playerCountryFlags.push({
-        code: fromCountryCode,
-        flag: flagUrl,
-        name: countryCodeToName[fromCountryCode] || fromCountryCode,
-      })
-    } else {
-      // Fallback to a default flag or country code display
-      playerCountryFlags.push({
-        code: fromCountryCode,
-        flag: `https://flagcdn.com/w20/${fromCountryCode.toLowerCase()}.png`,
-        name: countryCodeToName[fromCountryCode] || fromCountryCode,
-      })
-    }
-  }
-
-  // Then add all destination countries in order (including duplicates)
-  playerCareerArcs.forEach((arc) => {
-    const toCountryCode = arc.to
-
-    // Try to find the flag URL for this country
-    const flagUrl = findCountryFlagUrl(toCountryCode)
-    if (flagUrl) {
-      playerCountryFlags.push({
-        code: toCountryCode,
-        flag: flagUrl,
-        name: countryCodeToName[toCountryCode] || toCountryCode,
-      })
-    } else {
-      // Fallback to a default flag or country code display
-      playerCountryFlags.push({
-        code: toCountryCode,
-        flag: `https://flagcdn.com/w20/${toCountryCode.toLowerCase()}.png`,
-        name: countryCodeToName[toCountryCode] || toCountryCode,
-      })
-    }
-  })
 
   // Update the visualization with all arcs at once
   if (playerCareerArcs.length > 0) {
@@ -1890,90 +1845,14 @@ function startPlayerTransferAnimation() {
   }, transferAnimationDuration)
 }
 
-// Function to show the current transfer
-function showCurrentTransfer() {
-  if (playerCareerArcs.length === 0) return
-
-  // Get the current transfer arc
-  const currentArc = playerCareerArcs[currentTransferIndex]
-
-  // Create an array with just the current arc
-  const singleArcWithThickness = [
-    {
-      ...currentArc,
-      stroke: 0.5, // Fixed stroke for player transfers
-    },
-  ]
-
-  // Update the main globe with just this arc
-  mainGlobe.arcsData(singleArcWithThickness)
-  arcsArray = singleArcWithThickness
-
-  // Update the player info to show the current transfer year
-  const playerInfo = document.getElementById("player-info")
-  if (playerInfo) {
-    const title = playerInfo.querySelector("h3")
-    if (title) {
-      const fromClub = currentArc.fromClub || countryCodeToName[currentArc.from] || "Unknown"
-      const toClub = currentArc.toClub || countryCodeToName[currentArc.to] || "Unknown"
-
-      // Remove birth year from player name if present
-      const cleanName = playerName.replace(/\s*$$\d{4}$$$/g, "")
-      title.textContent = `${cleanName} (${currentArc.year})`
-
-      const text = playerInfo.querySelector("p")
-      if (text) {
-        text.textContent = `${fromClub} → ${toClub}`
-      }
-    }
-  }
-}
-
-// Function to update player career path
-async function updatePlayerCareerPath(year) {
-  // This function is no longer needed for the animation
-  // but we'll keep it for compatibility
-  // The animation is now handled by startPlayerTransferAnimation
-}
-
-// Helper function to find country flag URL from country code
-function findCountryFlagUrl(countryCode) {
-  if (
-    selectedPlayerId &&
-    playerDatabase[selectedPlayerId] &&
-    playerDatabase[selectedPlayerId].country_flags &&
-    playerDatabase[selectedPlayerId].country_flags[countryCode]
-  ) {
-    return playerDatabase[selectedPlayerId].country_flags[countryCode]
-  }
-
-  return null
-}
-
-// Function to preload flag images
-function preloadFlagImages() {
-  // Create a set to store unique flag URLs
-  const flagUrls = new Set()
-
-  // Collect flag URLs from player database
-  for (const playerId in playerDatabase) {
-    const player = playerDatabase[playerId]
-    if (player.country_flags) {
-      for (const countryCode in player.country_flags) {
-        const flagUrl = player.country_flags[countryCode]
-        if (flagUrl) {
-          flagUrls.add(flagUrl)
-        }
-      }
-    }
-  }
-
-  // Preload each flag image
-  flagUrls.forEach((url) => {
-    const img = new Image()
-    img.crossOrigin = "anonymous" // Important for CORS
-    img.src = url
-  })
+// Function to create a zerozero.pt profile URL from player name and ID
+function createPlayerProfileUrl(name, id) {
+  // Convert the name to lowercase and replace spaces with hyphens
+  const formattedName = name.toLowerCase().replace(/\s+/g, "-")
+  // Remove any parentheses and their contents (like birth year)
+  const cleanName = formattedName.replace(/$$[^)]*$$/g, "").replace(/-+$/, "")
+  // Return the full URL
+  return `https://www.zerozero.pt/jogador/${cleanName}/${id}`
 }
 
 // Show player info panel
@@ -1986,8 +1865,34 @@ function showPlayerInfo(name) {
 
   if (title) {
     // Remove birth year from player name if present
-    const cleanName = name.replace(/\s*$$\d{4}$$$/g, "")
-    title.textContent = cleanName
+    const cleanName = name.replace(/\s*\d{4}$/g, "")
+
+    // Create a clickable link if we have a player ID
+    if (selectedPlayerId && !selectedPlayerId.startsWith("placeholder_")) {
+      // Create the link element
+      const playerLink = document.createElement("a")
+      playerLink.href = createPlayerProfileUrl(cleanName, selectedPlayerId)
+      playerLink.textContent = cleanName
+      playerLink.target = "_blank" // Open in new tab
+      playerLink.style.color = "inherit"
+      playerLink.style.textDecoration = "none"
+      playerLink.style.borderBottom = "1px dotted"
+      playerLink.title = "Ver perfil do jogador"
+
+      // Clear the title and append the link
+      title.textContent = ""
+      title.appendChild(playerLink)
+
+      // If we're showing a specific year, add it after the link
+      if (playerCareerArcs.length > 0) {
+        const yearSpan = document.createElement("span")
+        yearSpan.textContent = ` (${playerCareerArcs[currentTransferIndex].year})`
+        title.appendChild(yearSpan)
+      }
+    } else {
+      // Fallback to plain text if no valid ID
+      title.textContent = cleanName
+    }
   }
 
   // Add country flags if available
@@ -2007,8 +1912,8 @@ function showPlayerInfo(name) {
         text.textContent = `${fromClub} → ${toClub}`
       }
 
-      // Update the title to include the year
-      if (title) {
+      // Update the title to include the year if not already done above
+      if (title && !title.querySelector("a")) {
         title.textContent = `${name} (${firstTransfer.year})`
       }
 
@@ -2095,6 +2000,112 @@ function showPlayerInfo(name) {
   }
 
   playerInfo.style.display = "block"
+}
+
+// Function to show the current transfer
+function showCurrentTransfer() {
+  if (playerCareerArcs.length === 0) return
+
+  // Get the current transfer arc
+  const currentArc = playerCareerArcs[currentTransferIndex]
+
+  // Create an array with just the current arc
+  const singleArcWithThickness = [
+    {
+      ...currentArc,
+      stroke: 0.5, // Fixed stroke for player transfers
+    },
+  ]
+
+  // Update the main globe with just this arc
+  mainGlobe.arcsData(singleArcWithThickness)
+  arcsArray = singleArcWithThickness
+
+  // Update the player info to show the current transfer year
+  const playerInfo = document.getElementById("player-info")
+  if (playerInfo) {
+    const title = playerInfo.querySelector("h3")
+    if (title) {
+      const fromClub = currentArc.fromClub || countryCodeToName[currentArc.from] || "Unknown"
+      const toClub = currentArc.toClub || countryCodeToName[currentArc.to] || "Unknown"
+
+      // Remove birth year from player name if present
+      const cleanName = playerName.replace(/\s*\d{4}$/g, "")
+
+      // Update the title with a link if we have a valid player ID
+      if (selectedPlayerId && !selectedPlayerId.startsWith("placeholder_")) {
+        // Create the link element
+        const playerLink = document.createElement("a")
+        playerLink.href = createPlayerProfileUrl(cleanName, selectedPlayerId)
+        playerLink.textContent = cleanName
+        playerLink.target = "_blank" // Open in new tab
+        playerLink.style.color = "inherit"
+        playerLink.style.textDecoration = "none"
+        playerLink.style.borderBottom = "1px dotted"
+        playerLink.title = "Ver perfil no zerozero.pt"
+
+        // Clear the title and append the link with year
+        title.textContent = ""
+        title.appendChild(playerLink)
+        title.appendChild(document.createTextNode(` (${currentArc.year})`))
+      } else {
+        // Fallback to plain text if no valid ID
+        title.textContent = `${cleanName} (${currentArc.year})`
+      }
+
+      const text = playerInfo.querySelector("p")
+      if (text) {
+        text.textContent = `${fromClub} → ${toClub}`
+      }
+    }
+  }
+}
+
+// Function to update player career path
+async function updatePlayerCareerPath(year) {
+  // This function is no longer needed for the animation
+  // but we'll keep it for compatibility
+  // The animation is now handled by startPlayerTransferAnimation
+}
+
+// Helper function to find country flag URL from country code
+function findCountryFlagUrl(countryCode) {
+  if (
+    selectedPlayerId &&
+    playerDatabase[selectedPlayerId] &&
+    playerDatabase[selectedPlayerId].country_flags &&
+    playerDatabase[selectedPlayerId].country_flags[countryCode]
+  ) {
+    return playerDatabase[selectedPlayerId].country_flags[countryCode]
+  }
+
+  return null
+}
+
+// Function to preload flag images
+function preloadFlagImages() {
+  // Create a set to store unique flag URLs
+  const flagUrls = new Set()
+
+  // Collect flag URLs from player database
+  for (const playerId in playerDatabase) {
+    const player = playerDatabase[playerId]
+    if (player.country_flags) {
+      for (const countryCode in player.country_flags) {
+        const flagUrl = player.country_flags[countryCode]
+        if (flagUrl) {
+          flagUrls.add(flagUrl)
+        }
+      }
+    }
+  }
+
+  // Preload each flag image
+  flagUrls.forEach((url) => {
+    const img = new Image()
+    img.crossOrigin = "anonymous" // Important for CORS
+    img.src = url
+  })
 }
 
 //=============================================================================
