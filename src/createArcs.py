@@ -99,7 +99,9 @@ for transfer_file in transfer_files:
                         
                         # Store flag URL if available
                         if "logo" in transfer_info and transfer_info["logo"]:
-                            country_flags[origin_country_code] = transfer_info["logo"]
+                            logo_url = transfer_info["logo"]
+                            if origin_country_code and origin_country_code not in country_flags:
+                                country_flags[origin_country_code] = logo_url
                         
                         if "players" in transfer_info:
                             players = transfer_info["players"]
@@ -204,7 +206,9 @@ for transfer_file in transfer_files:
                         destination_country_code_out = country_info[int(country_id)]["code"]
                         
                         if "logo" in transfer_info and transfer_info["logo"]:
-                            country_flags[destination_country_code_out] = transfer_info["logo"]
+                            logo_url = transfer_info["logo"]
+                            if destination_country_code_out and destination_country_code_out not in country_flags:
+                                country_flags[destination_country_code_out] = logo_url
                         
                         if "players" in transfer_info:
                             players = transfer_info["players"]
@@ -292,6 +296,12 @@ for transfer_file in transfer_files:
                                         
                                         if destination_country_code_out not in player_database[player_id]["country_flags"] and destination_country_code_out in country_flags:
                                             player_database[player_id]["country_flags"][destination_country_code_out] = country_flags[destination_country_code_out]
+
+for player_id, player_data in player_database.items():
+    for transfer in player_data["transfers"]:
+        for code in [transfer["from_country"], transfer["to_country"]]:
+            if code not in player_data["country_flags"] and code in country_flags:
+                player_data["country_flags"][code] = country_flags[code]
 
 # Deduplicate transfers for each player
 for player_id, player_data in player_database.items():

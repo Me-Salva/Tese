@@ -1938,55 +1938,16 @@ async function updatePlayerCareerPath(year) {
 
 // Helper function to find country flag URL from country code
 function findCountryFlagUrl(countryCode) {
-  // First check if the player has this flag in their country_flags property
   if (
     selectedPlayerId &&
     playerDatabase[selectedPlayerId] &&
     playerDatabase[selectedPlayerId].country_flags &&
     playerDatabase[selectedPlayerId].country_flags[countryCode]
   ) {
-    const flagUrl = playerDatabase[selectedPlayerId].country_flags[countryCode]
-    return flagUrl
+    return playerDatabase[selectedPlayerId].country_flags[countryCode]
   }
 
-  // If not found in player database, try to find it in the country_flags global object
-  // Search through all years data to find the flag URL
-  for (const year in allYearsData) {
-    const data = allYearsData[year]
-
-    // Check if the data has the new structure with "data" property
-    if (data.data && data.data.seasons) {
-      // Search through each season
-      for (const seasonName in data.data.seasons) {
-        const season = data.data.seasons[seasonName]
-
-        // Search through each club
-        for (const club of season) {
-          // Check incoming transfers
-          if (club.teams_in) {
-            for (const [id, country] of Object.entries(club.teams_in)) {
-              if (country_info[id] && country_info[id].code === countryCode && country.logo) {
-                return country.logo
-              }
-            }
-          }
-
-          // Check outgoing transfers
-          if (club.teams_out) {
-            for (const [id, country] of Object.entries(club.teams_out)) {
-              if (country_info[id] && country_info[id].code === countryCode && country.logo) {
-                return country.logo
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // If no flag URL is found, use a fallback from flagcdn.com
-  const fallbackUrl = `https://flagcdn.com/w20/${countryCode.toLowerCase()}.png`
-  return fallbackUrl
+  return null
 }
 
 // Function to preload flag images
