@@ -15,8 +15,8 @@ let countriesData, arcsData
 let arcsArray = []
 const countryCodeToName = {}
 const country_info = {}
-const allYearsData = {} // Store data for all years
-let allPlayers = [] // All players
+const allYearsData = {}
+let allPlayers = []
 let playerDatabase = {}
 
 // Interaction variables
@@ -30,7 +30,7 @@ let animationInterval = null
 let currentYear = 1950
 const minYear = 1950
 const maxYear = 2025
-let animationSpeed = 1 // Default animation speed
+let animationSpeed = 1
 
 // Player career path tracking
 let playerCareerMode = false
@@ -43,7 +43,7 @@ let selectedPlayerId = null
 // Player career animation variables
 let playerTransferAnimationInterval = null
 let currentTransferIndex = 0
-const transferAnimationDuration = 3000 // 3 seconds per transfer
+const transferAnimationDuration = 3000
 
 // Theme variables
 let currentTheme = "light"
@@ -66,9 +66,9 @@ const themeColors = {
 
 // Arc colors
 const arcColors = {
-  default: "#F76B15", // Orange for general arcs
-  exit: "#2DA6E0", // Blue for exits in 1 country view
-  player: "#25E009", // Green for player view
+  default: "#F76B15",
+  exit: "#2DA6E0",
+  player: "#25E009",
 }
 
 // Filter state variables
@@ -184,7 +184,7 @@ function animate() {
 
 // Initialize the globe with countries data
 function initGlobe(countries) {
-  if (globeInitialized) return // Only initialize once
+  if (globeInitialized) return
 
   // Create glow globe
   glowGlobe = new ThreeGlobe({
@@ -248,11 +248,11 @@ function initGlobe(countries) {
 // Load initial data
 async function loadInitialData() {
   try {
-    // Load countries data (only need to do this once)
+    // Load countries data
     const countriesResponse = await fetch("./files/maps/countriesToday.json")
     countriesData = await countriesResponse.json()
 
-    // Load country code to name mapping
+    // Load country code
     const mapResponse = await fetch("./files/map.json")
     const mapData = await mapResponse.json()
 
@@ -261,7 +261,7 @@ async function loadInitialData() {
       const name = country.country
       countryCodeToName[code] = name
 
-      // Store country coordinates for later use
+      // Store country coordinates
       country_info[country.id] = {
         code: country.text,
         lat: country.lat,
@@ -1615,14 +1615,14 @@ async function showAllPlayerTransfers(playerId) {
           startLng: fromCoords.lng,
           endLat: toCoords.lat,
           endLng: toCoords.lng,
-          color: arcColors.player, // Green for player career
+          color: arcColors.player,
           from: fromCode,
           to: toCode,
-          count: 1, // Always 1 for a single player
+          count: 1,
           players: [playerName],
-          year: transferYear, // Add year information
-          stroke: 0.2, // Fixed stroke for player transfers
-          fromClub: fromClub, // Add club information for tooltip
+          year: transferYear,
+          stroke: 0.2,
+          fromClub: fromClub,
           toClub: toClub,
         })
       }
@@ -1663,13 +1663,13 @@ async function showAllPlayerTransfers(playerId) {
                         startLng: fromCoords.lng,
                         endLat: toCoords.lat,
                         endLng: toCoords.lng,
-                        color: arcColors.player, // Green for player career
+                        color: arcColors.player,
                         from: fromCountryCode,
                         to: toCountryCode,
-                        count: 1, // Always 1 for a single player
+                        count: 1,
                         players: [player.name],
-                        year: year, // Add year information
-                        stroke: 0.2, // Fixed stroke for player transfers
+                        year: year,
+                        stroke: 0.2,
                       })
                     }
                   }
@@ -1697,13 +1697,13 @@ async function showAllPlayerTransfers(playerId) {
                         startLng: fromCoords.lng,
                         endLat: toCoords.lat,
                         endLng: toCoords.lng,
-                        color: arcColors.player, // Green for player career
+                        color: arcColors.player,
                         from: fromCountryCode,
                         to: toCountryCode,
-                        count: 1, // Always 1 for a single player
+                        count: 1,
                         players: [player.name],
-                        year: year, // Add year information
-                        stroke: 0.5, // Fixed stroke for player transfers
+                        year: year,
+                        stroke: 0.5,
                       })
                     }
                   }
@@ -1730,13 +1730,13 @@ async function showAllPlayerTransfers(playerId) {
               startLng: arc.startLong,
               endLat: arc.endLat,
               endLng: arc.endLong,
-              color: arcColors.player, // Green for player career
+              color: arcColors.player,
               from: arc.from,
               to: arc.to,
-              count: 1, // Always 1 for a single player
+              count: 1,
               players: matchingPlayers,
-              year: year, // Add year information
-              stroke: 0.5, // Fixed stroke for player transfers
+              year: year,
+              stroke: 0.5,
             }
           })
 
@@ -1801,7 +1801,7 @@ async function showAllPlayerTransfers(playerId) {
 
       return {
         ...arc,
-        stroke: 0.6, // Slightly thicker for glow
+        stroke: 0.6,
         color: `rgba(${r}, ${g}, ${b}, 0.25)`,
       }
     })
@@ -1845,11 +1845,8 @@ function startPlayerTransferAnimation() {
   }, transferAnimationDuration)
 }
 
-// Function to create a zerozero.pt profile URL from player name and ID
 function createPlayerProfileUrl(name, id) {
-  // Convert the name to lowercase and replace spaces with hyphens
   const formattedName = name.toLowerCase().replace(/\s+/g, "-")
-  // Remove any parentheses and their contents (like birth year)
   const cleanName = formattedName.replace(/$$[^)]*$$/g, "").replace(/-+$/, "")
   // Return the full URL
   return `https://www.zerozero.pt/jogador/${cleanName}/${id}`
@@ -1873,17 +1870,15 @@ function showPlayerInfo(name) {
       const playerLink = document.createElement("a")
       playerLink.href = createPlayerProfileUrl(cleanName, selectedPlayerId)
       playerLink.textContent = cleanName
-      playerLink.target = "_blank" // Open in new tab
+      playerLink.target = "_blank"
       playerLink.style.color = "inherit"
       playerLink.style.textDecoration = "none"
       playerLink.style.borderBottom = "1px dotted"
       playerLink.title = "Ver perfil do jogador"
 
-      // Clear the title and append the link
       title.textContent = ""
       title.appendChild(playerLink)
 
-      // If we're showing a specific year, add it after the link
       if (playerCareerArcs.length > 0) {
         const yearSpan = document.createElement("span")
         yearSpan.textContent = ` (${playerCareerArcs[currentTransferIndex].year})`
@@ -1898,7 +1893,7 @@ function showPlayerInfo(name) {
   // Add country flags if available
   const flagsContainer = playerInfo.querySelector(".country-flags")
   if (flagsContainer) {
-    flagsContainer.innerHTML = "" // Clear existing flags
+    flagsContainer.innerHTML = ""
 
     // First add the origin country of the first transfer
     if (playerCareerArcs.length > 0) {
@@ -1953,7 +1948,6 @@ function showPlayerInfo(name) {
 
     // Then add all destination countries in order
     playerCareerArcs.forEach((arc, index) => {
-      // Add arrow between flags
       if (index > 0 || playerCareerArcs.length > 0) {
         const arrow = document.createElement("span")
         arrow.innerHTML = "→"
@@ -2013,7 +2007,7 @@ function showCurrentTransfer() {
   const singleArcWithThickness = [
     {
       ...currentArc,
-      stroke: 0.5, // Fixed stroke for player transfers
+      stroke: 0.5,
     },
   ]
 
@@ -2061,27 +2055,6 @@ function showCurrentTransfer() {
   }
 }
 
-// Function to update player career path
-async function updatePlayerCareerPath(year) {
-  // This function is no longer needed for the animation
-  // but we'll keep it for compatibility
-  // The animation is now handled by startPlayerTransferAnimation
-}
-
-// Helper function to find country flag URL from country code
-function findCountryFlagUrl(countryCode) {
-  if (
-    selectedPlayerId &&
-    playerDatabase[selectedPlayerId] &&
-    playerDatabase[selectedPlayerId].country_flags &&
-    playerDatabase[selectedPlayerId].country_flags[countryCode]
-  ) {
-    return playerDatabase[selectedPlayerId].country_flags[countryCode]
-  }
-
-  return null
-}
-
 // Function to preload flag images
 function preloadFlagImages() {
   // Create a set to store unique flag URLs
@@ -2103,7 +2076,7 @@ function preloadFlagImages() {
   // Preload each flag image
   flagUrls.forEach((url) => {
     const img = new Image()
-    img.crossOrigin = "anonymous" // Important for CORS
+    img.crossOrigin = "anonymous"
     img.src = url
   })
 }
@@ -2133,7 +2106,6 @@ function showTooltip(arc, clientX, clientY) {
     // Get year information
     const transferYear = arcData.year || "Ano Desconhecido"
 
-    // Format the tooltip with the requested format
     tooltip.innerHTML = `
         <strong>Origem:</strong> ${fromClub} (${originCountry})<br>
         <strong>Destino:</strong> ${toClub} (${destinationCountry})<br>
@@ -2212,7 +2184,7 @@ function onMouseMove(event) {
 
     try {
       // Generate points along the arc for detection
-      const numPoints = 50 // Increased for better detection
+      const numPoints = 50
       const arcScale = arc.scale || 0.5
 
       // Create start and end points in 3D space
@@ -2310,7 +2282,7 @@ function onMouseMove(event) {
   })
 
   // Threshold for hover detection
-  const hoverThreshold = 10 // Increased for better usability
+  const hoverThreshold = 10
 
   if (closestArc && closestDistance < hoverThreshold) {
     if (hoveredArc !== closestArc) {
