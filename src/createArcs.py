@@ -2,19 +2,85 @@ import json
 from collections import defaultdict
 import os
 import re
+import requests
+import hashlib
+
+# Download transfer files only if needed
+def hash_json(data):
+    """Create a hash of the JSON object (used to compare current vs new data)."""
+    return hashlib.md5(json.dumps(data, sort_keys=True).encode('utf-8')).hexdigest()
+
+print("\U0001F504 Checking for updates to transfer data...")
+
+transfers_folder_path = 'D:/Tese/Tese/test/src/files/transfers'
+transfers_api_config = {
+    "transfers_ALE.json": 11,
+    "transfers_ARG.json": 70,
+    "transfers_ASA.json": 518,
+    "transfers_BEL.json": 15,
+    "transfers_BRA.json": 51,
+    "transfers_CHI.json": 117,
+    "transfers_ESP.json": 5,
+    "transfers_EUA.json": 25,
+    "transfers_FRA.json": 13,
+    "transfers_ING.json": 4,
+    "transfers_ITA.json": 10,
+    "transfers_MEX.json": 1485,
+    "transfers_PBA.json": 12,
+    "transfers_POR.json": 3,
+    "transfers_TUR.json": 24
+}
+
+api_base_url = "http://direct.zerozero.pt/api/v1/getGraphPlayersTransfersCountryCompet"
+app_key = "tY9Qv2xP"
+
+for filename, compet_id in transfers_api_config.items():
+    api_url = f"{api_base_url}/AppKey/{app_key}/competID/{compet_id}"
+    output_path = os.path.join(transfers_folder_path, filename)
+
+    try:
+        # Get new data from API
+        response = requests.get(api_url)
+        response.raise_for_status()
+        new_data = response.json()
+        new_hash = hash_json(new_data)
+
+        # Check if local file exists and is different
+        if os.path.exists(output_path):
+            with open(output_path, 'r', encoding='utf-8') as f:
+                try:
+                    existing_data = json.load(f)
+                    existing_hash = hash_json(existing_data)
+
+                    if existing_hash == new_hash:
+                        print(f"✅ {filename} is up-to-date.")
+                        continue  # Skip writing
+                except json.JSONDecodeError:
+                    print(f"⚠️ Corrupted JSON in {filename}, will overwrite.")
+
+        # Save new data
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(new_data, f, ensure_ascii=False, indent=2)
+
+        print(f"🔁 {filename} updated.")
+
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Failed to fetch {filename}: {e}")
+    except Exception as e:
+        print(f"❌ Unexpected error for {filename}: {e}")
+
+print("✔️ Transfer files update check complete.\n")
 
 # File paths configuration
 map_file_path = 'D:/Tese/Tese/test/src/files/map.json'
-transfers_folder_path = 'D:/Tese/Tese/test/src/files/transfers'
 output_folder_path = 'D:/Tese/Tese/test/src/files/arcs'
 player_db_path = 'D:/Tese/Tese/test/src/files/players.json'
 
 def extract_year(season_name):
     """Extract year from season name, using first year for season formats like '2017/2018'"""
-    # Check for season format like "2017/2018"
     match = re.search(r'(\d{4})/(\d{4})', season_name)
     if match:
-        return match.group(1)  # Use first year for consistency
+        return match.group(1)
 
     # Check for standalone year like "2018"
     match = re.search(r'\b(\d{4})\b', season_name)
@@ -89,7 +155,7 @@ for transfer_file in transfer_files:
             transfers_in = club.get("teams_in", {})
             transfers_out = club.get("teams_out", {})
 
-            # Process incoming transfers (players coming to this club)
+            # Process incoming transfers
             if isinstance(transfers_in, dict):
                 for country_id, transfer_info in transfers_in.items():
                     if not country_id or int(country_id) == 0:
@@ -197,7 +263,7 @@ for transfer_file in transfer_files:
                                         if destination_country_code not in player_database[player_id]["country_flags"] and destination_country_code in country_flags:
                                             player_database[player_id]["country_flags"][destination_country_code] = country_flags[destination_country_code]
 
-            # Process outgoing transfers (players leaving this club)
+            # Process outgoing transfers
             if isinstance(transfers_out, dict):
                 for country_id, transfer_info in transfers_out.items():
                     if not country_id or int(country_id) == 0:
