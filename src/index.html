@@ -3,26 +3,401 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>3D Globe Visualization</title>
+  <title>Transfers-Globe</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
   <style>
+    /* Base styles */
+    :root {
+      --primary-color: #2b3e50;
+      --primary-hover: #2b3e50;
+      --secondary-color: #4A5968;
+      --accent-color: #91d5ff;
+      --text-dark: #333;
+      --text-light: #666;
+      --text-lighter: #888;
+      --bg-light: #fff;
+      --bg-off-white: #f9f9f9;
+      --bg-accent: #e6f7ff;
+      --border-light: #eaeaea;
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --transition: all 0.3s ease;
+      --logo-bg: #2b3e50;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      color: var(--text-dark);
+      background-color: var(--bg-light);
+      line-height: 1.6;
+    }
+
+    /* Layout styles */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    .lateral-gap {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .lateral-gap {
+        padding-left: 4rem;
+        padding-right: 4rem;
+      }
+    }
+
+    .vertical-gap {
+      padding-top: 1.5rem;
+      padding-bottom: 1.5rem;
+    }
+
+    #logo-banner {
+      padding: 1.5rem 0;
+      background-color: var(--logo-bg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    #logo-banner img {
+      height: 45px;
+      width: auto;
+      transition: var(--transition);
+    }
+
+    #logo-banner img:hover {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+
+    #form-notice {
+      padding: 1.5rem 0;
+      background-color: var(--bg-light);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    #form-notice-content {
+      background-color: var(--bg-accent);
+      border: 1px solid var(--accent-color);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      box-shadow: var(--shadow-sm);
+    }
+
+    #form-notice-content span {
+      flex: 1;
+    }
+
+    #form-notice-content p {
+      margin: 0.5rem 0;
+      color: var(--text-dark);
+    }
+
+    #form-notice-content strong {
+      color: #0050b3;
+    }
+
+    #form-notice-content button {
+      background-color: #2b3e50;
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1.5rem;
+      margin-top: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+
+    #form-notice-content button:hover {
+      background-color: #096dd9;
+      transform: translateY(-2px);
+    }
+
+    #form-notice-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      cursor: pointer;
+      color: var(--text-lighter);
+      transition: var(--transition);
+      font-size: 1.25rem;
+    }
+
+    #form-notice-close:hover {
+      color: var(--text-dark);
+    }
+
+    #main-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 5rem 2rem;
+      background: linear-gradient(135deg, var(--bg-off-white) 0%, #f5f5ff 100%);
+    }
+
+    #main-content h2 {
+      font-size: 2.25rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--text-dark);
+      line-height: 1.2;
+    }
+
+    #main-content p {
+      font-size: 1.25rem;
+      color: var(--text-light);
+      max-width: 700px;
+      margin: 0 auto 2.5rem;
+    }
+
+    #main-content button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 1rem 2.5rem;
+      font-size: 1.25rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #main-content button:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    #main-content button::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.5);
+      opacity: 0;
+      border-radius: 100%;
+      transform: scale(1, 1) translate(-50%);
+      transform-origin: 50% 50%;
+    }
+
+    #main-content button:focus:not(:active)::after {
+      animation: ripple 1s ease-out;
+    }
+
+    @keyframes ripple {
+      0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+      }
+      20% {
+        transform: scale(25, 25);
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: scale(40, 40);
+      }
+    }
+
+    #footer-credits {
+      padding: 4rem 0;
+      background-color: var(--bg-light);
+      border-top: 1px solid var(--border-light);
+    }
+
+    .credit-card {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 3rem;
+      background-color: var(--bg-off-white);
+      border-radius: var(--radius-md);
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+
+    .credit-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-3px);
+    }
+
+    @media (min-width: 768px) {
+      .credit-card {
+        flex-direction: row;
+      }
+    }
+
+    .credit-card-author {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    @media (min-width: 768px) {
+      .credit-card-author {
+        width: 200px;
+        margin-right: 2rem;
+        margin-bottom: 0;
+      }
+    }
+
+    .labs-logo {
+      width: 180px;
+      height: auto;
+      margin-right: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+
+    .profile-image {
+      width: 100px;
+      height: auto;
+      margin-right: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+
+    .radius-50 {
+      border-radius: 50%;
+    }
+
+    .author-name {
+      font-weight: 600;
+      margin: 0 0 0.25rem 0;
+      color: var(--text-dark);
+    }
+
+    .author-institution {
+      color: var(--text-light);
+      margin: 0;
+      font-size: 0.9rem;
+    }
+
+    .credit-card-text {
+      flex: 1;
+    }
+
+    .credit-card-text .text {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--text-light);
+    }
+
+    #footer-evaluation {
+      display: flex;
+      align-items: center;
+      background: linear-gradient(to right, #f5f5ff, #f9f9ff);
+      padding: 3rem 0;
+      border-top: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    #footer-evaluation-content {
+      flex: 1;
+    }
+
+    #footer-evaluation-content .title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--text-dark);
+    }
+
+    #footer-evaluation-content .text {
+      margin-bottom: 1.5rem;
+      color: var(--text-light);
+      max-width: 800px;
+    }
+
+    #footer-evaluation-content button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+
+    #footer-evaluation-content button:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    #footer-partners {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 0;
+      background-color: var(--bg-light);
+    }
+
+    #footer-partners .text {
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+    }
+
+    #footer-partners img {
+      height: 80px;
+      width: auto;
+      transition: var(--transition);
+    }
+
+    #footer-partners img:hover {
+      transform: scale(1.05);
+    }
+
+    #visualization-container {
+      display: none;
+      height: 100vh;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
     /* Theme Variables */
     :root {
       /* Light theme colors */
       --text-color: #333333;
       --background-color: #FFFFFF;
       --input-border-color: #CCCCCC;
-      --menu-background: rgba(255, 255, 255, 0.8);
+      --menu-background: rgba(255, 255, 255, 0.9);
       --hover-color: #f5f5f5;
       --dropdown-text: #333;
       --dropdown-border: #eee;
       --dropdown-small: #666;
-      --tab-background: rgba(255, 255, 255, 0.9);
+      --tab-background: rgba(255, 255, 255, 0.95);
       --tab-border: #CCCCCC;
-      --button-primary: #5A6978;
-      --button-primary-hover: #4A5968;
+      --button-primary: #7D8A99;
+      --button-primary-hover: #7D8A99;
       --button-secondary: #7D8A99;
       --button-secondary-hover: #6D7A89;
       --button-reset: #8D8D8D;
@@ -35,7 +410,7 @@
       --button-exit-hover: #6D7A89;
       --filter-active-bg: #e6f0f9;
       --filter-active-border: #4a90e2;
-      
+      --filter-hover-color: #b8c4d0;
     }
 
     [data-theme="dark"] {
@@ -43,15 +418,15 @@
       --text-color: #F0F0F0;
       --background-color: #1A1A1A;
       --input-border-color: #444444;
-      --menu-background: rgba(26, 26, 26, 0.8);
+      --menu-background: rgba(26, 26, 26, 0.9);
       --hover-color: #333333;
       --dropdown-text: #F0F0F0;
       --dropdown-border: #444444;
       --dropdown-small: #AAAAAA;
-      --tab-background: rgba(26, 26, 26, 0.9);
+      --tab-background: rgba(26, 26, 26, 0.95);
       --tab-border: #444444;
-      --button-primary: #5A6978;
-      --button-primary-hover: #4A5968;
+      --button-primary: #7D8A99;
+      --button-primary-hover: #7D8A99;
       --button-secondary: #7D8A99;
       --button-secondary-hover: #6D7A89;
       --button-reset: #8D8D8D;
@@ -64,19 +439,19 @@
       --button-exit-hover: #6D7A89;
       --filter-active-bg: #2a3a4a;
       --filter-active-border: #4a90e2;
+      --checkbox-accent-color: #f76b15;
+      --filter-hover-color: #b8c4d0;
     }
 
-    /* Base Styles */
     body { 
       margin: 0; 
-      overflow: hidden; 
+      overflow-x: hidden;
       background-color: var(--background-color);
       color: var(--text-color);
       transition: background-color 0.3s, color 0.3s;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
     
-    /* Filter Tabs Styles */
     .filter-tabs-container {
       position: absolute;
       top: 0;
@@ -92,18 +467,17 @@
       display: flex;
       margin-top: 15px;
       margin-left: 15px;
-      gap: 5px;
+      gap: 8px;
       position: relative;
       z-index: 1;
       pointer-events: auto;
     }
     
     .filter-tab {
-      padding: 8px 15px;
+      padding: 10px 18px;
       background-color: var(--tab-background);
       border: 1px solid var(--tab-border);
-      border-radius: 8px 8px 0 0;
-      margin-right: 5px;
+      border-radius: 10px 10px 0 0;
       cursor: pointer;
       font-weight: 600;
       color: var(--text-color);
@@ -118,6 +492,7 @@
     
     .filter-tab:hover {
       background-color: var(--hover-color);
+      transform: translateY(-2px);
     }
     
     .filter-tab.active {
@@ -142,14 +517,14 @@
       display: none;
       background-color: var(--menu-background);
       border: 1px solid var(--tab-border);
-      border-radius: 0;
-      padding: 18px;
+      border-radius: 0 0 10px 10px;
+      padding: 20px;
       margin-left: 15px;
       margin-right: 15px;
       max-height: 80vh;
       overflow-y: auto;
-      min-width: 254px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      min-width: 205px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
       pointer-events: auto;
     }
 
@@ -161,7 +536,7 @@
     
     .filter-panel h3 {
       margin-top: 0;
-      margin-bottom: 12px;
+      margin-bottom: 15px;
       font-size: 16px;
       font-weight: 600;
       color: var(--text-color);
@@ -170,52 +545,58 @@
     .filter-panel label {
       display: flex;
       align-items: center;
-      gap: 6px;
-      margin-bottom: 6px;
+      gap: 8px;
+      margin-bottom: 8px;
       font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .filter-panel label:hover {
+      color: var(--filter-hover-color, var(--primary-color));
     }
 
     .filter-panel input[type="checkbox"] {
       margin: 0;
       width: 16px;
       height: 16px;
+      accent-color: var(--checkbox-accent-color, var(--primary-color));
     }
     
-    /* Country Filter Panel Styles */
     .country-list {
-      margin-left: 20px;
+      margin-left: 25px;
       display: block;
     }
     
     .continent-group {
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       margin-left: 10px;
     }
     
     #transfer-filters {
-      margin-top: 10px;
+      margin-top: 12px;
       margin-left: 10px;
     }
     
-    /* Button Styles */
     .filter-panel button {
-      padding: 5px 10px;
+      padding: 8px 15px;
       border: none;
       background: var(--button-primary);
       color: white;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: all 0.2s;
+      font-weight: 500;
     }
     
     .filter-panel button:hover {
       background-color: var(--button-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
     }
     
-    /* Reset button specific styles */
     .reset-btn {
       background-color: var(--button-reset) !important;
-      margin: 10px 0 0 0 !important;
+      margin: 15px 0 0 0 !important;
       display: inline-block !important;
     }
     
@@ -223,80 +604,83 @@
       background-color: var(--button-reset-hover) !important;
     }
     
-    /* Time Controls Styles */
     .time-controls {
       position: absolute;
-      bottom: 20px;
+      bottom: 25px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       background-color: var(--menu-background);
-      padding: 10px 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
       z-index: 1000;
       width: auto;
       max-width: 90%;
       border: 1px solid var(--input-border-color);
-      transition: opacity 0.3s, visibility 0.3s;
+      transition: all 0.3s;
     }
     
-    /* Tooltip Styles */
     #tooltip {
       position: absolute;
       display: none;
       background: var(--menu-background);
-      padding: 8px 12px;
-      border-radius: 4px;
+      padding: 10px 15px;
+      border-radius: 8px;
       pointer-events: none;
-      font-size: 12px;
+      font-size: 13px;
       color: var(--text-color);
       border: 1px solid var(--input-border-color);
       max-width: 250px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
     }
     
-    /* Player Name Input */
     #playerName {
-      width: 160px;
+      width: 180px;
       background-color: var(--background-color);
       color: var(--text-color);
       border: 1px solid var(--input-border-color);
-      padding: 6px 10px;
-      border-radius: 4px;
+      padding: 8px 12px;
+      border-radius: 6px;
       font-family: inherit;
+      transition: var(--transition);
+    }
+
+    #playerName:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(94, 51, 191, 0.2);
     }
     
-    /* Time Control Button Styles */
     .time-control-btn {
       border: none;
-      border-radius: 6px;
-      padding: 8px 10px;
+      border-radius: 8px;
+      padding: 10px 12px;
       cursor: pointer;
       font-size: 14px;
       transition: all 0.2s;
       background-color: var(--button-secondary);
       color: white;
       font-family: inherit;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 32px;
-      min-height: 32px;
+      min-width: 36px;
+      min-height: 36px;
     }
 
     .time-control-btn:hover {
       background-color: var(--button-secondary-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 3px 5px rgba(0,0,0,0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 10px rgba(0,0,0,0.15);
     }
 
     .time-control-btn:active {
       transform: translateY(0);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     .backward-btn, .forward-btn {
@@ -312,7 +696,7 @@
     .play-pause-btn {
       background-color: var(--button-play);
       color: white;
-      padding: 10px 16px;
+      padding: 12px 18px;
       font-size: 14px;
     }
     
@@ -328,25 +712,30 @@
       background-color: var(--button-play-active-hover);
     }
     
-    /* Filter Row Styles */
     .filter-row {
-      margin-bottom: 10px;
-      max-width: 160px;
+      margin-bottom: 15px;
+      max-width: 180px;
       position: relative;
     }
     
     .filter-row select, .filter-row input {
       width: 100%;
-      padding: 6px 10px;
-      margin-top: 3px;
-      border-radius: 4px;
+      padding: 8px 12px;
+      margin-top: 5px;
+      border-radius: 6px;
       border: 1px solid var(--input-border-color);
       background-color: var(--background-color);
       color: var(--text-color);
       font-family: inherit;
+      transition: var(--transition);
+    }
+
+    .filter-row select:focus, .filter-row input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(94, 51, 191, 0.2);
     }
     
-    /* Autocomplete Styles */
     .autocomplete-container {
       position: relative;
       display: inline-block;
@@ -355,24 +744,25 @@
     
     .autocomplete-dropdown {
       position: fixed;
-      max-width: 185px;
+      max-width: 220px;
       max-height: 300px;
       overflow-y: auto;
       border: 1px solid var(--input-border-color);
       border-top: none;
       background-color: var(--background-color);
       z-index: 1500;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
       display: none;
-      border-radius: 0 0 4px 4px;
+      border-radius: 0 0 8px 8px;
     }
 
     .autocomplete-dropdown a {
-      padding: 10px;
+      padding: 12px;
       text-decoration: none;
       display: block;
       color: var(--dropdown-text);
       border-bottom: 1px solid var(--dropdown-border);
+      transition: var(--transition);
     }
 
     .autocomplete-dropdown a:hover {
@@ -387,34 +777,36 @@
     .autocomplete-dropdown a small {
       color: var(--dropdown-small);
       font-size: 12px;
+      margin-top: 3px;
+      display: block;
     }
     
-    /* Speed Button Styles */
     .speed-btn {
       background-color: var(--button-secondary);
       color: white;
-      padding: 8px 12px;
+      padding: 10px 15px;
       margin-left: 5px;
+      font-weight: 600;
     }
     
     .speed-btn:hover {
       background-color: var(--button-secondary-hover);
     }
     
-    /* Slider Container Styles */
     .slider-container {
       display: flex;
       flex-direction: column;
       align-items: center;
       flex: 1;
-      min-width: 200px;
-      margin: 0 10px;
+      min-width: 220px;
+      margin: 0 12px;
     }
 
     .slider-container label {
-      margin-bottom: 5px;
+      margin-bottom: 8px;
       font-size: 14px;
       font-weight: 500;
+      color: var(--text-color);
     }
 
     #time-slider {
@@ -426,28 +818,30 @@
       background: #e0e0e0;
       box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
       position: relative;
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     #time-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      background: var(--button-primary);
+      background: var(--primary-color);
       cursor: pointer;
       border: 2px solid #fff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-      margin-top: -5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      margin-top: -6px;
     }
 
     #time-slider::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      background: var(--button-primary);
+      background: var(--primary-color);
       cursor: pointer;
       border: 2px solid #fff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
     #time-slider::-webkit-slider-runnable-track {
@@ -460,144 +854,183 @@
       border-radius: 4px;
     }
     
-    /* Top right buttons container */
     #top-right-buttons {
       position: fixed;
-      top: 20px;
-      right: 20px;
+      top: 25px;
+      right: 25px;
       display: flex;
-      gap: 10px;
+      gap: 12px;
       z-index: 1100;
     }
     
-    /* Info Button and Legend Tooltip */
-    #info-button {
-      width: 40px;
-      height: 40px;
-      background: var(--button-primary);
+    #back-button {
+      width: 45px;
+      height: 45px;
+      background: var(--button-secondary);
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background-color 0.2s;
+      transition: all 0.2s;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+    }
+
+    #back-button:hover {
+      background: var(--button-secondary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+    }
+
+    #back-button svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    #info-button {
+      width: 45px;
+      height: 45px;
+      background: var(--button-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
     }
     
     #info-button:hover {
       background: var(--button-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 12px rgba(0,0,0,0.2);
     }
     
     #info-button svg {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
     }
     
-    /* Theme Toggle Button */
     #theme-toggle {
-      width: 40px;
-      height: 40px;
+      width: 45px;
+      height: 45px;
       background: var(--button-primary);
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background-color 0.2s;
+      transition: all 0.2s;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
     }
     
     #theme-toggle:hover {
       background: var(--button-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 12px rgba(0,0,0,0.2);
     }
     
     #theme-toggle svg {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
     }
     
     #legend-tooltip {
       position: absolute;
-      top: 70px;
-      right: 20px;
+      top: 80px;
+      right: 25px;
       background: var(--menu-background);
-      padding: 12px 16px;
-      border-radius: 6px;
+      padding: 15px 20px;
+      border-radius: 10px;
       border: 1px solid var(--input-border-color);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
       z-index: 1100;
-      width: 220px;
+      width: 240px;
       display: none;
       font-size: 14px;
       color: var(--text-color);
+      line-height: 1.8;
     }
     
-    /* Player Info Panel */
     #player-info {
       position: absolute;
-      bottom: 20px;
+      bottom: 25px;
       left: 50%;
       transform: translateX(-50%);
       background: var(--menu-background);
-      padding: 12px 18px;
-      border-radius: 8px;
+      padding: 18px 25px;
+      border-radius: 12px;
       display: none;
       z-index: 1000;
       text-align: center;
       border: 1px solid var(--input-border-color);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+      min-width: 280px;
     }
     
     #player-info h3 {
-      margin: 0 0 5px 0;
+      margin: 0 0 10px 0;
       color: var(--text-color);
       font-weight: 600;
+      font-size: 1.25rem;
     }
     
     #player-info p {
-      margin: 0 0 12px 0;
+      margin: 0 0 15px 0;
       color: var(--text-color);
+      line-height: 1.6;
     }
     
     #exit-player-view {
-      padding: 6px 12px;
+      padding: 8px 16px;
       background: var(--button-exit);
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
       font-family: inherit;
-      transition: background-color 0.2s;
-      margin-top: 10px;
+      transition: all 0.2s;
+      margin-top: 15px;
+      font-weight: 500;
     }
     
     #exit-player-view:hover {
       background: var(--button-exit-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
     }
     
-    /* Country flags container */
     .country-flags {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 5px;
+      gap: 8px;
       align-items: center;
-      margin-top: 10px;
+      margin-top: 15px;
     }
     
-    /* Flag image styles */
     .country-flags img {
-      width: 24px;
-      height: 16px;
+      width: 28px;
+      height: 18px;
       object-fit: cover;
-      border-radius: 2px;
+      border-radius: 3px;
       border: 1px solid var(--input-border-color);
       background-color: var(--background-color);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: var(--transition);
+    }
+
+    .country-flags img:hover {
+      transform: scale(1.1);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
     }
     
-    /* Flag loading and error states */
     .country-flags img.loading {
       animation: pulse 1.5s infinite;
     }
@@ -607,60 +1040,61 @@
       border-color: #f5c6cb;
     }
 
-    /* Country code fallback */
     .country-code-fallback {
-      width: 24px;
-      height: 16px;
+      width: 28px;
+      height: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
       background-color: var(--background-color);
       border: 1px solid var(--input-border-color);
-      border-radius: 2px;
-      font-size: 8px;
+      border-radius: 3px;
+      font-size: 9px;
       font-weight: bold;
       color: var(--text-color);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    /* Arrow between flags */
     .flag-arrow {
       color: var(--text-color);
-      font-size: 14px;
-      margin: 0 2px;
+      font-size: 16px;
+      margin: 0 3px;
     }
     
-    /* Animation for loading state */
     @keyframes pulse {
       0% { opacity: 0.6; }
       50% { opacity: 1; }
       100% { opacity: 0.6; }
     }
     
-    /* Responsive Styles */
     @media (max-width: 768px) {
       .time-controls {
         flex-wrap: wrap;
         justify-content: center;
+        padding: 15px;
       }
       
       .slider-container {
         order: -1;
         width: 100%;
-        margin: 0 0 10px 0;
+        margin: 0 0 15px 0;
       }
       
       .filter-tabs {
         flex-direction: column;
+        align-items: flex-start;
       }
       
       .filter-tab {
         margin-bottom: 5px;
-        border-radius: 5px;
+        border-radius: 8px;
+        width: 120px;
       }
       
       .filter-panel {
         width: 90%;
         margin: 0 auto;
+        border-radius: 10px;
       }
       
       #top-right-buttons {
@@ -668,8 +1102,49 @@
       }
       
       #legend-tooltip {
-        right: 10px;
-        width: 180px;
+        right: 15px;
+        width: 200px;
+      }
+
+      #main-content h2 {
+        font-size: 1.6rem;
+      }
+
+      #main-content p {
+        font-size: 1.1rem;
+      }
+
+      .credit-card {
+        padding: 1.5rem;
+      }
+
+      #footer-evaluation {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      #footer-evaluation-content {
+        margin-top: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .lateral-gap {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+      }
+
+      #main-content {
+        padding: 3rem 1.25rem;
+      }
+
+      #main-content button {
+        padding: 0.75rem 1.5rem;
+        font-size: 1.1rem;
+      }
+      
+      #logo-banner img {
+        height: 40px;
       }
     }
   </style>
@@ -684,162 +1159,319 @@
       }
     }
   </script>
+  
+  <script>
+    function onFormLinkClick() {
+      window.open('https://forms.gle/SDv6G91zMDxfL9Pj8', '_blank');
+    }
+    
+    function onNoticeCloseClick() {
+      document.getElementById('form-notice').style.display = 'none';
+    }
+    
+    function startVisualization() {
+      document.getElementById('landing-page').style.display = 'none';
+      document.getElementById('visualization-container').style.display = 'block';
+      
+      if (!window.visualizationInitialized) {
+        console.log("Initializing visualization for the first time");
+        window.initVisualization();
+        window.visualizationInitialized = true;
+      }
+      
+      window.dispatchEvent(new Event('resize'));
+    }
+
+    function returnToLandingPage() {
+      document.getElementById('visualization-container').style.display = 'none';
+      document.getElementById('landing-page').style.display = 'block';
+      
+      if (window.isPlaying) {
+        const playPauseBtn = document.getElementById("play-pause-btn");
+        if (playPauseBtn) {
+          window.togglePlayPause(playPauseBtn);
+        }
+      }
+    }
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const backButton = document.getElementById('back-button');
+    if (backButton) {
+      backButton.addEventListener('click', returnToLandingPage);
+    }
+  });
+</script>
 </head>
 
 <body>
-  <!-- Top-right buttons container -->
-  <div id="top-right-buttons">
-    <!-- Info Button -->
-    <button id="info-button">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="16" x2="12" y2="12"></line>
-        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-      </svg>
-    </button>
-    
-    <!-- Theme Toggle Button -->
-    <button id="theme-toggle">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-icon">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-      </svg>
-    </button>
+  <!-- Landing Page Content -->
+  <div id="landing-page">
+    <!-- Logo Banner -->
+    <div id="logo-banner" class="lateral-gap">
+      <div class="container">
+        <a href="https://www.zerozero.pt/" target="_blank">
+          <img src="./files/img/logo_zerozero.png" alt="ZeroZero Logo">
+        </a>
+      </div>
+    </div>
+
+    <!-- Form Notice -->
+    <div id="form-notice" class="lateral-gap">
+      <div class="container">
+        <div id="form-notice-content">
+          <span>
+            <p>
+              <i class="fas fa-info-circle" aria-hidden="true"></i>
+              <strong>Feedback</strong>
+            </p>
+
+            <p>Ajude-nos a melhorar a visualização! Por favor, preencha o seguinte questionário de avaliação.</p>
+            <button onclick="onFormLinkClick()">Responder ao Questionário</button>
+          </span>
+          
+          <i id="form-notice-close" class="fas fa-times" onclick="onNoticeCloseClick()" aria-hidden="true"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content with Button -->
+    <div id="main-content">
+      <div class="container">
+        <h2>Explore a visualização interativa de transferências globais</h2>
+        <p>Descubra os padrões de transferências internacionais de jogadores ao longo do tempo com nossa visualização interativa em 3D.</p>
+        <p>É recomendado o uso de um computador para uma melhor experiência.</p>
+        <button onclick="startVisualization()">Iniciar Visualização</button>
+      </div>
+    </div>
+
+    <!-- Footer Credits -->
+    <div id="footer-credits" class="lateral-gap">
+      <div class="container">
+        <div class="credit-card">
+          <div class="credit-card-author">
+            <img src="./files/img/logo_zzlabs.png" alt="ZeroZero Labs Logo" class="labs-logo">
+          </div>
+
+          <div class="credit-card-text">
+            <p class="text">
+              O zerozero Labs é um espaço do zerozero que compila estudos realizados in-house sobre o Desporto 
+              e as suas estatísticas, os quais revelam, em termos analíticos, a evolução de uma grande variedade de tópicos. 
+              Considerando a grandeza da base de dados e a expertise do zerozero, os consumidores poderao ter acesso a 
+              estudos que cobrem temas tão diversos como as probabilidades de chegar ao título, a disciplina no desporto 
+              (número de cartões, faltas,...), comparativos de índices e valores entre diferentes Ligas, a internacionalização 
+              das ligas de cada pais e as tendencias de transterencias (no que toca a talxas etárias, nacionalidades,...), 
+              a distribuição da idade dos jogadores em cada escalão e sua respetiva evolução, entre outros.
+            </p>
+          </div>
+        </div>
+
+        <div class="credit-card">
+          <div class="credit-card-author">
+            <img src="./files/img/profile_guilherme.jpg" alt="Guilherme Perfil" class="profile-image radius-50">
+            <div>
+              <p class="author-name">Guilherme Diogo</p>
+              <p class="author-institution">FEUP</p>
+            </div>
+          </div>
+
+          <div class="credit-card-text">
+            <p class="text">
+              Guilherme Diogo é um estudante de 25 anos, natural de Vila Nova de Gaia, e encontra-se neste momento a frequentar o segundo ano do mestrado em Engenharia Informática e Computação na FEUP.
+              É um amante do desporto em geral, com particular foco em futebol e em basquetebol.
+              Atualmente, em colaboração com a empresa ZOS, encontra-se em ambiente empresarial a realizar a sua dissertação de mestrado, a qual consiste neste projeto.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Evaluation -->
+    <div id="footer-evaluation" class="lateral-gap">
+      <div class="container">
+        <div id="footer-evaluation-content">
+          <p class="title">Avalie a sua experiência</p>
+          <p class="text">
+            A sua opinião é valiosa para nós! Queremos garantir que a sua experiência seja sempre a melhor possível. 
+            Por favor, tire um momento para avaliar a sua experiência com a visualização. Agradecemos imensamente pelo seu feedback!
+          </p>
+          <button onclick="onFormLinkClick()">Responder ao questionário</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Partners -->
+    <div id="footer-partners" class="lateral-gap">
+      <div class="container">
+        <p class="text">em colaboração com</p>
+        <img src="./files/img/logo_feup.png" alt="FEUP Logo">
+      </div>
+    </div>
   </div>
+  <!-- End of Landing Page Content -->
+
+  <!-- Visualization Container -->
+  <div id="visualization-container" style="display: none;">
+
+    <!-- Top-right buttons container -->
+    <div id="top-right-buttons">
+      <!-- Back Button -->
+      <button id="back-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"></path>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
   
-  <!-- Legend Tooltip -->
-  <div id="legend-tooltip">
-    <strong>Legenda:</strong><br>
-    <span style="color:#F76B15;">🟠 Geral/Entradas</span><br>
-    <span style="color:#2DA6E0;">🔵 Saídas</span><br>
-    <span style="color:#25E009;">🟢 Jogador</span>
-  </div>
-
-  <!-- Filter Tabs Structure -->
-  <div class="filter-tabs-container">
-    <div class="filter-tabs">
-      <div class="filter-tab" data-panel="country-filter">Transferências</div>
-      <div class="filter-tab" data-panel="country-to-country-filter">1-1</div>
-      <div class="filter-tab" data-panel="player-filter">Jogador</div>
+      <!-- Info Button -->
+      <button id="info-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+      </button>
+      
+      <!-- Theme Toggle Button -->
+      <button id="theme-toggle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-icon">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
     </div>
     
-    <div class="filter-panels">
-      <!-- Country Filter Panel -->
-      <div id="country-filter" class="filter-panel">
-        <h3>Transferências:</h3>
-        <label><input type="checkbox" id="showAllTransfers" checked> <strong>Todas</strong></label>
-        <div id="transfer-filters">
-          <label><input type="checkbox" id="showTransfersIn" checked> Entradas</label>
-          <label><input type="checkbox" id="showTransfersOut" checked> Saídas</label>
-        </div>
+    <!-- Legend Tooltip -->
+    <div id="legend-tooltip">
+      <strong>Legenda:</strong><br>
+      <span style="color:#F76B15;">🟠 Geral/Entradas</span><br>
+      <span style="color:#2DA6E0;">🔵 Saídas</span><br>
+      <span style="color:#25E009;">🟢 Jogador</span>
+    </div>
 
-        <h3>Países Selecionados:</h3>
-        <label><input type="checkbox" id="selectAll" checked> <strong>Todos</strong></label>
-
-        <div class="continent-group">
-          <label><input type="checkbox" class="continent-checkbox" checked> <strong>América do Norte</strong></label>
-          <div class="country-list">
-            <label><input type="checkbox" name="country" value="Estados Unidos" checked> EUA</label>
-            <label><input type="checkbox" name="country" value="México" checked> México</label>
-          </div>
-        </div>
-
-        <div class="continent-group">
-          <label><input type="checkbox" class="continent-checkbox" checked> <strong>América do Sul</strong></label>
-          <div class="country-list">
-            <label><input type="checkbox" name="country" value="Argentina" checked> Argentina</label>
-            <label><input type="checkbox" name="country" value="Brasil" checked> Brasil</label>
-          </div>
-        </div>
-
-        <div class="continent-group">
-          <label><input type="checkbox" class="continent-checkbox" checked> <strong>Ásia</strong></label>
-          <div class="country-list">
-            <label><input type="checkbox" name="country" value="Arábia Saudita" checked> Arábia Saudita</label>
-            <label><input type="checkbox" name="country" value="China" checked> China</label>
-          </div>
-        </div>
-
-        <div class="continent-group">
-          <label><input type="checkbox" class="continent-checkbox" checked> <strong>Europa</strong></label>
-          <div class="country-list">
-            <label><input type="checkbox" name="country" value="Alemanha" checked> Alemanha</label>
-            <label><input type="checkbox" name="country" value="Bélgica" checked> Bélgica</label>
-            <label><input type="checkbox" name="country" value="Espanha" checked> Espanha</label>
-            <label><input type="checkbox" name="country" value="França" checked> França</label>
-            <label><input type="checkbox" name="country" value="Inglaterra" checked> Inglaterra</label>
-            <label><input type="checkbox" name="country" value="Itália" checked> Itália</label>
-            <label><input type="checkbox" name="country" value="Países Baixos" checked> Países Baixos</label>
-            <label><input type="checkbox" name="country" value="Portugal" checked> Portugal</label>
-            <label><input type="checkbox" name="country" value="Turquia" checked> Turquia</label>
-          </div>
-        </div>
+    <!-- Filter Tabs Structure -->
+    <div class="filter-tabs-container">
+      <div class="filter-tabs">
+        <div class="filter-tab" data-panel="country-filter">Filtros</div>
+        <div class="filter-tab" data-panel="country-to-country-filter">1-1</div>
+        <div class="filter-tab" data-panel="player-filter">Jogador</div>
       </div>
+      
+      <div class="filter-panels">
+        <!-- Country Filter Panel -->
+        <div id="country-filter" class="filter-panel">
+          <h3>Transferências:</h3>
+          <label><input type="checkbox" id="showAllTransfers" checked> <strong>Todas</strong></label>
+          <div id="transfer-filters">
+            <label><input type="checkbox" id="showTransfersIn" checked> Entradas</label>
+            <label><input type="checkbox" id="showTransfersOut" checked> Saídas</label>
+          </div>
 
-      <!-- Country to Country Filter Panel -->
-      <div id="country-to-country-filter" class="filter-panel">
-        <h3>Escolha 2 países</h3>
-        <div class="filter-row">
-          <select id="sourceCountry">
-            <option value="">Selecione um país</option>
-            <!-- Options will be populated by JavaScript -->
-          </select>
-        </div>
-        <div class="filter-row">
-          <select id="destinationCountry">
-            <option value="">Selecione um país</option>
-            <!-- Options will be populated by JavaScript -->
-          </select>
-        </div>
-        <button id="resetCountryFilter" class="reset-btn">Limpar</button>
-      </div>
+          <h3>Países Selecionados:</h3>
+          <label><input type="checkbox" id="selectAll" checked> <strong>Todos</strong></label>
 
-      <!-- Player Filter Panel -->
-      <div id="player-filter" class="filter-panel">
-        <h3>Escolha um jogador</h3>
-        <div class="filter-row">
-          <div class="autocomplete-container">
-            <input type="text" id="playerName" placeholder="Digite o nome do jogador">
-            <div id="playerAutocomplete" class="autocomplete-dropdown"></div>
+          <div class="continent-group">
+            <label><input type="checkbox" class="continent-checkbox" checked> <strong>América do Norte</strong></label>
+            <div class="country-list">
+              <label><input type="checkbox" name="country" value="Estados Unidos" checked> EUA</label>
+              <label><input type="checkbox" name="country" value="México" checked> México</label>
+            </div>
+          </div>
+
+          <div class="continent-group">
+            <label><input type="checkbox" class="continent-checkbox" checked> <strong>América do Sul</strong></label>
+            <div class="country-list">
+              <label><input type="checkbox" name="country" value="Argentina" checked> Argentina</label>
+              <label><input type="checkbox" name="country" value="Brasil" checked> Brasil</label>
+            </div>
+          </div>
+
+          <div class="continent-group">
+            <label><input type="checkbox" class="continent-checkbox" checked> <strong>Ásia</strong></label>
+            <div class="country-list">
+              <label><input type="checkbox" name="country" value="Arábia Saudita" checked> Arábia Saudita</label>
+              <label><input type="checkbox" name="country" value="China" checked> China</label>
+            </div>
+          </div>
+
+          <div class="continent-group">
+            <label><input type="checkbox" class="continent-checkbox" checked> <strong>Europa</strong></label>
+            <div class="country-list">
+              <label><input type="checkbox" name="country" value="Alemanha" checked> Alemanha</label>
+              <label><input type="checkbox" name="country" value="Bélgica" checked> Bélgica</label>
+              <label><input type="checkbox" name="country" value="Espanha" checked> Espanha</label>
+              <label><input type="checkbox" name="country" value="França" checked> França</label>
+              <label><input type="checkbox" name="country" value="Inglaterra" checked> Inglaterra</label>
+              <label><input type="checkbox" name="country" value="Itália" checked> Itália</label>
+              <label><input type="checkbox" name="country" value="Países Baixos" checked> Países Baixos</label>
+              <label><input type="checkbox" name="country" value="Portugal" checked> Portugal</label>
+              <label><input type="checkbox" name="country" value="Turquia" checked> Turquia</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Country to Country Filter Panel -->
+        <div id="country-to-country-filter" class="filter-panel">
+          <h3>Escolha 2 países</h3>
+          <div class="filter-row">
+            <select id="sourceCountry">
+              <option value="">Selecione um país</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <select id="destinationCountry">
+              <option value="">Selecione um país</option>
+            </select>
+          </div>
+          <button id="resetCountryFilter" class="reset-btn">Limpar</button>
+        </div>
+
+        <!-- Player Filter Panel -->
+        <div id="player-filter" class="filter-panel">
+          <h3>Escolha um jogador</h3>
+          <div class="filter-row">
+            <div class="autocomplete-container">
+              <input type="text" id="playerName" placeholder="Digite o nome do jogador">
+              <div id="playerAutocomplete" class="autocomplete-dropdown"></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Time Controls -->
-  <div class="time-controls">
-    <button id="backward-btn" class="time-control-btn backward-btn">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="19 20 9 12 19 4 19 20"></polygon>
-      </svg>
-    </button>
-    <button id="play-pause-btn" class="time-control-btn play-pause-btn">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-      </svg>
-    </button>
-    <button id="forward-btn" class="time-control-btn forward-btn">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="5 4 15 12 5 20 5 4"></polygon>
-      </svg>
-    </button>
-    <div class="slider-container">
-      <label for="time-slider">Ano: <span id="current-year">1950</span></label>
-      <input type="range" id="time-slider" min="1950" max="2025" value="1950" step="1">
+    <!-- Time Controls -->
+    <div class="time-controls">
+      <button id="backward-btn" class="time-control-btn backward-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="19 20 9 12 19 4 19 20"></polygon>
+        </svg>
+      </button>
+      <button id="play-pause-btn" class="time-control-btn play-pause-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+      </button>
+      <button id="forward-btn" class="time-control-btn forward-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 4 15 12 5 20 5 4"></polygon>
+        </svg>
+      </button>
+      <div class="slider-container">
+        <label for="time-slider">Ano: <span id="current-year">1950</span></label>
+        <input type="range" id="time-slider" min="1950" max="2025" value="1950" step="1">
+      </div>
+      <button id="speed-toggle-btn" class="time-control-btn speed-btn">2x</button>
     </div>
-    <button id="speed-toggle-btn" class="time-control-btn speed-btn">2x</button>
+
+    <div id="tooltip"></div>
+    <div id="player-info">
+      <h3></h3>
+      <p></p>
+      <div class="country-flags"></div>
+      <button id="exit-player-view">Retornar</button>
+    </div>
+
+    <div id="globeViz"></div>
   </div>
 
-  <div id="tooltip"></div>
-  <div id="player-info">
-    <h3></h3>
-    <p></p>
-    <div class="country-flags"></div>
-    <button id="exit-player-view">Retornar</button>
-  </div>
-
-  <div id="globeViz"></div>
-  
-  <script type="module" src="script.js"></script>
+  <script type="module" src="files/script.js"></script>
 </body>
 </html>

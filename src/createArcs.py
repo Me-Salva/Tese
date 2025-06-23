@@ -12,7 +12,7 @@ def hash_json(data):
 
 print("\U0001F504 Checking for updates to transfer data...")
 
-transfers_folder_path = 'D:/Tese/Tese/test/src/files/transfers'
+transfers_folder_path = "./src/files/transfers"
 transfers_api_config = {
     "transfers_ALE.json": 11,
     "transfers_ARG.json": 70,
@@ -72,9 +72,9 @@ for filename, compet_id in transfers_api_config.items():
 print("✔️ Transfer files update check complete.\n")
 
 # File paths configuration
-map_file_path = 'D:/Tese/Tese/test/src/files/map.json'
-output_folder_path = 'D:/Tese/Tese/test/src/files/arcs'
-player_db_path = 'D:/Tese/Tese/test/src/files/players.json'
+map_file_path = './src/files/map.json'
+output_folder_path = './src/files/arcs'
+player_db_path = './src/files/players.json'
 
 def extract_year(season_name):
     """Extract year from season name, using first year for season formats like '2017/2018'"""
